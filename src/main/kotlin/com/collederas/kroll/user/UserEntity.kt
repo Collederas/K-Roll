@@ -1,15 +1,15 @@
-package com.collederas.kroll.entity
+package com.collederas.kroll.user
 
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.Id
 import jakarta.persistence.Table
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 @Entity
 @Table(name = "users")
-class UserEntity (
+class UserEntity(
 
     @Id
     @Column(nullable = false)

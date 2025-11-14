@@ -1,8 +1,7 @@
-package com.collederas.kroll.repository
+package com.collederas.kroll.remoteconfig.auth
 
-import com.collederas.kroll.entity.ApiKeyEntity
 import org.springframework.data.jpa.repository.JpaRepository
-import java.util.UUID
+import java.util.*
 
 interface ApiKeyRepository : JpaRepository<ApiKeyEntity, UUID> {
     fun findAllByEnvironmentId(environmentId: UUID): List<ApiKeyEntity>

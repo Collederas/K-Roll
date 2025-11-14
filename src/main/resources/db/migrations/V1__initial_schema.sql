@@ -74,8 +74,9 @@ CREATE TABLE config_entries
         FOREIGN KEY (environment_id) REFERENCES environments(id),
 
     CONSTRAINT fk_config_collection
-        FOREIGN KEY (collection_id) REFERENCES config_collections(id),
-        ON DELETE SET NULL
+        FOREIGN KEY (collection_id)
+            REFERENCES config_collections(id)
+            ON DELETE SET NULL,
 
     CONSTRAINT uq_config_env_key
             UNIQUE (environment_id, config_key)

@@ -1,8 +1,7 @@
-package com.collederas.kroll.repository
+package com.collederas.kroll.remoteconfig.configentry
 
-import com.collederas.kroll.entity.ConfigEntryEntity
 import org.springframework.data.jpa.repository.JpaRepository
-import java.util.UUID
+import java.util.*
 
 interface ConfigEntryRepository : JpaRepository<ConfigEntryEntity, UUID> {
     fun findAllByEnvironmentId(environmentId: UUID): List<ConfigEntryEntity>

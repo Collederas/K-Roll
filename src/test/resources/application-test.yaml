@@ -1,0 +1,9 @@
+auth:
+  jwt:
+    secret: "bzjKq1tb2/7FmHzg51eH8ZPqfm4twB4suaT2H8CYm8A="
+    expiration: 1h
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/krolldb
+    username: postgres
+    password: postgres

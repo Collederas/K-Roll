@@ -1,14 +1,9 @@
-package com.collederas.kroll.entity
+package com.collederas.kroll.remoteconfig.configentry
 
-import jakarta.persistence.Column
-import jakarta.persistence.Entity
-import jakarta.persistence.FetchType
-import jakarta.persistence.Id
-import jakarta.persistence.JoinColumn
-import jakarta.persistence.ManyToOne
-import jakarta.persistence.Table
+import com.collederas.kroll.remoteconfig.environment.EnvironmentEntity
+import jakarta.persistence.*
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 @Entity
 @Table(

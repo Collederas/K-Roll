@@ -1,8 +1,7 @@
-package com.collederas.kroll.repository
+package com.collederas.kroll.remoteconfig.project
 
-import com.collederas.kroll.entity.ProjectEntity
 import org.springframework.data.jpa.repository.JpaRepository
-import java.util.UUID
+import java.util.*
 
 interface ProjectRepository : JpaRepository<ProjectEntity, UUID> {
     fun existsByOwnerId(ownerId: UUID): Boolean

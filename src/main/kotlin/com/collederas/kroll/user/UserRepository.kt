@@ -1,8 +1,7 @@
-package com.collederas.kroll.repository
+package com.collederas.kroll.user
 
-import com.collederas.kroll.entity.UserEntity
 import org.springframework.data.jpa.repository.JpaRepository
-import java.util.UUID
+import java.util.*
 
 interface UserRepository : JpaRepository<UserEntity, UUID> {
     fun findByEmail(email: String): UserEntity?
