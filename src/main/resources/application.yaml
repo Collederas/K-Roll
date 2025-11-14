@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: kroll
+  datasource:
+    url: jdbc:postgresql://localhost:5432/krolldb
+    username: postgres
+    password: postgres
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+    locations: classpath:db/migrations

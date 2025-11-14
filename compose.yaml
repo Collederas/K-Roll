@@ -1,0 +1,12 @@
+name: kroll
+
+services:
+  db:
+    image: postgres:18
+    container_name: postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: krolldb
+    ports: [ "5432:5432" ]
