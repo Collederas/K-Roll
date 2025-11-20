@@ -3,11 +3,13 @@ plugins {
 	kotlin("plugin.spring") version "1.9.25"
 	id("org.springframework.boot") version "3.5.7"
 	id("io.spring.dependency-management") version "1.1.7"
+    id("org.flywaydb.flyway") version "11.17.0"
 }
 
 group = "com.collederas"
 version = "0.0.1-SNAPSHOT"
 description = "KRoll is a remote configuration and feature-flag service for games."
+
 
 java {
 	toolchain {
@@ -34,12 +36,14 @@ dependencies {
     implementation("com.github.ben-manes.caffeine:caffeine")
 	implementation("org.flywaydb:flyway-core")
 	implementation("org.flywaydb:flyway-database-postgresql")
+
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	runtimeOnly("org.postgresql:postgresql")
 
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("io.mockk:mockk:1.14.6")
     testImplementation("org.springframework.security:spring-security-test")
+    testImplementation("com.h2database:h2")
 }
 
 kotlin {

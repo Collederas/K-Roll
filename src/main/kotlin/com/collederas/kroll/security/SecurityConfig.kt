@@ -1,5 +1,8 @@
 package com.collederas.kroll.security
 
+import com.collederas.kroll.auth.AuthUserDetailsService
+import com.collederas.kroll.auth.jwt.JwtAuthEntryPoint
+import com.collederas.kroll.auth.jwt.JwtAuthFilter
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.authentication.AuthenticationManager
@@ -18,10 +21,11 @@ class SecurityConfig (
     private val jwtAuthEntryPoint: JwtAuthEntryPoint,
     private val jwtAuthFilter: JwtAuthFilter,
 
-    private val userDetailsService: CustomUserDetailsService
+    private val userDetailsService: AuthUserDetailsService
     ) {
+
     @Bean
-    fun passwordEncoder() = BCryptPasswordEncoder()
+    fun passwordEncoder(): BCryptPasswordEncoder = BCryptPasswordEncoder()
 
     @Bean
     fun authenticationProvider(): DaoAuthenticationProvider {
@@ -44,9 +48,12 @@ class SecurityConfig (
                     "/auth/login",
                     "/client/**",
                     "/error"
-                ).permitAll()
-                    .anyRequest().authenticated()
+                )
+                .permitAll()
+                .anyRequest()
+                .authenticated()
             }
+            .authenticationProvider(authenticationProvider())
             .exceptionHandling { it.authenticationEntryPoint(jwtAuthEntryPoint) }
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter::class.java)
