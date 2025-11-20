@@ -27,7 +27,7 @@ class DatabaseSeeder(
         println("🌱 Seeding initial test user...")
 
         val testEmail = "test.user@example.com"
-        val testUsername = "testuser_admin"
+        val testUsername = "test"
         val rawPassword = "password123"
 
         val hashedPassword = passwordEncoder.encode(rawPassword)

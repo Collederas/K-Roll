@@ -10,6 +10,7 @@ class AuthUserDetails(
 
     fun getId(): UUID = user.id
     fun getEmail(): String = user.email
+    fun getUser(): AppUser = user
 
     override fun getAuthorities(): Collection<GrantedAuthority> {
         return emptyList()

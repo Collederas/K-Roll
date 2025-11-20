@@ -13,6 +13,7 @@ class AuthService(
     fun login(usernameOrEmail: String, password: String): String {
         val auth = UsernamePasswordAuthenticationToken(usernameOrEmail, password)
         val authentication = authManager.authenticate(auth)
+
         val principal = authentication.principal as AuthUserDetails
         return jwtService.generateToken(principal.getId(), principal.username)
     }
