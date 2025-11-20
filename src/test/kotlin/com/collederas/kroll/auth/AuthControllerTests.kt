@@ -1,6 +1,8 @@
 package com.collederas.kroll.auth
 
-import com.collederas.kroll.security.JwtAuthFilter
+import com.collederas.kroll.security.jwt.JwtAuthFilter
+import com.collederas.kroll.user.AuthController
+import com.collederas.kroll.user.AuthService
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.`when`

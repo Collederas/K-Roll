@@ -1,7 +1,9 @@
 package com.collederas.kroll.security
 
-import com.collederas.kroll.security.token.JwtTokenService
-import com.collederas.kroll.user.UserEntity
+import com.collederas.kroll.user.AuthUserDetails
+import com.collederas.kroll.user.AuthUserDetailsService
+import com.collederas.kroll.security.jwt.JwtTokenService
+import com.collederas.kroll.user.AppUser
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
@@ -50,7 +52,7 @@ class SecurityConfigTests {
     lateinit var jwtService: JwtTokenService
 
     @MockitoBean
-    lateinit var userDetailsService: CustomUserDetailsService
+    lateinit var userDetailsService: AuthUserDetailsService
 
     @Test
     fun `public route - login accessible without token`() {
@@ -96,8 +98,8 @@ class SecurityConfigTests {
     @Test
     fun `protected route - valid token returns 200`() {
         val id = UUID.randomUUID()
-        val details = CustomUserDetails(
-            UserEntity(
+        val details = AuthUserDetails(
+            AppUser(
                 id = id,
                 email = "test@example.com",
                 username = "test",

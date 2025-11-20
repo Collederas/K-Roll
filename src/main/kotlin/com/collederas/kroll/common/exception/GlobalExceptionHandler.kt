@@ -1,4 +1,4 @@
-package com.collederas.kroll.exception // Use your package structure
+package com.collederas.kroll.common.exception
 
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity

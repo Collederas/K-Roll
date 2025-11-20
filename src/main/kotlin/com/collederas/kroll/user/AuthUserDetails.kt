@@ -1,12 +1,11 @@
-package com.collederas.kroll.security
+package com.collederas.kroll.user
 
-import com.collederas.kroll.user.UserEntity
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
 import java.util.*
 
-class CustomUserDetails(
-    private val user: UserEntity
+class AuthUserDetails(
+    private val user: AppUser
 ) : UserDetails {
 
     fun getId(): UUID = user.id

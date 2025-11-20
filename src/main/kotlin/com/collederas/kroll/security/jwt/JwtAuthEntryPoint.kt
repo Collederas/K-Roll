@@ -1,4 +1,4 @@
-package com.collederas.kroll.security
+package com.collederas.kroll.security.jwt
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.servlet.http.HttpServletRequest

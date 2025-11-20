@@ -1,7 +1,6 @@
-package com.collederas.kroll.auth
+package com.collederas.kroll.user
 
 import jakarta.validation.constraints.NotBlank
-import org.aspectj.bridge.MessageUtil.fail
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody

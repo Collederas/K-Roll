@@ -9,11 +9,11 @@ import java.util.*
 
 @Entity
 @Table(name = "users")
-class UserEntity(
+class AppUser(
 
     @Id
     @Column(nullable = false)
-    val id: UUID = UUID.randomUUID(),
+    val id: UUID,
 
     @Column(name = "email", nullable = false, unique = true)
     val email: String,
@@ -28,5 +28,15 @@ class UserEntity(
     val createdAt: Instant,
 
     @Column(name = "updated_at", nullable = false)
-    val updatedAt: Instant,
-)
+    val updatedAt: Instant
+
+) {
+    protected constructor() : this(
+        UUID(0, 0),
+        "",
+        "",
+        "",
+        Instant.EPOCH,
+        Instant.EPOCH
+    )
+}

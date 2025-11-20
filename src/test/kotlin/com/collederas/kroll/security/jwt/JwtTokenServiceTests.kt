@@ -1,4 +1,4 @@
-package com.collederas.kroll.security.token
+package com.collederas.kroll.security.jwt
 
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test

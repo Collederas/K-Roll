@@ -1,12 +1,12 @@
 package com.collederas.kroll.auth
 
-import com.collederas.kroll.security.CustomUserDetails
-import com.collederas.kroll.security.token.JwtTokenService
-import com.collederas.kroll.user.UserEntity
+import com.collederas.kroll.security.jwt.JwtTokenService
+import com.collederas.kroll.user.AppUser
+import com.collederas.kroll.user.AuthService
+import com.collederas.kroll.user.AuthUserDetails
 import io.mockk.*
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
-import org.mockito.ArgumentMatchers.any
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.core.Authentication
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -26,8 +26,8 @@ class AuthServiceTests {
     @AfterEach
     fun tearDown() = clearAllMocks()
 
-    private fun fakePrincipal(): CustomUserDetails {
-        val user = UserEntity(
+    private fun fakePrincipal(): AuthUserDetails {
+        val user = AppUser(
             id = UUID.randomUUID(),
             email = "user@example.com",
             username = "testUser",
@@ -35,7 +35,7 @@ class AuthServiceTests {
             createdAt = Instant.now(),
             updatedAt = Instant.now()
         )
-        return CustomUserDetails(user)
+        return AuthUserDetails(user)
     }
 
     private fun authenticationWith(principal: Any): Authentication {

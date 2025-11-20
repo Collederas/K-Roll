@@ -1,7 +1,6 @@
-package com.collederas.kroll.auth
+package com.collederas.kroll.user
 
-import com.collederas.kroll.security.CustomUserDetails
-import com.collederas.kroll.security.token.JwtTokenService
+import com.collederas.kroll.security.jwt.JwtTokenService
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.stereotype.Service
@@ -14,7 +13,7 @@ class AuthService(
     fun login(usernameOrEmail: String, password: String): String {
         val auth = UsernamePasswordAuthenticationToken(usernameOrEmail, password)
         val authentication = authManager.authenticate(auth)
-        val principal = authentication.principal as CustomUserDetails
+        val principal = authentication.principal as AuthUserDetails
         return jwtService.generateToken(principal.getId(), principal.username)
     }
 }

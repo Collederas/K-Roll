@@ -1,7 +1,6 @@
-package com.collederas.kroll.security
+package com.collederas.kroll.security.jwt
 
-import com.collederas.kroll.security.token.JwtTokenService
-import com.collederas.kroll.security.CustomUserDetailsService
+import com.collederas.kroll.user.AuthUserDetailsService
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -18,7 +17,7 @@ import org.springframework.web.filter.OncePerRequestFilter
 @Component
 class JwtAuthFilter(
     private val jwtService: JwtTokenService,
-    private val userDetailsService: CustomUserDetailsService
+    private val userDetailsService: AuthUserDetailsService
 ) : OncePerRequestFilter() {
 
     override fun doFilterInternal(

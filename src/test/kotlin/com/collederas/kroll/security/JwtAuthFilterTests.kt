@@ -1,8 +1,10 @@
 package com.collederas.kroll.security
 
-import com.collederas.kroll.security.token.JwtTokenService
-import com.collederas.kroll.security.CustomUserDetailsService
-import com.collederas.kroll.user.UserEntity
+import com.collederas.kroll.user.AuthUserDetails
+import com.collederas.kroll.user.AuthUserDetailsService
+import com.collederas.kroll.security.jwt.JwtAuthFilter
+import com.collederas.kroll.security.jwt.JwtTokenService
+import com.collederas.kroll.user.AppUser
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
@@ -35,7 +37,7 @@ class FilterTestController {
 
     @GetMapping("/protected")
     fun protected(authentication: Authentication?): String {
-        val p = authentication?.principal as? CustomUserDetails ?: return "none"
+        val p = authentication?.principal as? AuthUserDetails ?: return "none"
         return p.getId().toString()
     }
 
@@ -70,10 +72,10 @@ class JwtAuthFilterTests {
     lateinit var jwtService: JwtTokenService
 
     @MockitoBean
-    lateinit var userDetailsService: CustomUserDetailsService
+    lateinit var userDetailsService: AuthUserDetailsService
 
-    private fun userDetails(id: UUID): CustomUserDetails {
-        val user = UserEntity(
+    private fun userDetails(id: UUID): AuthUserDetails {
+        val user = AppUser(
             id = id,
             email = "test@example.com",
             username = "testuser",
@@ -81,7 +83,7 @@ class JwtAuthFilterTests {
             createdAt = Instant.now(),
             updatedAt = Instant.now()
         )
-        return CustomUserDetails(user)
+        return AuthUserDetails(user)
     }
 
     @Test

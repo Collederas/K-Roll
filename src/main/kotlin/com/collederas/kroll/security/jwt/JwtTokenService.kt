@@ -1,4 +1,4 @@
-package com.collederas.kroll.security.token
+package com.collederas.kroll.security.jwt
 
 import io.jsonwebtoken.JwtException
 import io.jsonwebtoken.Jwts

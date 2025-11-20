@@ -1,8 +1,8 @@
 package com.collederas.kroll.security
 
-import com.collederas.kroll.auth.AuthUserDetailsService
-import com.collederas.kroll.auth.jwt.JwtAuthEntryPoint
-import com.collederas.kroll.auth.jwt.JwtAuthFilter
+import com.collederas.kroll.user.AuthUserDetailsService
+import com.collederas.kroll.security.jwt.JwtAuthEntryPoint
+import com.collederas.kroll.security.jwt.JwtAuthFilter
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.authentication.AuthenticationManager

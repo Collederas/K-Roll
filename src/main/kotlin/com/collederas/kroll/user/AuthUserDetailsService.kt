@@ -1,16 +1,15 @@
-package com.collederas.kroll.security
+package com.collederas.kroll.user
 
-import com.collederas.kroll.user.UserRepository
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.core.userdetails.UsernameNotFoundException
 import org.springframework.stereotype.Service
-import java.util.UUID
+import java.util.*
 
 @Service
-class CustomUserDetailsService(
-    private val userRepository: UserRepository
+class AuthUserDetailsService(
+    private val appUserRepository: AppUserRepository
 ) : UserDetailsService {
 
     /**
@@ -24,14 +23,15 @@ class CustomUserDetailsService(
      *
      */
     override fun loadUserByUsername(identifier: String): UserDetails {
-        val userByEmail = userRepository.findByEmail(identifier)
+
+        val userByEmail = appUserRepository.findByEmail(identifier)
         if (userByEmail != null) {
-            return CustomUserDetails(userByEmail)
+            return AuthUserDetails(userByEmail)
         }
 
-        val userByUsername = userRepository.findByUsername(identifier)
+        val userByUsername = appUserRepository.findByUsername(identifier)
         if (userByUsername != null) {
-            return CustomUserDetails(userByUsername)
+            return AuthUserDetails(userByUsername)
         }
 
         throw UsernameNotFoundException("User not found: $identifier")
@@ -42,8 +42,8 @@ class CustomUserDetailsService(
      * This is the preferred method for JWT authentication.
      */
     fun loadUserById(id: UUID): UserDetails {
-        val user = userRepository.findByIdOrNull(id)
+        val user = appUserRepository.findByIdOrNull(id)
             ?: throw UsernameNotFoundException("User not found (by ID): $id")
-        return CustomUserDetails(user)
+        return AuthUserDetails(user)
     }
 }

@@ -1,6 +1,6 @@
 package com.collederas.kroll.remoteconfig.project
 
-import com.collederas.kroll.user.UserEntity
+import com.collederas.kroll.user.AppUser
 import jakarta.persistence.*
 import java.time.Instant
 import java.util.*
@@ -15,7 +15,7 @@ class ProjectEntity (
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id", nullable = false)
-    val owner: UserEntity,
+    val owner: AppUser,
 
     @Column(name = "name", nullable = false)
     val name: String,
