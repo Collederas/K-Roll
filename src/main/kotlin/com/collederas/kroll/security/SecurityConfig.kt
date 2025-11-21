@@ -1,6 +1,5 @@
 package com.collederas.kroll.security
 
-import com.collederas.kroll.user.AuthUserDetailsService
 import com.collederas.kroll.security.jwt.JwtAuthEntryPoint
 import com.collederas.kroll.security.jwt.JwtAuthFilter
 import org.springframework.context.annotation.Bean
@@ -46,6 +45,7 @@ class SecurityConfig (
             .authorizeHttpRequests {
                 it.requestMatchers(
                     "/auth/login",
+                    "/auth/refresh",
                     "/client/**",
                     "/error"
                 )

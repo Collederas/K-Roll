@@ -1,13 +1,11 @@
 package com.collederas.kroll.security
 
-import com.collederas.kroll.user.AuthUserDetails
-import com.collederas.kroll.user.AuthUserDetailsService
 import com.collederas.kroll.user.AppUser
 import com.collederas.kroll.user.AppUserRepository
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertInstanceOf
 import org.junit.jupiter.api.assertThrows
@@ -16,7 +14,7 @@ import java.time.Instant
 import java.util.Optional
 import java.util.UUID
 
-class CustomUserDetailsServiceTests {
+class AuthUserDetailsServiceTests {
     private val appUserRepository: AppUserRepository = mockk()
     private val userDetailsService = AuthUserDetailsService(appUserRepository)
 
@@ -41,7 +39,7 @@ class CustomUserDetailsServiceTests {
         val userDetails = userDetailsService.loadUserById(userId)
 
         assertInstanceOf<AuthUserDetails>(userDetails)
-        Assertions.assertEquals(mockUser.username, userDetails.username)
+        assertEquals(mockUser.username, userDetails.username)
 
         verify(exactly = 1) { appUserRepository.findById(userId) }
     }
@@ -67,7 +65,7 @@ class CustomUserDetailsServiceTests {
 
         val userDetails = userDetailsService.loadUserByUsername(inputEmail)
 
-        Assertions.assertEquals(existingUser.username, userDetails.username)
+        assertEquals(existingUser.username, userDetails.username)
 
         // Ensure we stopped early and didn't check username unnecessarily.
         verify(exactly = 1) { appUserRepository.findByEmail(inputEmail) }
@@ -87,7 +85,7 @@ class CustomUserDetailsServiceTests {
 
         val userDetails = userDetailsService.loadUserByUsername(inputUsername)
 
-        Assertions.assertEquals(existingUser.username, userDetails.username)
+        assertEquals(existingUser.username, userDetails.username)
 
         verify(exactly = 1) { appUserRepository.findByEmail(inputUsername) }
         verify(exactly = 1) { appUserRepository.findByUsername(inputUsername) }

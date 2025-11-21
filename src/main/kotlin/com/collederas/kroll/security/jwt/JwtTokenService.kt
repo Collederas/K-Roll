@@ -20,11 +20,11 @@ data class JwtProperties @ConstructorBinding constructor(
 
 
 @Service
-class JwtTokenService(private val props: JwtProperties) {
+class JwtTokenService(private val properties: JwtProperties) {
     private val logger: Logger = LoggerFactory.getLogger(javaClass)
 
     private val jwtSigningKey = Keys.hmacShaKeyFor(
-        Decoders.BASE64.decode(props.secret)
+        Decoders.BASE64.decode(properties.secret)
     )
 
     /**
@@ -35,16 +35,17 @@ class JwtTokenService(private val props: JwtProperties) {
      */
     fun generateToken(userId: UUID, username: String): String {
         val now = Date()
-        val expiryDate = Date(now.time + props.expiration.toMillis())
+        val expiryDate = Date(now.time + properties.expiration.toMillis())
         val signingKey = jwtSigningKey
 
-        return Jwts.builder()
+        val token = Jwts.builder()
             .subject(userId.toString())
             .claim("username", username)
             .issuedAt(now)
             .expiration(expiryDate)
             .signWith(signingKey, Jwts.SIG.HS256)
             .compact()
+        return token
     }
 
     /**

@@ -1,6 +1,6 @@
 package com.collederas.kroll.security.jwt
 
-import org.assertj.core.api.Assertions
+import org.assertj.core.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.springframework.test.context.ActiveProfiles
 import java.time.Duration
@@ -26,7 +26,7 @@ class JwtServiceTests {
 
         val extracted: UUID? = jwtService.validateAndGetUserId(token)
 
-        Assertions.assertThat(extracted).isEqualTo(userId)
+        assertThat(extracted).isEqualTo(userId)
     }
 
     @Test
@@ -36,7 +36,7 @@ class JwtServiceTests {
 
         val token = jwtService.validateAndGetUserId(jwtService.generateToken(userId, "testUser"))
 
-        Assertions.assertThat(token).isNull()
+        assertThat(token).isNull()
     }
 
     @Test
@@ -52,6 +52,6 @@ class JwtServiceTests {
         val maliciousToken = maliciousService.generateToken(userId, "testUser")
         val result = krollJwtService.validateAndGetUserId(maliciousToken)
 
-        Assertions.assertThat(result).isNull()
+        assertThat(result).isNull()
     }
 }

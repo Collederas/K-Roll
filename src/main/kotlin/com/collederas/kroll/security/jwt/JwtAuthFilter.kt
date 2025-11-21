@@ -1,6 +1,6 @@
 package com.collederas.kroll.security.jwt
 
-import com.collederas.kroll.user.AuthUserDetailsService
+import com.collederas.kroll.security.AuthUserDetailsService
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse

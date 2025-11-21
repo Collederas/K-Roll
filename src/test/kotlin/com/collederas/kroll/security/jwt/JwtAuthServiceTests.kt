@@ -1,41 +1,38 @@
-package com.collederas.kroll.auth
+package com.collederas.kroll.security.jwt
 
-import com.collederas.kroll.security.jwt.JwtTokenService
-import com.collederas.kroll.user.AppUser
-import com.collederas.kroll.user.AuthService
-import com.collederas.kroll.user.AuthUserDetails
-import io.mockk.*
+import com.collederas.kroll.security.AuthUserDetails
+import com.collederas.kroll.utils.AuthUserFactory
+import com.collederas.kroll.utils.UserFactory
+import io.mockk.clearAllMocks
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
 import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.Test
-import org.springframework.security.authentication.AuthenticationManager
-import org.springframework.security.core.Authentication
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
+import org.junit.jupiter.api.Test
+import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
+import org.springframework.security.core.Authentication
 import org.springframework.security.core.userdetails.UsernameNotFoundException
-import java.time.Instant
-import java.util.*
 
-class AuthServiceTests {
+class JwtAuthServiceTests {
     private val authManager: AuthenticationManager = mockk()
     private val jwtTokenService: JwtTokenService = mockk()
+    private val refreshTokenService: RefreshTokenService = mockk()
 
-    private val authService = AuthService(authManager, jwtTokenService)
+    private val authService = JwtAuthService(
+        authManager, jwtTokenService, refreshTokenService
+    )
 
     @AfterEach
     fun tearDown() = clearAllMocks()
 
-    private fun fakePrincipal(): AuthUserDetails {
-        val user = AppUser(
-            id = UUID.randomUUID(),
-            email = "user@example.com",
-            username = "testUser",
-            passwordHash = "hash",
-            createdAt = Instant.now(),
-            updatedAt = Instant.now()
-        )
-        return AuthUserDetails(user)
+    private fun fakePrincipal(username: String?): AuthUserDetails {
+        val username = username ?: "user@example.com"
+        val principal = UserFactory.create(username = username)
+        return AuthUserFactory.create(principal)
     }
 
     private fun authenticationWith(principal: Any): Authentication {
@@ -45,16 +42,20 @@ class AuthServiceTests {
     }
 
     @Test
-    fun `valid login returns token`() {
-        val principal = fakePrincipal()
-        val token = "jwt.token"
+    fun `valid login returns access and refresh token`() {
+        val principal = fakePrincipal("testUser")
+        val accessToken = "accessToken"
+        val refreshToken = "refreshToken"
 
         every { authManager.authenticate(any()) } returns authenticationWith(principal)
-        every { jwtTokenService.generateToken(principal.getId(), "testUser") } returns token
+        every { jwtTokenService.generateToken(principal.getId(), "testUser") } returns accessToken
+        every { refreshTokenService.rotateAllTokensFor(principal.getUser()) } returns refreshToken
 
-        val result = authService.login("user@example.com", "password")
+        val (resultAccess, resultRefresh) = authService.login("user@example.com", "password")
 
-        assertEquals(token, result)
+        assertEquals(accessToken, resultAccess)
+        assertEquals(refreshToken, resultRefresh)
+
         verify(exactly = 1) {
             authManager.authenticate(
                 withArg { auth ->
@@ -67,9 +68,25 @@ class AuthServiceTests {
     }
 
     @Test
+    fun `refreshToken returns new access and refresh`() {
+        val user = UserFactory.create()
+        val newRefresh = "newRefresh"
+        val newAccess = "newAccess"
+
+        every { refreshTokenService.rotateFromRefresh("old") } returns (user to newRefresh)
+        every { jwtTokenService.generateToken(user.id, user.username) } returns newAccess
+
+        val (access, refresh) = authService.refreshToken("old")
+
+        assert(access == newAccess)
+        assert(refresh == newRefresh)
+    }
+
+    @Test
     fun `bad credentials propagate`() {
         every { authManager.authenticate(any()) } throws BadCredentialsException(
-            "bad")
+            "bad"
+        )
 
         assertThrows(BadCredentialsException::class.java) {
             authService.login("user@example.com", "wrong")
@@ -79,7 +96,8 @@ class AuthServiceTests {
     @Test
     fun `unknown user propagates`() {
         every { authManager.authenticate(any()) } throws UsernameNotFoundException(
-            "user does not exist")
+            "user does not exist"
+        )
 
         assertThrows(UsernameNotFoundException::class.java) {
             authService.login("nope@example.com", "pwd")

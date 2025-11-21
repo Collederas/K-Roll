@@ -1,15 +1,16 @@
 package com.collederas.kroll.security
 
-import com.collederas.kroll.user.AuthUserDetails
-import com.collederas.kroll.user.AuthUserDetailsService
+import com.collederas.kroll.security.jwt.JwtAuthService
 import com.collederas.kroll.security.jwt.JwtTokenService
 import com.collederas.kroll.user.AppUser
 import org.junit.jupiter.api.Test
+import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
+import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.client.match.MockRestRequestMatchers.header
@@ -22,15 +23,8 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
-@RestController
-@RequestMapping("/admin")
-class ProtectedTestController()
-{
-    @GetMapping("/projects")
-    fun projects() = "projects here"
-}
 
 @RestController
 @RequestMapping("/client")
@@ -54,8 +48,14 @@ class SecurityConfigTests {
     @MockitoBean
     lateinit var userDetailsService: AuthUserDetailsService
 
+    @MockitoBean
+    lateinit var authService: JwtAuthService
+
     @Test
     fun `public route - login accessible without token`() {
+        `when`(authService.login(anyString(), anyString()))
+            .thenThrow(BadCredentialsException("Invalid credentials"))
+
         mvc.post("/auth/login") {
             contentType = MediaType.APPLICATION_JSON
             content = """{"identifier":"x","password":"y"}"""
@@ -77,7 +77,8 @@ class SecurityConfigTests {
 
         mvc.perform(
             get("/admin/projects")
-            .header("Authorization", "Bearer BAD"))
+                .header("Authorization", "Bearer BAD")
+        )
             .andExpect { status().isUnauthorized }
     }
 
@@ -87,7 +88,7 @@ class SecurityConfigTests {
 
         mvc.perform(
             get("/admin/projects")
-                .header ("Authorization", "Bearer BAD")
+                .header("Authorization", "Bearer BAD")
         )
             .andExpect {
                 status().isUnauthorized
@@ -116,8 +117,31 @@ class SecurityConfigTests {
             get("/admin/projects")
                 .header("Authorization", "Bearer jwt.token")
         )
-            .andExpect (
+            .andExpect(
                 status().isOk
             )
+    }
+
+    @Test
+    fun `public route - refresh accessible without access token`() {
+        // We mock the service so the controller returns 200 OK
+        // ensuring the Security Filter Chain let the request through.
+        `when`(authService.refreshToken(anyString())).thenReturn("newAccess" to "newRefresh")
+
+        mvc.post("/auth/refresh") {
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"refresh":"valid-refresh-token"}"""
+        }
+            .andExpect {
+                status { isOk() }
+            }
+    }
+
+    @Test
+    fun `protected route - logout requires authentication`() {
+        mvc.post("/auth/logout")
+            .andExpect {
+                status { isUnauthorized() }
+            }
     }
 }

@@ -1,0 +1,95 @@
+package com.collederas.kroll.security.jwt
+
+import com.collederas.kroll.user.AppUser
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
+import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager
+import org.junit.jupiter.api.Test
+import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Assertions.assertThrows
+import org.springframework.dao.DataIntegrityViolationException
+import java.time.Instant
+import java.util.UUID
+
+@DataJpaTest
+class RefreshTokenRepositoryTest {
+
+    @Autowired
+    lateinit var repository: RefreshTokenRepository
+
+    @Autowired
+    lateinit var entityManager: TestEntityManager
+
+    @Test
+    fun `findByToken returns null when token does not exist`() {
+        val token = "nonexistent-token"
+        val result = repository.findByToken(token)
+        assertThat(result).isNull()
+    }
+
+    @Test
+    fun `findByToken returns token when it exists`() {
+        val user = AppUser(
+            id = UUID.randomUUID(),
+            email = "test@example.com",
+            username = "testuser",
+            passwordHash = "hash",
+            createdAt = Instant.now(),
+            updatedAt = Instant.now()
+        )
+        entityManager.persist(user)
+
+        val token = RefreshTokenEntity(user, "token", Instant.now(), Instant.now(), Instant.now())
+        entityManager.persist(token)
+        entityManager.flush()
+
+        val result = repository.findByToken("token")
+        assertThat(result).isNotNull()
+        assertThat(result?.token).isEqualTo("token")
+    }
+
+    @Test
+    fun `deleteAllByOwner removes all tokens for specific user`() {
+        val user = AppUser(
+            id = UUID.randomUUID(),
+            email = "test@example.com",
+            username = "testuser",
+            passwordHash = "hash",
+            createdAt = Instant.now(),
+            updatedAt = Instant.now()
+        )
+        entityManager.persist(user)
+
+        val token1 = RefreshTokenEntity(user, "token1", Instant.now(), Instant.now(), Instant.now())
+        val token2 = RefreshTokenEntity(user, "token2", Instant.now(), Instant.now(), Instant.now())
+        entityManager.persist(token1)
+        entityManager.persist(token2)
+        entityManager.flush()
+
+        repository.deleteAllByOwner(user)
+
+        assertThat(repository.findAll()).isEmpty()
+    }
+
+    @Test
+    fun `throws DataIntegrityViolationException when saving duplicate token`() {
+        val user = AppUser(
+            id = UUID.randomUUID(),
+            email = "test2@example.com",
+            username = "testuser2",
+            passwordHash = "hash",
+            createdAt = Instant.now(),
+            updatedAt = Instant.now()
+        )
+        entityManager.persist(user)
+
+        val token1 = RefreshTokenEntity(user, "same-token", Instant.now(), Instant.now(), Instant.now())
+        repository.save(token1)
+
+        val token2 = RefreshTokenEntity(user, "same-token", Instant.now(), Instant.now(), Instant.now())
+
+        assertThrows(DataIntegrityViolationException::class.java) {
+            repository.saveAndFlush(token2)
+        }
+    }
+}

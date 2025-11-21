@@ -1,7 +1,5 @@
 package com.collederas.kroll.security
 
-import com.collederas.kroll.user.AuthUserDetails
-import com.collederas.kroll.user.AuthUserDetailsService
 import com.collederas.kroll.security.jwt.JwtAuthFilter
 import com.collederas.kroll.security.jwt.JwtTokenService
 import com.collederas.kroll.user.AppUser
@@ -45,23 +43,8 @@ class FilterTestController {
     fun echoAuth(authentication: Authentication?) = authentication?.name ?: "none"
 }
 
-@TestConfiguration
-class TestSecurityConfig {
-    @Bean
-    fun filterChain(
-        http: HttpSecurity,
-        jwtAuthFilter: JwtAuthFilter
-    ): SecurityFilterChain {
-        http
-            .csrf { it.disable() }
-            .authorizeHttpRequests { it.anyRequest().permitAll() }
-            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter::class.java)
-        return http.build()
-    }
-}
-
 @WebMvcTest(FilterTestController::class)
-@Import(TestSecurityConfig::class, JwtAuthFilter::class)
+@Import( JwtAuthFilter::class)
 @ActiveProfiles("test")
 class JwtAuthFilterTests {
 
@@ -73,6 +56,18 @@ class JwtAuthFilterTests {
 
     @MockitoBean
     lateinit var userDetailsService: AuthUserDetailsService
+
+    @TestConfiguration
+    class TestSecurityConfig {
+        @Bean
+        fun securityFilterChain(http: HttpSecurity, jwtFilter: JwtAuthFilter): SecurityFilterChain {
+            return http
+                .csrf { it.disable() }
+                .authorizeHttpRequests { it.anyRequest().permitAll() }
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter::class.java)
+                .build()
+        }
+    }
 
     private fun userDetails(id: UUID): AuthUserDetails {
         val user = AppUser(

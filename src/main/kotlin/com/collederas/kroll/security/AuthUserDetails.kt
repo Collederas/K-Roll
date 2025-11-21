@@ -1,5 +1,6 @@
-package com.collederas.kroll.user
+package com.collederas.kroll.security
 
+import com.collederas.kroll.user.AppUser
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
 import java.util.*

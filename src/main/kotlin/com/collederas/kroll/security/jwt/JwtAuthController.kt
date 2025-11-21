@@ -1,7 +1,10 @@
-package com.collederas.kroll.user
+package com.collederas.kroll.security.jwt
 
+import com.collederas.kroll.security.AuthUserDetails
 import com.collederas.kroll.user.dto.BasicUserDto
 import jakarta.validation.constraints.NotBlank
+import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.GetMapping
@@ -13,12 +16,26 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/auth")
 @Validated
-class AuthController(
-    private val authService: AuthService
+class JwtAuthController(
+    private val authService: JwtAuthService
 ) {
     @PostMapping("/login")
     fun login(@RequestBody request: LoginRequest): LoginResponse {
-        return LoginResponse(authService.login(request.identifier, request.password))
+        val (accessToken, refreshToken) = authService.login(request.identifier, request.password)
+        return LoginResponse(access = accessToken, refresh = refreshToken)
+    }
+
+    @PostMapping("/refresh")
+    fun refresh(@RequestBody request: RefreshTokenRequest): LoginResponse
+    {
+        val (accessToken, refreshToken) = authService.refreshToken(request.refresh)
+        return LoginResponse(access = accessToken, refresh = refreshToken)
+    }
+
+    @PostMapping("/logout")
+    fun logout(@AuthenticationPrincipal principal: AuthUserDetails) : ResponseEntity<Any> {
+        authService.revokeTokenFor(principal.getUser())
+        return ResponseEntity.noContent().build()
     }
 
     @GetMapping("/me")
@@ -37,6 +54,10 @@ data class LoginRequest(
 )
 
 data class LoginResponse(
-    val token: String
-    // TODO: refresh token
+    val access: String,
+    val refresh: String
+)
+
+data class RefreshTokenRequest(
+    val refresh: String
 )

@@ -1,5 +1,6 @@
-package com.collederas.kroll.user
+package com.collederas.kroll.security
 
+import com.collederas.kroll.user.AppUserRepository
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.core.userdetails.UserDetailsService
