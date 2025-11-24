@@ -13,19 +13,21 @@ import java.time.Duration
 import java.util.*
 
 @ConfigurationProperties(prefix = "auth.jwt")
-data class JwtProperties @ConstructorBinding constructor(
-    val secret: String,
-    val expiration: Duration = Duration.ofHours(1)
-)
-
+data class JwtProperties
+    @ConstructorBinding
+    constructor(
+        val secret: String,
+        val expiration: Duration = Duration.ofHours(1),
+    )
 
 @Service
 class JwtTokenService(private val properties: JwtProperties) {
     private val logger: Logger = LoggerFactory.getLogger(javaClass)
 
-    private val jwtSigningKey = Keys.hmacShaKeyFor(
-        Decoders.BASE64.decode(properties.secret)
-    )
+    private val jwtSigningKey =
+        Keys.hmacShaKeyFor(
+            Decoders.BASE64.decode(properties.secret),
+        )
 
     /**
      * Generate a new JWT Token with username as optional claim.
@@ -33,18 +35,22 @@ class JwtTokenService(private val properties: JwtProperties) {
      * more suited for `sub` claim).
      * @return String the JWT
      */
-    fun generateToken(userId: UUID, username: String): String {
+    fun generateToken(
+        userId: UUID,
+        username: String,
+    ): String {
         val now = Date()
         val expiryDate = Date(now.time + properties.expiration.toMillis())
         val signingKey = jwtSigningKey
 
-        val token = Jwts.builder()
-            .subject(userId.toString())
-            .claim("username", username)
-            .issuedAt(now)
-            .expiration(expiryDate)
-            .signWith(signingKey, Jwts.SIG.HS256)
-            .compact()
+        val token =
+            Jwts.builder()
+                .subject(userId.toString())
+                .claim("username", username)
+                .issuedAt(now)
+                .expiration(expiryDate)
+                .signWith(signingKey, Jwts.SIG.HS256)
+                .compact()
         return token
     }
 
@@ -56,11 +62,12 @@ class JwtTokenService(private val properties: JwtProperties) {
         return try {
             if (token.isBlank()) return null
 
-            val claims = Jwts.parser()
-                .verifyWith(jwtSigningKey)
-                .build()
-                .parseSignedClaims(token)
-                .payload
+            val claims =
+                Jwts.parser()
+                    .verifyWith(jwtSigningKey)
+                    .build()
+                    .parseSignedClaims(token)
+                    .payload
 
             UUID.fromString(claims.subject)
         } catch (e: JwtException) {

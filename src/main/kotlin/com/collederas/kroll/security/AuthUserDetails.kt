@@ -6,11 +6,12 @@ import org.springframework.security.core.userdetails.UserDetails
 import java.util.*
 
 class AuthUserDetails(
-    private val user: AppUser
+    private val user: AppUser,
 ) : UserDetails {
-
     fun getId(): UUID = user.id
+
     fun getEmail(): String = user.email
+
     fun getUser(): AppUser = user
 
     override fun getAuthorities(): Collection<GrantedAuthority> {

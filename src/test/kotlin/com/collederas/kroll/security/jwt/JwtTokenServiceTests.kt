@@ -11,10 +11,11 @@ class JwtServiceTests {
     private val SECRET = "bzjKq1tb2/7FmHzg51eH8ZPqfm4twB4suaT2H8CYm8A="
 
     private fun newService(exp: Duration = Duration.ofHours(1)): JwtTokenService {
-        val props = JwtProperties(
-            secret = SECRET,
-            expiration = exp
-        )
+        val props =
+            JwtProperties(
+                secret = SECRET,
+                expiration = exp,
+            )
         return JwtTokenService(props)
     }
 
@@ -43,10 +44,11 @@ class JwtServiceTests {
     fun `invalid signature must fail validation`() {
         val userId: UUID = UUID.randomUUID()
         val krollJwtService = newService()
-        val invalidProps = JwtProperties(
-            secret = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
-            expiration = Duration.ofHours(1)
-        )
+        val invalidProps =
+            JwtProperties(
+                secret = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+                expiration = Duration.ofHours(1),
+            )
 
         val maliciousService = JwtTokenService(invalidProps)
         val maliciousToken = maliciousService.generateToken(userId, "testUser")

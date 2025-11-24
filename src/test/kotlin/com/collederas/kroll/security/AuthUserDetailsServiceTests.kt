@@ -25,13 +25,12 @@ class AuthUserDetailsServiceTests {
             username = "test-user-$id",
             passwordHash = "some-hashed-password",
             createdAt = Instant.now(),
-            updatedAt = Instant.now()
+            updatedAt = Instant.now(),
         )
     }
 
     @Test
     fun `existing userId should return a valid UserDetails object`() {
-
         val userId = UUID.randomUUID()
         val mockUser = createTestUser(userId)
         every { appUserRepository.findById(userId) } returns Optional.of(mockUser)
@@ -57,7 +56,6 @@ class AuthUserDetailsServiceTests {
 
     @Test
     fun `finding user by existing email should return a valid UserDetails object and stop early`() {
-
         val existingUser = createTestUser(UUID.randomUUID())
         val inputEmail = existingUser.email
 

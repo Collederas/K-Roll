@@ -12,7 +12,7 @@ object UserFactory {
         email: String = "test@example.com",
         passwordHash: String = "\$2a\$10\$fakehash",
         createdAt: Instant = Instant.now(),
-        updatedAt: Instant = createdAt
+        updatedAt: Instant = createdAt,
     ): AppUser {
         return AppUser(
             id = id,
@@ -20,17 +20,13 @@ object UserFactory {
             email = email,
             passwordHash = passwordHash,
             createdAt = createdAt,
-            updatedAt = updatedAt
+            updatedAt = updatedAt,
         )
     }
-
 }
 
 object AuthUserFactory {
-    fun create(
-        user: AppUser
-    ): AuthUserDetails
-    {
+    fun create(user: AppUser): AuthUserDetails {
         return AuthUserDetails(user)
     }
 }

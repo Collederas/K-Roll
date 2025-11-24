@@ -10,26 +10,19 @@ import java.util.*
 @Entity
 @Table(name = "users")
 class AppUser(
-
     @Id
     @Column(nullable = false)
     val id: UUID,
-
     @Column(name = "email", nullable = false, unique = true)
     val email: String,
-
     @Column(name = "username", nullable = false, unique = true)
     val username: String,
-
     @Column(name = "password_hash", nullable = false)
     val passwordHash: String,
-
     @Column(name = "created_at", nullable = false)
     val createdAt: Instant,
-
     @Column(name = "updated_at", nullable = false)
-    val updatedAt: Instant
-
+    val updatedAt: Instant,
 ) {
     protected constructor() : this(
         UUID(0, 0),
@@ -37,6 +30,6 @@ class AppUser(
         "",
         "",
         Instant.EPOCH,
-        Instant.EPOCH
+        Instant.EPOCH,
     )
 }

@@ -25,7 +25,6 @@ import org.springframework.web.bind.annotation.RestController
 import java.time.Instant
 import java.util.*
 
-
 @RestController
 @RequestMapping("/client")
 class PublicClientTestController {
@@ -33,12 +32,10 @@ class PublicClientTestController {
     fun ping() = "pong"
 }
 
-
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 class SecurityConfigTests {
-
     @Autowired
     lateinit var mvc: MockMvc
 
@@ -77,7 +74,7 @@ class SecurityConfigTests {
 
         mvc.perform(
             get("/admin/projects")
-                .header("Authorization", "Bearer BAD")
+                .header("Authorization", "Bearer BAD"),
         )
             .andExpect { status().isUnauthorized }
     }
@@ -88,7 +85,7 @@ class SecurityConfigTests {
 
         mvc.perform(
             get("/admin/projects")
-                .header("Authorization", "Bearer BAD")
+                .header("Authorization", "Bearer BAD"),
         )
             .andExpect {
                 status().isUnauthorized
@@ -99,26 +96,27 @@ class SecurityConfigTests {
     @Test
     fun `protected route - valid token returns 200`() {
         val id = UUID.randomUUID()
-        val details = AuthUserDetails(
-            AppUser(
-                id = id,
-                email = "test@example.com",
-                username = "test",
-                passwordHash = "xyz",
-                createdAt = Instant.now(),
-                updatedAt = Instant.now()
+        val details =
+            AuthUserDetails(
+                AppUser(
+                    id = id,
+                    email = "test@example.com",
+                    username = "test",
+                    passwordHash = "xyz",
+                    createdAt = Instant.now(),
+                    updatedAt = Instant.now(),
+                ),
             )
-        )
 
         `when`(userDetailsService.loadUserById(id)).thenReturn(details)
         `when`(jwtService.validateAndGetUserId("jwt.token")).thenReturn(id)
 
         mvc.perform(
             get("/admin/projects")
-                .header("Authorization", "Bearer jwt.token")
+                .header("Authorization", "Bearer jwt.token"),
         )
             .andExpect(
-                status().isOk
+                status().isOk,
             )
     }
 

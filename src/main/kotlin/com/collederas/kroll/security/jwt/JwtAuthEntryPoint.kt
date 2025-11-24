@@ -19,24 +19,25 @@ import org.springframework.stereotype.Component
  */
 @Component
 class JwtAuthEntryPoint(
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
 ) : AuthenticationEntryPoint {
     override fun commence(
         request: HttpServletRequest,
         response: HttpServletResponse,
-        authException: AuthenticationException?
+        authException: AuthenticationException?,
     ) {
         response.status = HttpServletResponse.SC_UNAUTHORIZED
         response.contentType = "application/json"
         response.setHeader("WWW-Authenticate", "Bearer")
 
-        val body = mapOf(
-            "timestamp" to System.currentTimeMillis(),
-            "status" to HttpServletResponse.SC_UNAUTHORIZED,
-            "error" to "Unauthorized",
-            "message" to (authException?.message ?: "Full authentication is required to access this resource"),
-            "path" to request.requestURI
-        )
+        val body =
+            mapOf(
+                "timestamp" to System.currentTimeMillis(),
+                "status" to HttpServletResponse.SC_UNAUTHORIZED,
+                "error" to "Unauthorized",
+                "message" to (authException?.message ?: "Full authentication is required to access this resource"),
+                "path" to request.requestURI,
+            )
 
         response.writer.use {
             it.write(objectMapper.writeValueAsString(body))

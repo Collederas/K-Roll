@@ -11,15 +11,14 @@ import java.util.Base64
 
 @ConfigurationProperties(prefix = "auth.refresh")
 data class RefreshTokenProperties(
-    val expiration: Duration = Duration.ofDays(30)
+    val expiration: Duration = Duration.ofDays(30),
 )
 
 @Service
 class RefreshTokenService(
     private val repository: RefreshTokenRepository,
-    private val properties: RefreshTokenProperties
+    private val properties: RefreshTokenProperties,
 ) {
-
     private fun generateSecureToken(bytes: Int = 32): String {
         val buffer = ByteArray(bytes)
         SecureRandom().nextBytes(buffer)
@@ -30,13 +29,12 @@ class RefreshTokenService(
         val now = Instant.now()
         val tokenValue = generateSecureToken()
 
-        val token = RefreshTokenEntity(
-            owner = user,
-            token = tokenValue,
-            createdAt = now,
-            updatedAt = now,
-            expiresAt = now.plus(properties.expiration)
-        )
+        val token =
+            RefreshTokenEntity(
+                owner = user,
+                token = tokenValue,
+                expiresAt = now.plus(properties.expiration),
+            )
 
         repository.save(token)
         return tokenValue
@@ -66,8 +64,9 @@ class RefreshTokenService(
 
     @Transactional
     fun consumeToken(tokenString: String): AppUser {
-        val token = repository.findByToken(tokenString)
-            ?: throw IllegalArgumentException("Invalid refresh token")
+        val token =
+            repository.findByToken(tokenString)
+                ?: throw IllegalArgumentException("Invalid refresh token")
 
         repository.delete(token)
 

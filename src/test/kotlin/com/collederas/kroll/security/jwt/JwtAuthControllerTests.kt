@@ -1,37 +1,38 @@
 package com.collederas.kroll.security.jwt
 
-import com.collederas.kroll.common.exception.GlobalExceptionHandler
-import com.collederas.kroll.security.AuthUserDetails
+import com.collederas.kroll.security.AuthUserDetailsService
+import com.collederas.kroll.security.SecurityConfig
+import com.collederas.kroll.utils.AuthUserFactory
 import com.collederas.kroll.utils.UserFactory
+import com.ninjasquad.springmockk.MockkBean // Requires springmockk dependency
 import io.mockk.every
-import io.mockk.mockk
 import io.mockk.verify
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
+import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
 import org.springframework.security.authentication.BadCredentialsException
-import org.springframework.security.authentication.TestingAuthenticationToken
-import org.springframework.security.core.context.SecurityContextHolder
-import org.springframework.security.web.method.annotation.AuthenticationPrincipalArgumentResolver
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.post
-import org.springframework.test.web.servlet.setup.MockMvcBuilders
 
+@WebMvcTest(JwtAuthController::class)
+@Import(SecurityConfig::class, JwtAuthFilter::class)
 class JwtAuthControllerTests {
+    @Autowired private lateinit var mockMvc: MockMvc
 
-    private lateinit var mvc: MockMvc
+    @MockkBean(relaxed = true)
+    private lateinit var jwtTokenService: JwtTokenService
 
-    private val authService: JwtAuthService = mockk(relaxed = true)
+    @MockkBean(relaxed = true)
+    private lateinit var authService: JwtAuthService
 
-    @BeforeEach
-    fun setup() {
-        val controller = JwtAuthController(authService)
+    @MockkBean(relaxed = true)
+    private lateinit var userDetailsService: AuthUserDetailsService
 
-        mvc = MockMvcBuilders.standaloneSetup(controller)
-            .setCustomArgumentResolvers(AuthenticationPrincipalArgumentResolver())
-             .setControllerAdvice(GlobalExceptionHandler())
-            .build()
-    }
+    @MockkBean(relaxed = true)
+    private lateinit var jwtAuthEntryPoint: JwtAuthEntryPoint
 
     @Test
     fun `login with valid credentials returns valid tokens`() {
@@ -39,10 +40,11 @@ class JwtAuthControllerTests {
         val password = "password"
         every { authService.login(identifier, password) } returns ("access" to "refresh")
 
-        mvc.post("/auth/login") {
-            contentType = MediaType.APPLICATION_JSON
-            content = """{"identifier":"$identifier", "password":"$password"}"""
-        }
+        mockMvc
+            .post("/auth/login") {
+                contentType = MediaType.APPLICATION_JSON
+                content = """{"identifier":"$identifier", "password":"$password"}"""
+            }
             .andExpect {
                 status { isOk() }
                 jsonPath("$.access") { value("access") }
@@ -51,33 +53,27 @@ class JwtAuthControllerTests {
 
     @Test
     fun `logout returns 204`() {
-        val user = UserFactory.create()
-        val principal = AuthUserDetails(user)
+        val principalUser = UserFactory.create()
+        val principal = AuthUserFactory.create(principalUser)
 
-        val auth = TestingAuthenticationToken(principal, null)
-        SecurityContextHolder.getContext().authentication = auth
-
-        mvc.post("/auth/logout")
-            .andExpect {
-                status { isNoContent() }
-            }
+        mockMvc.post("/auth/logout") {
+            with(user(principal))
+        }.andExpect {
+            status { isNoContent() }
+        }
 
         verify { authService.revokeTokenFor(any()) }
-
-        SecurityContextHolder.clearContext()
     }
 
     @Test
     fun `login with invalid credentials returns 401`() {
         every { authService.login(any(), any()) } throws BadCredentialsException("Bad creds")
 
-        try {
-            mvc.post("/auth/login") {
+        mockMvc
+            .post("/auth/login") {
                 contentType = MediaType.APPLICATION_JSON
                 content = """{"identifier":"u", "password":"p"}"""
             }
-        } catch (e: Exception) {
-            assert(e.cause is BadCredentialsException)
-        }
+            .andExpect { status { isUnauthorized() } }
     }
 }

@@ -9,12 +9,12 @@ import java.util.UUID
 @Entity
 @Table(name = "projects")
 class ProjectEntity(
-    @Id @Column(nullable = false, unique = true, updatable = false) 
+    @Id @Column(nullable = false, unique = true, updatable = false)
     val id: UUID = UUID.randomUUID(),
-    
-    @Column(name = "name", nullable = false) 
+
+    @Column(name = "name", nullable = false)
     var name: String,
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id", nullable = false)
     var owner: AppUser,
@@ -23,7 +23,7 @@ class ProjectEntity(
     var createdAt: Instant = Instant.now()
 
     @Column(name = "updated_at", nullable = false)
-    var updatedAt: Instant = java.time.Instant.now()
+    var updatedAt: Instant = Instant.now()
 
     @PreUpdate
     fun onPreUpdate() {

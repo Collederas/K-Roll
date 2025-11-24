@@ -11,11 +11,10 @@ import java.util.*
 
 @Component
 @Profile("dev")
-class DatabaseSeeder(
+class DevDataSeeder(
     private val appUserRepository: AppUserRepository,
     private val passwordEncoder: PasswordEncoder,
 ) : CommandLineRunner {
-
     override fun run(vararg args: String?) {
         if (appUserRepository.count() == 0L) {
             seedTestUser()
@@ -32,14 +31,15 @@ class DatabaseSeeder(
         val hashedPassword = passwordEncoder.encode(rawPassword)
 
         val now = Instant.now()
-        val testUser = AppUser(
-            id = UUID.randomUUID(),
-            email = testEmail,
-            username = testUsername,
-            passwordHash = hashedPassword,
-            createdAt = now,
-            updatedAt = now
-        )
+        val testUser =
+            AppUser(
+                id = UUID.randomUUID(),
+                email = testEmail,
+                username = testUsername,
+                passwordHash = hashedPassword,
+                createdAt = now,
+                updatedAt = now,
+            )
 
         appUserRepository.save(testUser)
 

@@ -27,7 +27,6 @@ import org.springframework.web.bind.annotation.RestController
 import java.time.Instant
 import java.util.*
 
-
 @RestController
 class FilterTestController {
     @GetMapping("/open")
@@ -44,10 +43,9 @@ class FilterTestController {
 }
 
 @WebMvcTest(FilterTestController::class)
-@Import( JwtAuthFilter::class)
+@Import(JwtAuthFilter::class)
 @ActiveProfiles("test")
 class JwtAuthFilterTests {
-
     @Autowired
     lateinit var mockMvc: MockMvc
 
@@ -60,7 +58,10 @@ class JwtAuthFilterTests {
     @TestConfiguration
     class TestSecurityConfig {
         @Bean
-        fun securityFilterChain(http: HttpSecurity, jwtFilter: JwtAuthFilter): SecurityFilterChain {
+        fun securityFilterChain(
+            http: HttpSecurity,
+            jwtFilter: JwtAuthFilter,
+        ): SecurityFilterChain {
             return http
                 .csrf { it.disable() }
                 .authorizeHttpRequests { it.anyRequest().permitAll() }
@@ -70,14 +71,15 @@ class JwtAuthFilterTests {
     }
 
     private fun userDetails(id: UUID): AuthUserDetails {
-        val user = AppUser(
-            id = id,
-            email = "test@example.com",
-            username = "testuser",
-            passwordHash = "hash",
-            createdAt = Instant.now(),
-            updatedAt = Instant.now()
-        )
+        val user =
+            AppUser(
+                id = id,
+                email = "test@example.com",
+                username = "testuser",
+                passwordHash = "hash",
+                createdAt = Instant.now(),
+                updatedAt = Instant.now(),
+            )
         return AuthUserDetails(user)
     }
 
@@ -132,7 +134,7 @@ class JwtAuthFilterTests {
         mockMvc.perform(
             get("/echo-auth")
                 .with(authentication(original))
-                .header("Authorization", "Bearer $token")
+                .header("Authorization", "Bearer $token"),
         )
             .andExpect(status().isOk)
             .andExpect(content().string("existing"))

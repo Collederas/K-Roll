@@ -17,13 +17,12 @@ import org.springframework.web.filter.OncePerRequestFilter
 @Component
 class JwtAuthFilter(
     private val jwtService: JwtTokenService,
-    private val userDetailsService: AuthUserDetailsService
+    private val userDetailsService: AuthUserDetailsService,
 ) : OncePerRequestFilter() {
-
     override fun doFilterInternal(
         request: HttpServletRequest,
         response: HttpServletResponse,
-        filterChain: FilterChain
+        filterChain: FilterChain,
     ) {
         // If authentication exists, just use it
         val existing = SecurityContextHolder.getContext().authentication

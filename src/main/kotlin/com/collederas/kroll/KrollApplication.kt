@@ -9,5 +9,5 @@ import org.springframework.boot.runApplication
 class KrollApplication
 
 fun main(args: Array<String>) {
-	runApplication<KrollApplication>(*args)
+    runApplication<KrollApplication>(*args)
 }

@@ -22,9 +22,12 @@ class JwtAuthServiceTests {
     private val jwtTokenService: JwtTokenService = mockk()
     private val refreshTokenService: RefreshTokenService = mockk()
 
-    private val authService = JwtAuthService(
-        authManager, jwtTokenService, refreshTokenService
-    )
+    private val authService =
+        JwtAuthService(
+            authManager,
+            jwtTokenService,
+            refreshTokenService,
+        )
 
     @AfterEach
     fun tearDown() = clearAllMocks()
@@ -62,7 +65,7 @@ class JwtAuthServiceTests {
                     assert(auth is UsernamePasswordAuthenticationToken)
                     assertEquals("user@example.com", auth.principal)
                     assertEquals("password", auth.credentials)
-                }
+                },
             )
         }
     }
@@ -84,9 +87,10 @@ class JwtAuthServiceTests {
 
     @Test
     fun `bad credentials propagate`() {
-        every { authManager.authenticate(any()) } throws BadCredentialsException(
-            "bad"
-        )
+        every { authManager.authenticate(any()) } throws
+            BadCredentialsException(
+                "bad",
+            )
 
         assertThrows(BadCredentialsException::class.java) {
             authService.login("user@example.com", "wrong")
@@ -95,9 +99,10 @@ class JwtAuthServiceTests {
 
     @Test
     fun `unknown user propagates`() {
-        every { authManager.authenticate(any()) } throws UsernameNotFoundException(
-            "user does not exist"
-        )
+        every { authManager.authenticate(any()) } throws
+            UsernameNotFoundException(
+                "user does not exist",
+            )
 
         assertThrows(UsernameNotFoundException::class.java) {
             authService.login("nope@example.com", "pwd")

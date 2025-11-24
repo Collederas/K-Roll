@@ -10,9 +10,8 @@ import java.util.*
 
 @Service
 class AuthUserDetailsService(
-    private val appUserRepository: AppUserRepository
+    private val appUserRepository: AppUserRepository,
 ) : UserDetailsService {
-
     /**
      * Loads a user by username or email.
      * This is used by DaoAuthenticationProvider during the login process.
@@ -24,7 +23,6 @@ class AuthUserDetailsService(
      *
      */
     override fun loadUserByUsername(identifier: String): UserDetails {
-
         val userByEmail = appUserRepository.findByEmail(identifier)
         if (userByEmail != null) {
             return AuthUserDetails(userByEmail)
@@ -43,8 +41,9 @@ class AuthUserDetailsService(
      * This is the preferred method for JWT authentication.
      */
     fun loadUserById(id: UUID): UserDetails {
-        val user = appUserRepository.findByIdOrNull(id)
-            ?: throw UsernameNotFoundException("User not found (by ID): $id")
+        val user =
+            appUserRepository.findByIdOrNull(id)
+                ?: throw UsernameNotFoundException("User not found (by ID): $id")
         return AuthUserDetails(user)
     }
 }

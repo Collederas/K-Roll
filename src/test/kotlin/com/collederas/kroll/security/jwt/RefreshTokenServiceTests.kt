@@ -9,26 +9,28 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import java.time.Instant
 import java.time.Duration
+import java.time.Instant
 import java.util.Base64
 
-class RefreshTokenServiceTests () {
+class RefreshTokenServiceTests() {
     private lateinit var refreshTokenService: RefreshTokenService
     private lateinit var refreshTokenRepository: RefreshTokenRepository
     private lateinit var properties: RefreshTokenProperties
 
     @BeforeEach
-        fun setup() {
-            refreshTokenRepository = mockk()
-            properties = RefreshTokenProperties(Duration.ofDays(1))
-            refreshTokenService = RefreshTokenService(
-                repository = refreshTokenRepository, properties = properties
+    fun setup() {
+        refreshTokenRepository = mockk()
+        properties = RefreshTokenProperties(Duration.ofDays(1))
+        refreshTokenService =
+            RefreshTokenService(
+                repository = refreshTokenRepository,
+                properties = properties,
             )
-        }
+    }
 
     @Test
-    fun `issueTokenFor persists the right owner` () {
+    fun `issueTokenFor persists the right owner`() {
         val user = UserFactory.create()
         val slot = slot<RefreshTokenEntity>()
 
@@ -62,7 +64,7 @@ class RefreshTokenServiceTests () {
 
         // firstArg = the entity in JPA repo
         every { refreshTokenRepository.save(any()) } answers { firstArg() }
-        
+
         val newToken = refreshTokenService.rotateAllTokensFor(user)
 
         verify { refreshTokenRepository.deleteAllByOwner(user) }
@@ -73,13 +75,12 @@ class RefreshTokenServiceTests () {
     @Test
     fun `consumeToken returns user and deletes token`() {
         val user = UserFactory.create()
-        val entity = RefreshTokenEntity(
-            owner = user,
-            token = "abc",
-            expiresAt = Instant.now().plusSeconds(60),
-            createdAt = Instant.now(),
-            updatedAt = Instant.now()
-        )
+        val entity =
+            RefreshTokenEntity(
+                owner = user,
+                token = "abc",
+                expiresAt = Instant.now().plusSeconds(60),
+            )
 
         every { refreshTokenRepository.findByToken("abc") } returns entity
         every { refreshTokenRepository.delete(entity) } returns Unit
@@ -93,13 +94,12 @@ class RefreshTokenServiceTests () {
     @Test
     fun `consumeToken throws if expired`() {
         val user = UserFactory.create()
-        val entity = RefreshTokenEntity(
-            owner = user,
-            token = "expired",
-            expiresAt = Instant.now().minusSeconds(10),
-            createdAt = Instant.now(),
-            updatedAt = Instant.now()
-        )
+        val entity =
+            RefreshTokenEntity(
+                owner = user,
+                token = "expired",
+                expiresAt = Instant.now().minusSeconds(10),
+            )
 
         every { refreshTokenRepository.findByToken("expired") } returns entity
         every { refreshTokenRepository.delete(entity) } returns Unit
@@ -110,15 +110,14 @@ class RefreshTokenServiceTests () {
     }
 
     @Test
-    fun `rotateFromRefresh consumes old and returns new` () {
+    fun `rotateFromRefresh consumes old and returns new`() {
         val user = UserFactory.create()
-        val old = RefreshTokenEntity(
-            owner = user,
-            token = "old",
-            expiresAt = Instant.now().plusSeconds(60),
-            createdAt = Instant.now(),
-            updatedAt = Instant.now()
-        )
+        val old =
+            RefreshTokenEntity(
+                owner = user,
+                token = "old",
+                expiresAt = Instant.now().plusSeconds(60)
+            )
 
         every { refreshTokenRepository.findByToken("old") } returns old
         every { refreshTokenRepository.delete(old) } returns Unit

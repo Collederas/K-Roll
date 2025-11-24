@@ -16,13 +16,11 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
-class SecurityConfig (
+class SecurityConfig(
     private val jwtAuthEntryPoint: JwtAuthEntryPoint,
     private val jwtAuthFilter: JwtAuthFilter,
-
-    private val userDetailsService: AuthUserDetailsService
-    ) {
-
+    private val userDetailsService: AuthUserDetailsService,
+) {
     @Bean
     fun passwordEncoder(): BCryptPasswordEncoder = BCryptPasswordEncoder()
 
@@ -47,11 +45,11 @@ class SecurityConfig (
                     "/auth/login",
                     "/auth/refresh",
                     "/client/**",
-                    "/error"
+                    "/error",
                 )
-                .permitAll()
-                .anyRequest()
-                .authenticated()
+                    .permitAll()
+                    .anyRequest()
+                    .authenticated()
             }
             .authenticationProvider(authenticationProvider())
             .exceptionHandling { it.authenticationEntryPoint(jwtAuthEntryPoint) }

@@ -1,7 +1,7 @@
 package com.collederas.kroll.security.jwt
 
-import com.collederas.kroll.user.AppUser
 import com.collederas.kroll.security.AuthUserDetails
+import com.collederas.kroll.user.AppUser
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.stereotype.Service
@@ -10,9 +10,12 @@ import org.springframework.stereotype.Service
 class JwtAuthService(
     private val authManager: AuthenticationManager,
     private val jwtTokenService: JwtTokenService,
-    private val refreshTokenService: RefreshTokenService
+    private val refreshTokenService: RefreshTokenService,
 ) {
-    fun login(usernameOrEmail: String, password: String): Pair<String, String> {
+    fun login(
+        usernameOrEmail: String,
+        password: String,
+    ): Pair<String, String> {
         val auth = UsernamePasswordAuthenticationToken(usernameOrEmail, password)
         val authentication = authManager.authenticate(auth)
 

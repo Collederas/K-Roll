@@ -5,6 +5,14 @@ import java.util.*
 
 interface ConfigEntryRepository : JpaRepository<ConfigEntryEntity, UUID> {
     fun findAllByEnvironmentId(environmentId: UUID): List<ConfigEntryEntity>
-    fun findByEnvironmentIdAndConfigKey(environmentId: UUID, configKey: String): ConfigEntryEntity?
-    fun existsByEnvironmentIdAndConfigKey(environmentId: UUID, configKey: String): Boolean
+
+    fun findByEnvironmentIdAndConfigKey(
+        environmentId: UUID,
+        configKey: String,
+    ): ConfigEntryEntity?
+
+    fun existsByEnvironmentIdAndConfigKey(
+        environmentId: UUID,
+        configKey: String,
+    ): Boolean
 }
