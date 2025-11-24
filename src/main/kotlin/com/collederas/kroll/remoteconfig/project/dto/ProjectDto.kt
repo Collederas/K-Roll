@@ -1,9 +1,10 @@
 package com.collederas.kroll.remoteconfig.project.dto
 
+import jakarta.validation.constraints.NotBlank
 import java.util.UUID
 
 data class CreateProjectDto(
-    val name: String,
+    @field:NotBlank val name: String,
 )
 
 data class ProjectDto(
