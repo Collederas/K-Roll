@@ -2,13 +2,13 @@ package com.collederas.kroll.remoteconfig.project
 
 import com.collederas.kroll.remoteconfig.project.dto.CreateProjectDto
 import com.collederas.kroll.remoteconfig.project.dto.ProjectDto
-import com.collederas.kroll.security.AuthUserDetailsService
+import com.collederas.kroll.security.user.AuthUserDetailsService
 import com.collederas.kroll.security.SecurityConfig
 import com.collederas.kroll.security.jwt.JwtAuthEntryPoint
 import com.collederas.kroll.security.jwt.JwtAuthFilter
 import com.collederas.kroll.security.jwt.JwtTokenService
-import com.collederas.kroll.utils.AuthUserFactory
-import com.collederas.kroll.utils.UserFactory
+import com.collederas.kroll.support.factories.AuthUserFactory
+import com.collederas.kroll.support.factories.UserFactory
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
