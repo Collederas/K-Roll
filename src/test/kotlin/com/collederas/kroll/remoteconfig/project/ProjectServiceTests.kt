@@ -1,7 +1,7 @@
 package com.collederas.kroll.remoteconfig.project
 
 import com.collederas.kroll.remoteconfig.project.dto.CreateProjectDto
-import com.collederas.kroll.utils.UserFactory
+import com.collederas.kroll.support.factories.UserFactory
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify

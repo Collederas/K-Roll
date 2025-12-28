@@ -2,7 +2,7 @@ package com.collederas.kroll.remoteconfig.project
 
 import com.collederas.kroll.remoteconfig.project.dto.CreateProjectDto
 import com.collederas.kroll.remoteconfig.project.dto.ProjectDto
-import com.collederas.kroll.security.AuthUserDetails
+import com.collederas.kroll.security.user.AuthUserDetails
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.security.core.annotation.AuthenticationPrincipal

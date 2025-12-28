@@ -32,9 +32,11 @@ class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(ProjectAlreadyExistsException::class)
-    fun handleDuplicateProject(ex: ProjectAlreadyExistsException): ResponseEntity<Map<String, String>> {
-        return ResponseEntity
-            .status(HttpStatus.CONFLICT)
-            .body(mapOf("error" to (ex.message ?: "Project already exists")))
+    fun handleDuplicateProject(ex: ProjectAlreadyExistsException): ProblemDetail {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.message ?:
+        "Project already exists").apply {
+            title = "Project Conflict"
+            setProperty("error_code", "PROJECT_EXISTS")
+        }
     }
 }
