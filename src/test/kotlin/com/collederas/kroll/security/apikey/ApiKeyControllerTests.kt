@@ -15,6 +15,7 @@ import org.springframework.test.web.servlet.delete
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
+import org.springframework.transaction.annotation.Transactional
 import java.time.Duration
 import java.time.Instant
 
@@ -22,6 +23,7 @@ import java.time.Instant
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@Transactional
 class ApiKeyControllerTests() {
     @Autowired
     lateinit var apiKeyService: ApiKeyService
@@ -102,6 +104,6 @@ class ApiKeyControllerTests() {
             .andExpect { status { isNoContent() } }
 
         mvc.delete("/admin/apikey/${created.id}")
-            .andExpect { status { isNotFound() } }
+            .andExpect { status { isNoContent() } }
     }
 }

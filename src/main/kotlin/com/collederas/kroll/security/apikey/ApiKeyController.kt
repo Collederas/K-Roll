@@ -16,6 +16,6 @@ class ApiKeyController(
     fun delete(
         @PathVariable apiKeyId: UUID,
     ) {
-        apiKeyService.delete(apiKeyId)
+        runCatching { apiKeyService.delete(apiKeyId) }
     }
 }

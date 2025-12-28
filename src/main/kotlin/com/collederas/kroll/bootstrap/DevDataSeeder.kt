@@ -2,6 +2,7 @@ package com.collederas.kroll.bootstrap
 
 import com.collederas.kroll.user.AppUser
 import com.collederas.kroll.user.AppUserRepository
+import com.collederas.kroll.user.UserRole
 import org.springframework.boot.CommandLineRunner
 import org.springframework.context.annotation.Profile
 import org.springframework.security.crypto.password.PasswordEncoder
@@ -37,8 +38,7 @@ class DevDataSeeder(
                 email = testEmail,
                 username = testUsername,
                 passwordHash = hashedPassword,
-                createdAt = now,
-                updatedAt = now,
+                roles = setOf(UserRole.ADMIN),
             )
 
         appUserRepository.save(testUser)

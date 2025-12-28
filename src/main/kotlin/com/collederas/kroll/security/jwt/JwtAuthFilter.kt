@@ -1,9 +1,11 @@
 package com.collederas.kroll.security.jwt
 
-import com.collederas.kroll.security.AuthUserDetailsService
+import com.collederas.kroll.security.user.AuthUserDetailsService
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
+import org.springframework.security.authentication.AnonymousAuthenticationToken
+import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource
@@ -19,22 +21,22 @@ class JwtAuthFilter(
     private val jwtService: JwtTokenService,
     private val userDetailsService: AuthUserDetailsService,
 ) : OncePerRequestFilter() {
+
     override fun doFilterInternal(
         request: HttpServletRequest,
         response: HttpServletResponse,
         filterChain: FilterChain,
     ) {
-        // If authentication exists, just use it
         val existing = SecurityContextHolder.getContext().authentication
-        if (existing != null) {
+        if (existing != null && existing.isAuthenticated && existing !is AnonymousAuthenticationToken) {
             filterChain.doFilter(request, response)
             return
         }
 
-        val header = request.getHeader("Authorization") ?: ""
-        val parts = header.split(" ")
+        val header = request.getHeader("Authorization").orEmpty()
+        val parts = header.split(" ", limit = 2)
 
-        val validScheme = parts.size == 2 && parts[0] == "Bearer"
+        val validScheme = parts.size == 2 && parts[0].equals("Bearer", ignoreCase = true)
         if (!validScheme) {
             filterChain.doFilter(request, response)
             return
@@ -42,16 +44,22 @@ class JwtAuthFilter(
 
         val token = parts[1].trim()
         val userId = jwtService.validateAndGetUserId(token)
-
-        if (userId != null) {
-            val userDetails = userDetailsService.loadUserById(userId)
-
-            // TODO: Cache?
-            val authToken = UsernamePasswordAuthenticationToken(userDetails, null, userDetails.authorities)
-            authToken.details = WebAuthenticationDetailsSource().buildDetails(request)
-            SecurityContextHolder.getContext().authentication = authToken
+        if (userId == null) {
+            filterChain.doFilter(request, response)
+            return
         }
 
+        val userDetails = userDetailsService.loadUserById(userId)
+
+        val authToken = UsernamePasswordAuthenticationToken(
+            userDetails,
+            null,
+            userDetails.authorities
+        ).apply {
+            details = WebAuthenticationDetailsSource().buildDetails(request)
+        }
+
+        SecurityContextHolder.getContext().authentication = authToken
         filterChain.doFilter(request, response)
     }
 }

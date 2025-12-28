@@ -28,7 +28,7 @@ class JwtAuthEntryPoint(
     ) {
         response.status = HttpServletResponse.SC_UNAUTHORIZED
         response.contentType = "application/json"
-        response.setHeader("WWW-Authenticate", "Bearer")
+        response.setHeader("WWW-Authenticate", "Bearer error=\"invalid_token\"")
 
         val body =
             mapOf(

@@ -1,7 +1,9 @@
 package com.collederas.kroll.security.jwt
 
+import com.collederas.kroll.support.factories.UserFactory
 import com.collederas.kroll.user.AppUser
 import org.assertj.core.api.Assertions.assertThat
+import org.h2.engine.User
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -28,15 +30,7 @@ class RefreshTokenRepositoryTest {
 
     @Test
     fun `findByToken returns token when it exists`() {
-        val user =
-            AppUser(
-                id = UUID.randomUUID(),
-                email = "test@example.com",
-                username = "testuser",
-                passwordHash = "hash",
-                createdAt = Instant.now(),
-                updatedAt = Instant.now(),
-            )
+        val user = UserFactory.create()
         entityManager.persist(user)
 
         val token = RefreshTokenEntity(owner=user, token="token", expiresAt=Instant.now())
@@ -50,15 +44,7 @@ class RefreshTokenRepositoryTest {
 
     @Test
     fun `deleteAllByOwner removes all tokens for specific user`() {
-        val user =
-            AppUser(
-                id = UUID.randomUUID(),
-                email = "test@example.com",
-                username = "testuser",
-                passwordHash = "hash",
-                createdAt = Instant.now(),
-                updatedAt = Instant.now(),
-            )
+        val user = UserFactory.create()
         entityManager.persist(user)
 
         val token1 = RefreshTokenEntity(owner=user, token="token1", expiresAt=Instant.now())
@@ -74,15 +60,7 @@ class RefreshTokenRepositoryTest {
 
     @Test
     fun `throws DataIntegrityViolationException when saving duplicate token`() {
-        val user =
-            AppUser(
-                id = UUID.randomUUID(),
-                email = "test2@example.com",
-                username = "testuser2",
-                passwordHash = "hash",
-                createdAt = Instant.now(),
-                updatedAt = Instant.now(),
-            )
+        val user = UserFactory.create()
         entityManager.persist(user)
 
         val token1 = RefreshTokenEntity(owner=user, token="same-token", expiresAt=Instant.now())

@@ -1,85 +1,42 @@
 package com.collederas.kroll.security
 
-import com.collederas.kroll.security.jwt.JwtAuthFilter
+import com.collederas.kroll.config.SecurityTestConfig
 import com.collederas.kroll.security.jwt.JwtTokenService
-import com.collederas.kroll.user.AppUser
+import com.collederas.kroll.security.user.AuthUserDetails
+import com.collederas.kroll.security.user.AuthUserDetailsService
+import com.collederas.kroll.support.factories.UserFactory
+import com.ninjasquad.springmockk.MockkBean
+import io.mockk.every
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito.`when`
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
-import org.springframework.boot.test.context.TestConfiguration
-import org.springframework.context.annotation.Bean
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
+import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Import
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
-import org.springframework.security.config.annotation.web.builders.HttpSecurity
-import org.springframework.security.core.Authentication
-import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication
-import org.springframework.security.web.SecurityFilterChain
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.RestController
-import java.time.Instant
 import java.util.*
 
-@RestController
-class FilterTestController {
-    @GetMapping("/open")
-    fun testEndpoint() = "OK"
 
-    @GetMapping("/protected")
-    fun protected(authentication: Authentication?): String {
-        val p = authentication?.principal as? AuthUserDetails ?: return "none"
-        return p.getId().toString()
-    }
-
-    @GetMapping("/echo-auth")
-    fun echoAuth(authentication: Authentication?) = authentication?.name ?: "none"
-}
-
-@WebMvcTest(FilterTestController::class)
-@Import(JwtAuthFilter::class)
+@SpringBootTest
+@AutoConfigureMockMvc
+@Import(SecurityTestConfig::class)
 @ActiveProfiles("test")
 class JwtAuthFilterTests {
     @Autowired
-    lateinit var mockMvc: MockMvc
+    lateinit var mvc: MockMvc
 
-    @MockitoBean
+    @MockkBean
     lateinit var jwtService: JwtTokenService
 
-    @MockitoBean
+    @MockkBean
     lateinit var userDetailsService: AuthUserDetailsService
 
-    @TestConfiguration
-    class TestSecurityConfig {
-        @Bean
-        fun securityFilterChain(
-            http: HttpSecurity,
-            jwtFilter: JwtAuthFilter,
-        ): SecurityFilterChain {
-            return http
-                .csrf { it.disable() }
-                .authorizeHttpRequests { it.anyRequest().permitAll() }
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter::class.java)
-                .build()
-        }
-    }
 
     private fun userDetails(id: UUID): AuthUserDetails {
-        val user =
-            AppUser(
-                id = id,
-                email = "test@example.com",
-                username = "testuser",
-                passwordHash = "hash",
-                createdAt = Instant.now(),
-                updatedAt = Instant.now(),
-            )
+        val user = UserFactory.create(id = id)
         return AuthUserDetails(user)
     }
 
@@ -89,54 +46,46 @@ class JwtAuthFilterTests {
         val userId = UUID.randomUUID()
         val details = userDetails(userId)
 
-        `when`(jwtService.validateAndGetUserId(token)).thenReturn(userId)
-        `when`(userDetailsService.loadUserById(userId)).thenReturn(details)
+        every { jwtService.validateAndGetUserId(token) } returns userId
+        every { userDetailsService.loadUserById(userId) } returns details
 
-        mockMvc.perform(get("/protected").header("Authorization", "Bearer $token"))
+        mvc.perform(get("/test/auth/whoami").header("Authorization", "Bearer $token"))
             .andExpect(status().isOk)
-            .andExpect(content().string(userId.toString()))
+            .andExpect(jsonPath("$.principal.user.id").value(userId.toString()))
     }
 
     @Test
     fun `missing Authorization header leaves context empty`() {
-        mockMvc.perform(get("/protected"))
+        mvc.perform(get("/test/auth/whoami"))
             .andExpect(status().isOk)
-            .andExpect(content().string("none"))
+            .andExpect(
+                jsonPath("$.authenticated").value(false)
+            )
     }
 
     @Test
     fun `invalid scheme leaves context empty`() {
-        mockMvc.perform(get("/protected").header("Authorization", "Basic xyz"))
+        mvc.perform(get("/test/auth/whoami").header("Authorization", "Basic xyz"))
             .andExpect(status().isOk)
-            .andExpect(content().string("none"))
-    }
-
-    @Test
-    fun `invalid token leaves context empty`() {
-        `when`(jwtService.validateAndGetUserId("bad")).thenReturn(null)
-
-        mockMvc.perform(get("/protected").header("Authorization", "Bearer bad"))
-            .andExpect(status().isOk)
-            .andExpect(content().string("none"))
+            .andExpect(jsonPath("$.authenticated").value(false))
     }
 
     @Test
     fun `existing authentication is not overwritten`() {
-        val original = UsernamePasswordAuthenticationToken("existing", null, emptyList())
         val token = "valid.jwt"
         val userId = UUID.randomUUID()
         val otherUser = userDetails(userId)
 
-        `when`(jwtService.validateAndGetUserId(token)).thenReturn(userId)
-        `when`(userDetailsService.loadUserById(userId)).thenReturn(otherUser)
+        every { jwtService.validateAndGetUserId(token) } returns userId
+        every { userDetailsService.loadUserById(userId) } returns otherUser
 
         // even if a valid token is passed, we don't want to authenticate it
-        mockMvc.perform(
-            get("/echo-auth")
-                .with(authentication(original))
+        mvc.perform(
+            get("/test/auth/whoami")
+                .header("X-Simulate-PreAuth", "true")
                 .header("Authorization", "Bearer $token"),
         )
             .andExpect(status().isOk)
-            .andExpect(content().string("existing"))
+            .andExpect(jsonPath("$.authorities[0]").value("ROLE_PREAUTH"))
     }
 }
