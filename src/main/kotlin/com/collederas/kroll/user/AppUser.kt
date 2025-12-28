@@ -1,35 +1,48 @@
 package com.collederas.kroll.user
 
-import jakarta.persistence.Column
-import jakarta.persistence.Entity
-import jakarta.persistence.Id
-import jakarta.persistence.Table
+import jakarta.persistence.*
 import java.time.Instant
 import java.util.*
+
+enum class UserRole {
+    ADMIN
+}
 
 @Entity
 @Table(name = "users")
 class AppUser(
+
     @Id
     @Column(nullable = false)
-    val id: UUID,
-    @Column(name = "email", nullable = false, unique = true)
+    val id: UUID = UUID.randomUUID(),
+
+    @Column(nullable = false, unique = true)
     val email: String,
-    @Column(name = "username", nullable = false, unique = true)
+
+    @Column(nullable = false, unique = true)
     val username: String,
+
     @Column(name = "password_hash", nullable = false)
     val passwordHash: String,
-    @Column(name = "created_at", nullable = false)
-    val createdAt: Instant,
-    @Column(name = "updated_at", nullable = false)
-    val updatedAt: Instant,
-) {
-    protected constructor() : this(
-        UUID(0, 0),
-        "",
-        "",
-        "",
-        Instant.EPOCH,
-        Instant.EPOCH,
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(
+        name = "user_roles",
+        joinColumns = [JoinColumn(name = "user_id")]
     )
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role", nullable = false)
+    val roles: Set<UserRole> = emptySet(),
+) {
+    @Column(name = "created_at", nullable = false, updatable = false)
+    var createdAt: Instant = Instant.now()
+
+    @Column(name = "updated_at", nullable = false)
+    var updatedAt: Instant = Instant.now()
+
+    @PreUpdate
+    fun onPreUpdate() {
+        updatedAt = Instant.now()
+    }
 }
+

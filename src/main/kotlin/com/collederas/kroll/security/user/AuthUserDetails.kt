@@ -2,6 +2,7 @@ package com.collederas.kroll.security.user
 
 import com.collederas.kroll.user.AppUser
 import org.springframework.security.core.GrantedAuthority
+import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
 import java.util.*
 
@@ -14,10 +15,10 @@ class AuthUserDetails(
 
     fun getUser(): AppUser = user
 
-    override fun getAuthorities(): Collection<GrantedAuthority> {
-        return emptyList()
-    }
-
+    override fun getAuthorities(): Collection<GrantedAuthority> =
+        user.roles.map {
+            SimpleGrantedAuthority("ROLE_${it.name}")
+        }
     override fun getPassword(): String {
         return user.passwordHash
     }

@@ -4,6 +4,7 @@ import com.collederas.kroll.security.jwt.JwtTokenService
 import com.collederas.kroll.security.user.AuthUserDetails
 import com.collederas.kroll.security.user.AuthUserDetailsService
 import com.collederas.kroll.user.AppUser
+import com.collederas.kroll.user.UserRole
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
 import org.junit.jupiter.api.Test
@@ -16,7 +17,6 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.post
-import java.time.Instant
 import java.util.*
 
 
@@ -69,6 +69,7 @@ class AdminSecurityIntegrationTests {
                 email = "test@example.com",
                 username = "test",
                 passwordHash = "xyz",
+                roles = setOf(UserRole.ADMIN)
             )
         )
 

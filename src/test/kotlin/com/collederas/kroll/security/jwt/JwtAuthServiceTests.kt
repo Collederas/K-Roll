@@ -1,8 +1,9 @@
 package com.collederas.kroll.security.jwt
 
-import com.collederas.kroll.security.AuthUserDetails
-import com.collederas.kroll.utils.AuthUserFactory
-import com.collederas.kroll.utils.UserFactory
+import com.collederas.kroll.security.user.AuthUserDetails
+import com.collederas.kroll.security.AuthenticationService
+import com.collederas.kroll.support.factories.AuthUserFactory
+import com.collederas.kroll.support.factories.UserFactory
 import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
@@ -23,7 +24,7 @@ class JwtAuthServiceTests {
     private val refreshTokenService: RefreshTokenService = mockk()
 
     private val authService =
-        JwtAuthService(
+        AuthenticationService(
             authManager,
             jwtTokenService,
             refreshTokenService,

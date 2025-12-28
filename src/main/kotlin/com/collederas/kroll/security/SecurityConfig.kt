@@ -87,7 +87,7 @@ class SecurityConfig(
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .authorizeHttpRequests {
                 it.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-
+                it.requestMatchers("/admin/**").hasRole("ADMIN")
                 it.requestMatchers(
                     "/auth/login",
                     "/auth/refresh",

@@ -1,7 +1,8 @@
-package com.collederas.kroll.utils
+package com.collederas.kroll.support.factories
 
-import com.collederas.kroll.security.AuthUserDetails
+import com.collederas.kroll.security.user.AuthUserDetails
 import com.collederas.kroll.user.AppUser
+import com.collederas.kroll.user.UserRole
 import java.time.Instant
 import java.util.UUID
 
@@ -11,16 +12,14 @@ object UserFactory {
         username: String = "testuser",
         email: String = "test@example.com",
         passwordHash: String = "\$2a\$10\$fakehash",
-        createdAt: Instant = Instant.now(),
-        updatedAt: Instant = createdAt,
+        roles: Set<UserRole> = emptySet(),
     ): AppUser {
         return AppUser(
             id = id,
             username = username,
             email = email,
             passwordHash = passwordHash,
-            createdAt = createdAt,
-            updatedAt = updatedAt,
+            roles = roles
         )
     }
 }
