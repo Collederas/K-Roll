@@ -1,4 +1,4 @@
-package com.collederas.kroll.remoteconfig.auth
+package com.collederas.kroll.security.apikey
 
 import com.collederas.kroll.remoteconfig.environment.EnvironmentEntity
 import jakarta.persistence.*
@@ -13,15 +13,33 @@ class ApiKeyEntity(
     @Id
     @Column(nullable = false)
     val id: UUID = UUID.randomUUID(),
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "environment_id", nullable = false)
     val environment: EnvironmentEntity,
-    @Column(name = "api_key", nullable = false, unique = true)
-    val apiKey: String,
+
+    @Column(name = "api_key_hash", nullable = false, unique = true)
+    val keyHash: String,
+
+    @Column(name = "mask", nullable = false)
+    val mask: String,
+
+    @Column(name = "expires_at", nullable = false)
+    val expiresAt: Instant,
+){
     @Column(name = "created_at", nullable = false)
     @CreatedDate
-    val createdAt: Instant,
+    var createdAt: Instant = Instant.now()
+
     @Column(name = "updated_at", nullable = false)
     @LastModifiedDate
-    val updatedAt: Instant,
-)
+    var updatedAt: Instant = Instant.now()
+
+    @PreUpdate
+    fun onPreUpdate() {
+        updatedAt = Instant.now()
+    }
+
+    fun isActive(now: Instant = Instant.now()): Boolean =
+        expiresAt.isAfter(now)
+}

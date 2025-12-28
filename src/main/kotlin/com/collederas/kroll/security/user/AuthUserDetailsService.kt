@@ -1,4 +1,4 @@
-package com.collederas.kroll.security
+package com.collederas.kroll.security.user
 
 import com.collederas.kroll.user.AppUserRepository
 import org.springframework.data.repository.findByIdOrNull
