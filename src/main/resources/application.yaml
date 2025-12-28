@@ -12,3 +12,5 @@ auth:
     expiration: 1h
   refresh:
     expiration: 30d
+  api-key:
+    max-lifetime: 30d
