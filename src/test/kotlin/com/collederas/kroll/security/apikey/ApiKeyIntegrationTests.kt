@@ -15,8 +15,7 @@ import java.time.Instant
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-class ApiKeyIntegrationTest {
-
+class ApiKeyIntegrationTests {
     @Autowired
     lateinit var envFactory: PersistedEnvironmentFactory
 
@@ -30,10 +29,11 @@ class ApiKeyIntegrationTest {
     fun `deleted api key is immediately invalidated`() {
         val env = envFactory.create()
 
-        val created = apiKeyService.create(
-            env.id,
-            Instant.now().plus(Duration.ofDays(1))
-        )
+        val created =
+            apiKeyService.create(
+                env.id,
+                Instant.now().plus(Duration.ofDays(1)),
+            )
 
         mvc.get("/test/auth/whoami") {
             header("X-Api-Key", created.key)
@@ -54,10 +54,11 @@ class ApiKeyIntegrationTest {
     fun `expired api key does not authenticate`() {
         val env = envFactory.create()
 
-        val created = apiKeyService.create(
-            env.id,
-            Instant.now().minus(Duration.ofSeconds(1))
-        )
+        val created =
+            apiKeyService.create(
+                env.id,
+                Instant.now().minus(Duration.ofSeconds(1)),
+            )
 
         mvc.get("/test/auth/whoami") {
             header("X-Api-Key", created.key)
@@ -76,7 +77,4 @@ class ApiKeyIntegrationTest {
             jsonPath("$.authenticated").value(false)
         }
     }
-
-
 }
-

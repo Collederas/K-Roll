@@ -3,12 +3,12 @@ package com.collederas.kroll.security.apikey
 import io.swagger.v3.oas.annotations.Operation
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.*
-import java.util.*
+import java.util.UUID
 
 @RestController
 @RequestMapping("/admin/apikey")
 class ApiKeyController(
-    private val apiKeyService: ApiKeyService
+    private val apiKeyService: ApiKeyService,
 ) {
     @DeleteMapping("{apiKeyId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)

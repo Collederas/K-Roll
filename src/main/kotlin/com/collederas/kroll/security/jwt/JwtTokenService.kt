@@ -10,7 +10,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.bind.ConstructorBinding
 import org.springframework.stereotype.Service
 import java.time.Duration
-import java.util.*
+import java.util.Date
+import java.util.UUID
 
 @ConfigurationProperties(prefix = "auth.jwt")
 data class JwtProperties

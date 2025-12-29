@@ -3,7 +3,6 @@ package com.collederas.kroll.support.factories
 import com.collederas.kroll.security.user.AuthUserDetails
 import com.collederas.kroll.user.AppUser
 import com.collederas.kroll.user.UserRole
-import java.time.Instant
 import java.util.UUID
 
 object UserFactory {
@@ -19,7 +18,7 @@ object UserFactory {
             username = username,
             email = email,
             passwordHash = passwordHash,
-            roles = roles
+            roles = roles,
         )
     }
 }

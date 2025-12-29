@@ -1,7 +1,13 @@
 package com.collederas.kroll.security.jwt
 
 import com.collederas.kroll.user.AppUser
-import jakarta.persistence.*
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.FetchType
+import jakarta.persistence.Id
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.ManyToOne
+import jakarta.persistence.Table
 import org.hibernate.Hibernate
 import java.time.Instant
 import java.util.UUID
@@ -9,17 +15,13 @@ import java.util.UUID
 @Entity
 @Table(name = "refresh_tokens")
 class RefreshTokenEntity(
-    @Id @Column(nullable = false, unique = true, updatable = false) 
+    @Id @Column(nullable = false, unique = true, updatable = false)
     var id: UUID? = UUID.randomUUID(),
-
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "owner_id", nullable = false)
     var owner: AppUser,
-
     @Column(name = "token", nullable = false, unique = true) var token: String,
-    
     @Column(name = "expires_at", nullable = false) var expiresAt: Instant,
-    
 ) {
     @Column(name = "created_at", nullable = false)
     var createdAt: Instant = Instant.now()

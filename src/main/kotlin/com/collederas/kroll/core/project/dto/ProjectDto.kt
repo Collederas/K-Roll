@@ -1,4 +1,4 @@
-package com.collederas.kroll.remoteconfig.project.dto
+package com.collederas.kroll.core.project.dto
 
 import jakarta.validation.constraints.NotBlank
 import java.util.UUID

@@ -10,21 +10,19 @@ import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
 import java.util.UUID
 
-
 data class GameClientPrincipal(
     val environmentId: UUID,
     val apiKeyId: UUID,
 )
 
 @Component
-class ApiKeyAuthenticationFilter (
+class ApiKeyAuthenticationFilter(
     private val apiKeyService: ApiKeyService,
 ) : OncePerRequestFilter() {
-
     override fun doFilterInternal(
         request: HttpServletRequest,
         response: HttpServletResponse,
-        filterChain: FilterChain
+        filterChain: FilterChain,
     ) {
         val existing = SecurityContextHolder.getContext().authentication
         if (existing != null && existing.isAuthenticated) {
@@ -47,11 +45,12 @@ class ApiKeyAuthenticationFilter (
         val principal = GameClientPrincipal(authResult.environmentId, authResult.apiKeyId)
         val authorities = authResult.roles.map { SimpleGrantedAuthority(it) }
 
-        val authToken = UsernamePasswordAuthenticationToken(
-            principal,
-            null,
-            authorities
-        )
+        val authToken =
+            UsernamePasswordAuthenticationToken(
+                principal,
+                null,
+                authorities,
+            )
 
         SecurityContextHolder.getContext().authentication = authToken
         filterChain.doFilter(request, response)

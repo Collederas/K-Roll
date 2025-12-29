@@ -13,13 +13,11 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @TestConfiguration
 class SecurityTestConfig {
-
     @Bean
     fun preAuthTestFilter() = PreAuthTestFilter()
 
     @Bean
     fun authIntrospectionController() = AuthIntrospectionController()
-
 
     /**
      * Injects a filter that forces a test authentication before anything else.
@@ -30,7 +28,7 @@ class SecurityTestConfig {
     fun clientTestChain(
         http: HttpSecurity,
         preAuthTestFilter: PreAuthTestFilter,
-        apiKeyAuthenticationFilter: ApiKeyAuthenticationFilter
+        apiKeyAuthenticationFilter: ApiKeyAuthenticationFilter,
     ): SecurityFilterChain {
         http
             .securityMatcher("/test/auth/**")

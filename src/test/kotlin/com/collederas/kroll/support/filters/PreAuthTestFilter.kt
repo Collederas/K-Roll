@@ -12,14 +12,15 @@ class PreAuthTestFilter : OncePerRequestFilter() {
     override fun doFilterInternal(
         request: HttpServletRequest,
         response: HttpServletResponse,
-        chain: FilterChain
+        chain: FilterChain,
     ) {
         if (request.getHeader("X-Simulate-PreAuth") == "true") {
-            val auth = UsernamePasswordAuthenticationToken(
-                "preauth",
-                null,
-                listOf(SimpleGrantedAuthority("ROLE_PREAUTH"))
-            )
+            val auth =
+                UsernamePasswordAuthenticationToken(
+                    "preauth",
+                    null,
+                    listOf(SimpleGrantedAuthority("ROLE_PREAUTH")),
+                )
             SecurityContextHolder.getContext().authentication = auth
         }
         chain.doFilter(request, response)

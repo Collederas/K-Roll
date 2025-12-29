@@ -11,7 +11,7 @@ data class CreateApiKeyResponseDto(
 
 data class ApiKeyMetadataDto(
     val id: UUID,
-    val truncated: String,  // we don't want to return full key
+    val truncated: String, // we don't want to return full key
     val environmentId: UUID,
     val createdAt: Instant,
 )
@@ -19,8 +19,9 @@ data class ApiKeyMetadataDto(
 data class ApiKeyAuthResult(
     val environmentId: UUID?,
     val apiKeyId: UUID?,
-    val roles: List<String>
+    val roles: List<String>,
 ) {
     companion object {
         fun invalid() = ApiKeyAuthResult(null, null, emptyList())
-    }}
+    }
+}

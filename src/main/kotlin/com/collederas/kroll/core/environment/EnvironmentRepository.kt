@@ -1,8 +1,10 @@
-package com.collederas.kroll.remoteconfig.environment
+package com.collederas.kroll.core.environment
 
 import org.springframework.data.jpa.repository.JpaRepository
-import java.util.*
+import org.springframework.stereotype.Repository
+import java.util.UUID
 
+@Repository
 interface EnvironmentRepository : JpaRepository<EnvironmentEntity, UUID> {
     fun findAllByProjectId(projectId: UUID): List<EnvironmentEntity>
 }
