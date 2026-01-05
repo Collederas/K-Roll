@@ -5,10 +5,12 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertThrows
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import java.time.Duration
 import java.time.Instant
 import java.util.Base64
@@ -62,7 +64,6 @@ class RefreshTokenServiceTests() {
         val user = UserFactory.create()
         every { refreshTokenRepository.deleteAllByOwner(user) } returns Unit
 
-        // firstArg = the entity in JPA repo
         every { refreshTokenRepository.save(any()) } answers { firstArg() }
 
         val newToken = refreshTokenService.rotateAllTokensFor(user)
@@ -104,7 +105,7 @@ class RefreshTokenServiceTests() {
         every { refreshTokenRepository.findByToken("expired") } returns entity
         every { refreshTokenRepository.delete(entity) } returns Unit
 
-        assertThrows<IllegalArgumentException> {
+        assertThrows(IllegalArgumentException::class.java) {
             refreshTokenService.consumeToken("expired")
         }
     }
@@ -116,7 +117,7 @@ class RefreshTokenServiceTests() {
             RefreshTokenEntity(
                 owner = user,
                 token = "old",
-                expiresAt = Instant.now().plusSeconds(60)
+                expiresAt = Instant.now().plusSeconds(60),
             )
 
         every { refreshTokenRepository.findByToken("old") } returns old

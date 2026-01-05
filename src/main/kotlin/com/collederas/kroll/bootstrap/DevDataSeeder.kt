@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Profile
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Component
 import java.time.Instant
-import java.util.*
+import java.util.UUID
 
 @Component
 @Profile("dev")
@@ -31,7 +31,6 @@ class DevDataSeeder(
 
         val hashedPassword = passwordEncoder.encode(rawPassword)
 
-        val now = Instant.now()
         val testUser =
             AppUser(
                 id = UUID.randomUUID(),

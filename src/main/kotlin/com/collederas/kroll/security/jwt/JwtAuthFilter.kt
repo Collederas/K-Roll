@@ -5,7 +5,6 @@ import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.security.authentication.AnonymousAuthenticationToken
-import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource
@@ -21,7 +20,6 @@ class JwtAuthFilter(
     private val jwtService: JwtTokenService,
     private val userDetailsService: AuthUserDetailsService,
 ) : OncePerRequestFilter() {
-
     override fun doFilterInternal(
         request: HttpServletRequest,
         response: HttpServletResponse,
@@ -51,13 +49,14 @@ class JwtAuthFilter(
 
         val userDetails = userDetailsService.loadUserById(userId)
 
-        val authToken = UsernamePasswordAuthenticationToken(
-            userDetails,
-            null,
-            userDetails.authorities
-        ).apply {
-            details = WebAuthenticationDetailsSource().buildDetails(request)
-        }
+        val authToken =
+            UsernamePasswordAuthenticationToken(
+                userDetails,
+                null,
+                userDetails.authorities,
+            ).apply {
+                details = WebAuthenticationDetailsSource().buildDetails(request)
+            }
 
         SecurityContextHolder.getContext().authentication = authToken
         filterChain.doFilter(request, response)

@@ -19,23 +19,22 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPat
 @ActiveProfiles("test")
 @Import(SecurityTestConfig::class)
 open class ApiKeyAuthFilterTests {
-
     @Autowired
     lateinit var mvc: MockMvc
 
     @MockkBean
     private lateinit var apiKeyRepository: ApiKeyRepository
 
-    private val TEST_ENDPOINT = "/test/auth/whoami"
-    private val AUTH_HEADER = "X-Api-Key"
+    private val testEndpoint = "/test/auth/whoami"
+    private val authHeader = "X-Api-Key"
 
     @Test
     fun `valid api key sets SecurityContext with correct role`() {
         val rawKey = "rk_test"
         every { apiKeyRepository.findByKeyHash(any()) } returns ApiKeyFactory.create()
 
-        mvc.get(TEST_ENDPOINT) {
-            header(AUTH_HEADER, rawKey)
+        mvc.get(testEndpoint) {
+            header(authHeader, rawKey)
         }
             .andExpect {
                 status { isOk() }
@@ -47,16 +46,16 @@ open class ApiKeyAuthFilterTests {
     @Test
     fun `missing api key does not authenticate`() {
         mvc.get("/test/auth/whoami")
-        .andExpect {
-            status { isOk() }
-            jsonPath("$.authenticated").value(false)
-        }
+            .andExpect {
+                status { isOk() }
+                jsonPath("$.authenticated").value(false)
+            }
     }
 
     @Test
     fun `api key does not override existing authentication`() {
         mvc.get("/test/auth/whoami") {
-            header(AUTH_HEADER, "valid-key")
+            header(authHeader, "valid-key")
             header("X-Simulate-PreAuth", "true")
         }
             .andExpect { jsonPath("$.authorities[0]").value("ROLE_PREAUTH") }

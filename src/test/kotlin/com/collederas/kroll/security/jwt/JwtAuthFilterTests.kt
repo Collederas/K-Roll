@@ -17,8 +17,7 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
-import java.util.*
-
+import java.util.UUID
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -33,7 +32,6 @@ class JwtAuthFilterTests {
 
     @MockkBean
     lateinit var userDetailsService: AuthUserDetailsService
-
 
     private fun userDetails(id: UUID): AuthUserDetails {
         val user = UserFactory.create(id = id)
@@ -59,7 +57,7 @@ class JwtAuthFilterTests {
         mvc.perform(get("/test/auth/whoami"))
             .andExpect(status().isOk)
             .andExpect(
-                jsonPath("$.authenticated").value(false)
+                jsonPath("$.authenticated").value(false),
             )
     }
 

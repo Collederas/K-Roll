@@ -1,7 +1,7 @@
 package com.collederas.kroll.security.jwt
 
-import com.collederas.kroll.security.user.AuthUserDetails
 import com.collederas.kroll.security.AuthenticationService
+import com.collederas.kroll.security.user.AuthUserDetails
 import com.collederas.kroll.user.dto.BasicUserDto
 import jakarta.validation.constraints.NotBlank
 import org.springframework.http.ResponseEntity

@@ -17,14 +17,12 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.post
-import java.util.*
-
+import java.util.UUID
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 class AdminSecurityIntegrationTests {
-
     @Autowired
     lateinit var mvc: MockMvc
 
@@ -63,15 +61,16 @@ class AdminSecurityIntegrationTests {
     @Test
     fun `protected route - valid token returns 200`() {
         val id = UUID.randomUUID()
-        val details = AuthUserDetails(
-            AppUser(
-                id = id,
-                email = "test@example.com",
-                username = "test",
-                passwordHash = "xyz",
-                roles = setOf(UserRole.ADMIN)
+        val details =
+            AuthUserDetails(
+                AppUser(
+                    id = id,
+                    email = "test@example.com",
+                    username = "test",
+                    passwordHash = "xyz",
+                    roles = setOf(UserRole.ADMIN),
+                ),
             )
-        )
 
         every { userDetailsService.loadUserById(id) } returns details
         every { jwtService.validateAndGetUserId("jwt.token") } returns id

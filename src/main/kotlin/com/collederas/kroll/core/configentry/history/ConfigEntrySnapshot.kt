@@ -1,0 +1,16 @@
+package com.collederas.kroll.core.configentry.history
+
+import com.collederas.kroll.core.configentry.ConfigType
+import java.time.Instant
+import java.util.*
+
+data class ConfigEntrySnapshot(
+    val key: String,
+    val type: ConfigType,
+    val value: String,
+    val activeFrom: Instant?,
+    val activeUntil: Instant?,
+    val environmentId: UUID,
+    val changeDescription: String?,
+    val changedBy: UUID?,
+)

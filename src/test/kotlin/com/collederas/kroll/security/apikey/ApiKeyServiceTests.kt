@@ -23,23 +23,22 @@ import java.time.ZoneOffset
 import java.util.UUID
 
 class ApiKeyServiceTests {
-
     private val environmentRepo = mockk<EnvironmentRepository>()
     private val apiRepo = mockk<ApiKeyRepository>()
     private val defaultConfig = ApiKeyConfig()
 
     private val fixedNow = Instant.parse("2025-01-01T00:00:00Z")
     private val fixedClock = Clock.fixed(fixedNow, ZoneOffset.UTC)
-    private val apiKeyService = ApiKeyService(
-        apiRepo,
-        environmentRepo,
-        defaultConfig,
-        fixedClock
-    )
+    private val apiKeyService =
+        ApiKeyService(
+            apiRepo,
+            environmentRepo,
+            defaultConfig,
+            fixedClock,
+        )
 
     @Test
-    fun `create throws when environment is missing`()
-    {
+    fun `create throws when environment is missing`() {
         val envId = UUID.randomUUID()
         every { environmentRepo.findByIdOrNull(envId) } returns null
 
@@ -85,8 +84,7 @@ class ApiKeyServiceTests {
     }
 
     @Test
-    fun `create throws expiry is beyond max lifetime`()
-    {
+    fun `create throws expiry is beyond max lifetime`() {
         val environment = EnvironmentFactory.create()
         val max = defaultConfig.maxLifetime
         val expiresAt = fixedNow.plus(max).plus(Duration.ofMillis(1))
@@ -98,15 +96,14 @@ class ApiKeyServiceTests {
     }
 
     @Test
-    fun `create key successfully`()
-    {
+    fun `create key successfully`() {
         val envId = UUID.randomUUID()
         val environment = EnvironmentFactory.create()
         val expiresAt = fixedNow.plus(Duration.ofDays(1))
         every { environmentRepo.findByIdOrNull(envId) } returns environment
 
         val keySlot = slot<ApiKeyEntity>()
-        every { apiRepo.save(capture(keySlot))} answers { keySlot.captured}
+        every { apiRepo.save(capture(keySlot)) } answers { keySlot.captured }
 
         val response = apiKeyService.create(envId, expiresAt)
 

@@ -1,7 +1,7 @@
 package com.collederas.kroll.security.user
 
-import com.collederas.kroll.user.AppUserRepository
 import com.collederas.kroll.support.factories.UserFactory
+import com.collederas.kroll.user.AppUserRepository
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify

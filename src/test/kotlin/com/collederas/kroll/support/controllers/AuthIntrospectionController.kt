@@ -16,7 +16,7 @@ class AuthIntrospectionController {
         return mapOf(
             "authenticated" to authentication.isAuthenticated,
             "principal" to authentication.principal,
-            "authorities" to authentication.authorities.map { it.authority }
+            "authorities" to authentication.authorities.map { it.authority },
         )
     }
 }

@@ -1,8 +1,9 @@
-package com.collederas.kroll.remoteconfig.project
+package com.collederas.kroll.core.project
 
-import com.collederas.kroll.remoteconfig.exceptions.ProjectAlreadyExistsException
-import com.collederas.kroll.remoteconfig.project.dto.CreateProjectDto
-import com.collederas.kroll.remoteconfig.project.dto.ProjectDto
+import com.collederas.kroll.core.exceptions.OwnerAlreadyHasProjectException
+import com.collederas.kroll.core.exceptions.ProjectAlreadyExistsException
+import com.collederas.kroll.core.project.dto.CreateProjectDto
+import com.collederas.kroll.core.project.dto.ProjectDto
 import com.collederas.kroll.user.AppUser
 import org.springframework.stereotype.Service
 import java.util.UUID
@@ -16,10 +17,17 @@ class ProjectService(private val repo: ProjectRepository) {
         projectDto: CreateProjectDto,
     ): ProjectDto {
         if (repo.existsByOwnerId(owner.id)) {
-            throw ProjectAlreadyExistsException(
-                "Project with name '${projectDto.name}' already exists.",
+            throw OwnerAlreadyHasProjectException(
+                "Owner ${owner.id} already has a project",
             )
         }
+
+        if (repo.existsByOwnerIdAndName(owner.id, projectDto.name)) {
+            throw ProjectAlreadyExistsException(
+                "Project with name '${projectDto.name}' already exists for this owner",
+            )
+        }
+
         val project =
             ProjectEntity(
                 name = projectDto.name,

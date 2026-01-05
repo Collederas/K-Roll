@@ -13,24 +13,20 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
 import java.time.Instant
-import java.util.*
-
+import java.util.UUID
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 class ClientSecurityIntegrationTests {
-
     @Autowired
     lateinit var mvc: MockMvc
 
     @MockkBean
     lateinit var apiKeyRepository: ApiKeyRepository
-
 
     @Test
     fun `public route - client api is not accessible without token`() {
@@ -40,21 +36,23 @@ class ClientSecurityIntegrationTests {
 
     @Test
     fun `api key route - valid api key returns 200`() {
-        val mockEnv = EnvironmentEntity(
-            id = UUID.randomUUID(),
-            name = "Test Env",
-            project = ProjectEntity(name = "Test", owner = UserFactory.create())
-        )
+        val mockEnv =
+            EnvironmentEntity(
+                id = UUID.randomUUID(),
+                name = "Test Env",
+                project = ProjectEntity(name = "Test", owner = UserFactory.create()),
+            )
 
         val validKey = "api_key_12345"
         val hashedKey = ApiKeyHelper.hash(validKey)
 
-        val mockKeyEntity = ApiKeyEntity(
-            environment = mockEnv,
-            keyHash = hashedKey,
-            mask = "rk_l...2345",
-            expiresAt = Instant.now().plusSeconds(3600),
-        )
+        val mockKeyEntity =
+            ApiKeyEntity(
+                environment = mockEnv,
+                keyHash = hashedKey,
+                mask = "rk_l...2345",
+                expiresAt = Instant.now().plusSeconds(3600),
+            )
 
         every { apiKeyRepository.findByKeyHash(hashedKey) } returns mockKeyEntity
 

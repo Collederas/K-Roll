@@ -1,9 +1,7 @@
 package com.collederas.kroll.security.jwt
 
 import com.collederas.kroll.support.factories.UserFactory
-import com.collederas.kroll.user.AppUser
 import org.assertj.core.api.Assertions.assertThat
-import org.h2.engine.User
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -11,7 +9,6 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager
 import org.springframework.dao.DataIntegrityViolationException
 import java.time.Instant
-import java.util.UUID
 
 @DataJpaTest
 class RefreshTokenRepositoryTest {
@@ -33,7 +30,7 @@ class RefreshTokenRepositoryTest {
         val user = UserFactory.create()
         entityManager.persist(user)
 
-        val token = RefreshTokenEntity(owner=user, token="token", expiresAt=Instant.now())
+        val token = RefreshTokenEntity(owner = user, token = "token", expiresAt = Instant.now())
         entityManager.persist(token)
         entityManager.flush()
 
@@ -47,8 +44,8 @@ class RefreshTokenRepositoryTest {
         val user = UserFactory.create()
         entityManager.persist(user)
 
-        val token1 = RefreshTokenEntity(owner=user, token="token1", expiresAt=Instant.now())
-        val token2 = RefreshTokenEntity(owner=user, token="token2", expiresAt=Instant.now())
+        val token1 = RefreshTokenEntity(owner = user, token = "token1", expiresAt = Instant.now())
+        val token2 = RefreshTokenEntity(owner = user, token = "token2", expiresAt = Instant.now())
         entityManager.persist(token1)
         entityManager.persist(token2)
         entityManager.flush()
@@ -63,10 +60,10 @@ class RefreshTokenRepositoryTest {
         val user = UserFactory.create()
         entityManager.persist(user)
 
-        val token1 = RefreshTokenEntity(owner=user, token="same-token", expiresAt=Instant.now())
+        val token1 = RefreshTokenEntity(owner = user, token = "same-token", expiresAt = Instant.now())
         repository.save(token1)
 
-        val token2 = RefreshTokenEntity(owner=user, token="same-token", expiresAt=Instant.now())
+        val token2 = RefreshTokenEntity(owner = user, token = "same-token", expiresAt = Instant.now())
 
         assertThrows(DataIntegrityViolationException::class.java) {
             repository.saveAndFlush(token2)

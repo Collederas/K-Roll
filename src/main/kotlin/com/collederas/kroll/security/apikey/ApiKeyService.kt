@@ -1,12 +1,12 @@
 package com.collederas.kroll.security.apikey
 
 import com.collederas.kroll.remoteconfig.auth.ApiKeyHelper
-import com.collederas.kroll.security.apikey.dto.ApiKeyMetadataDto
-import com.collederas.kroll.security.apikey.dto.CreateApiKeyResponseDto
 import com.collederas.kroll.remoteconfig.environment.EnvironmentRepository
 import com.collederas.kroll.remoteconfig.exceptions.ApiKeyNotFoundException
 import com.collederas.kroll.remoteconfig.exceptions.EnvironmentNotFoundException
 import com.collederas.kroll.security.apikey.dto.ApiKeyAuthResult
+import com.collederas.kroll.security.apikey.dto.ApiKeyMetadataDto
+import com.collederas.kroll.security.apikey.dto.CreateApiKeyResponseDto
 import com.collederas.kroll.security.apikey.exception.InvalidApiKeyExpiryException
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
@@ -22,7 +22,7 @@ class ApiKeyService(
     private val apiKeyRepository: ApiKeyRepository,
     private val environmentRepository: EnvironmentRepository,
     private val properties: ApiKeyConfig,
-    private val clock: Clock = Clock.systemUTC()
+    private val clock: Clock = Clock.systemUTC(),
 ) {
     private val secureRandom = SecureRandom()
 
@@ -41,9 +41,13 @@ class ApiKeyService(
     }
 
     @Transactional
-    fun create(envId: UUID, expiresAt: Instant): CreateApiKeyResponseDto {
-        val environment = environmentRepository.findByIdOrNull(envId)
-            ?: throw EnvironmentNotFoundException("Environment with ID $envId not found")
+    fun create(
+        envId: UUID,
+        expiresAt: Instant,
+    ): CreateApiKeyResponseDto {
+        val environment =
+            environmentRepository.findByIdOrNull(envId)
+                ?: throw EnvironmentNotFoundException("Environment with ID $envId not found")
 
         val now = Instant.now(clock)
 
@@ -60,12 +64,13 @@ class ApiKeyService(
         // We take the first 4 chars + ellipses + last 4 chars for better identification
         val displayMask = "${rawKey.take(7)}...${rawKey.takeLast(4)}"
 
-        val entity = ApiKeyEntity(
-            environment = environment,
-            keyHash = hashedKey,
-            mask = displayMask,
-            expiresAt = expiresAt,
-        )
+        val entity =
+            ApiKeyEntity(
+                environment = environment,
+                keyHash = hashedKey,
+                mask = displayMask,
+                expiresAt = expiresAt,
+            )
         val apiKey = apiKeyRepository.save(entity)
         return CreateApiKeyResponseDto(id = apiKey.id, key = rawKey, expiresAt = expiresAt)
     }
@@ -73,16 +78,18 @@ class ApiKeyService(
     fun validate(rawApiKey: String): ApiKeyAuthResult {
         val hashedKey = ApiKeyHelper.hash(rawApiKey)
 
-        val entity = apiKeyRepository.findByKeyHash(hashedKey)
-            ?: return ApiKeyAuthResult.invalid()
+        val entity =
+            apiKeyRepository.findByKeyHash(hashedKey)
+                ?: return ApiKeyAuthResult.invalid()
 
-        if (!entity.isActive())
+        if (!entity.isActive()) {
             return ApiKeyAuthResult.invalid()
+        }
 
         return ApiKeyAuthResult(
             entity.environment.id,
             entity.id,
-            roles = listOf("ROLE_GAME_CLIENT")
+            roles = listOf("ROLE_GAME_CLIENT"),
         )
     }
 
@@ -94,10 +101,11 @@ class ApiKeyService(
         apiKeyRepository.deleteById(apiKeyId)
     }
 
-    private fun ApiKeyEntity.toDto() = ApiKeyMetadataDto(
-        id = id,
-        truncated = this.mask,
-        environmentId = environment.id,
-        createdAt = createdAt,
-    )
+    private fun ApiKeyEntity.toDto() =
+        ApiKeyMetadataDto(
+            id = id,
+            truncated = this.mask,
+            environmentId = environment.id,
+            createdAt = createdAt,
+        )
 }

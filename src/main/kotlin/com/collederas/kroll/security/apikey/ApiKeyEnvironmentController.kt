@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RestController
 import java.time.Instant
 import java.util.UUID
 
-
 @RestController
 @RequestMapping("/admin/environments/{envId}/api-keys")
 @Tag(name = "API Key Management", description = "Endpoints for managing API keys")
@@ -40,4 +39,3 @@ class ApiKeyEnvironmentController(
         return apiKeyService.create(envId, expiresAt)
     }
 }
-

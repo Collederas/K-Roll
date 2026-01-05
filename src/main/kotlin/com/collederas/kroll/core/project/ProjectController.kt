@@ -1,7 +1,7 @@
-package com.collederas.kroll.remoteconfig.project
+package com.collederas.kroll.core.project
 
-import com.collederas.kroll.remoteconfig.project.dto.CreateProjectDto
-import com.collederas.kroll.remoteconfig.project.dto.ProjectDto
+import com.collederas.kroll.core.project.dto.CreateProjectDto
+import com.collederas.kroll.core.project.dto.ProjectDto
 import com.collederas.kroll.security.user.AuthUserDetails
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag

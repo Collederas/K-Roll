@@ -19,7 +19,6 @@ import org.springframework.transaction.annotation.Transactional
 import java.time.Duration
 import java.time.Instant
 
-
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
@@ -57,15 +56,17 @@ class ApiKeyControllerTests() {
         val env = envFactory.create()
         val expiresAt = Instant.now().plus(Duration.ofDays(1))
 
-        val createResult = mvc.post("/admin/environments/${env.id}/api-keys") {
-            contentType = MediaType.APPLICATION_JSON
-            content = "\"$expiresAt\""
-        }.andReturn()
+        val createResult =
+            mvc.post("/admin/environments/${env.id}/api-keys") {
+                contentType = MediaType.APPLICATION_JSON
+                content = "\"$expiresAt\""
+            }.andReturn()
 
-        val rawKey = JsonPath.read<String>(
-            createResult.response.contentAsString,
-            "$.key"
-        )
+        val rawKey =
+            JsonPath.read<String>(
+                createResult.response.contentAsString,
+                "$.key",
+            )
 
         mvc.get("/admin/environments/${env.id}/api-keys")
             .andExpect {
@@ -96,10 +97,11 @@ class ApiKeyControllerTests() {
     @WithMockUser(roles = ["ADMIN"])
     fun `delete api key is idempotent`() {
         val env = envFactory.create()
-        val created = apiKeyService.create(
-            env.id,
-            Instant.now().plus(Duration.ofDays(1))
-        )
+        val created =
+            apiKeyService.create(
+                env.id,
+                Instant.now().plus(Duration.ofDays(1)),
+            )
         mvc.delete("/admin/apikey/${created.id}")
             .andExpect { status { isNoContent() } }
 

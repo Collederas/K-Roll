@@ -14,7 +14,6 @@ import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
 import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
-import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.post
 
@@ -26,7 +25,6 @@ class JwtAuthControllerTests {
 
     @MockkBean()
     private lateinit var authService: AuthenticationService
-
 
     @Test
     fun `login with valid credentials returns valid tokens`() {

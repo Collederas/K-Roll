@@ -48,14 +48,15 @@ class SecurityConfig(
 
     @Bean
     fun corsConfigurationSource(): CorsConfigurationSource {
-        val config = CorsConfiguration().apply {
-            allowedOrigins = listOf("http://localhost:3000", "https://dashboard-domain.com")
-            allowedMethods = listOf("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
-            allowedHeaders = listOf("Authorization", "Content-Type", "X-Api-Key")
-            exposedHeaders = listOf("WWW-Authenticate")
-            allowCredentials = false
-            maxAge = 3600
-        }
+        val config =
+            CorsConfiguration().apply {
+                allowedOrigins = listOf("http://localhost:3000", "https://dashboard-domain.com")
+                allowedMethods = listOf("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
+                allowedHeaders = listOf("Authorization", "Content-Type", "X-Api-Key")
+                exposedHeaders = listOf("WWW-Authenticate")
+                allowCredentials = false
+                maxAge = 3600
+            }
 
         return UrlBasedCorsConfigurationSource().apply {
             registerCorsConfiguration("/**", config)
@@ -73,7 +74,8 @@ class SecurityConfig(
             .exceptionHandling { it.authenticationEntryPoint(HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)) }
             .authorizeHttpRequests {
                 it.requestMatchers(HttpMethod.OPTIONS, "/client/**").permitAll()
-                it.anyRequest().hasRole("GAME_CLIENT") }
+                it.anyRequest().hasRole("GAME_CLIENT")
+            }
             .addFilterBefore(apiKeyAuthenticationFilter, UsernamePasswordAuthenticationFilter::class.java)
         return http.build()
     }
