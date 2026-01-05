@@ -97,7 +97,7 @@ class SecurityConfig(
                     "/swagger-ui/**",
                     "/v3/api-docs/**",
                 ).permitAll()
-
+                it.requestMatchers("/auth/logout").authenticated()
                 it.anyRequest().denyAll()
             }
             .exceptionHandling { it.authenticationEntryPoint(jwtAuthEntryPoint) }

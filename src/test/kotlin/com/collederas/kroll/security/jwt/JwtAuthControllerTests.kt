@@ -5,23 +5,29 @@ import com.collederas.kroll.security.SecurityConfig
 import com.collederas.kroll.support.factories.AuthUserFactory
 import com.collederas.kroll.support.factories.UserFactory
 import com.ninjasquad.springmockk.MockkBean
+import io.mockk.Runs
 import io.mockk.every
+import io.mockk.just
 import io.mockk.verify
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
+import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
 import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
+import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.post
 
-@WebMvcTest(JwtAuthController::class)
-@Import(SecurityConfig::class, JwtAuthFilter::class)
+@SpringBootTest
+@AutoConfigureMockMvc
+@ActiveProfiles("test")
 class JwtAuthControllerTests {
     @Autowired
-    private lateinit var mockMvc: MockMvc
+    lateinit var mvc: MockMvc
 
     @MockkBean()
     private lateinit var authService: AuthenticationService
@@ -32,7 +38,7 @@ class JwtAuthControllerTests {
         val password = "password"
         every { authService.login(identifier, password) } returns ("access" to "refresh")
 
-        mockMvc
+        mvc
             .post("/auth/login") {
                 contentType = MediaType.APPLICATION_JSON
                 content = """{"identifier":"$identifier", "password":"$password"}"""
@@ -41,31 +47,35 @@ class JwtAuthControllerTests {
                 status { isOk() }
                 jsonPath("$.access") { value("access") }
             }
+
+        verify(exactly = 1) { authService.login(identifier, password) }
     }
 
     @Test
     fun `logout returns 204`() {
-        val principalUser = UserFactory.create()
-        val principal = AuthUserFactory.create(principalUser)
+        val user = UserFactory.create()
+        val authUser = AuthUserFactory.create(user)
 
-        mockMvc.post("/auth/logout") {
-            with(user(principal))
+        every { authService.revokeTokenFor(user) } just Runs
+
+        mvc.post("/auth/logout") {
+            with(user(authUser))
         }.andExpect {
             status { isNoContent() }
         }
 
-        verify { authService.revokeTokenFor(any()) }
+        verify(exactly = 1) { authService.revokeTokenFor(user) }
     }
 
     @Test
     fun `login with invalid credentials returns 401`() {
         every { authService.login(any(), any()) } throws BadCredentialsException("Bad creds")
 
-        mockMvc
+        mvc
             .post("/auth/login") {
                 contentType = MediaType.APPLICATION_JSON
                 content = """{"identifier":"u", "password":"p"}"""
             }
             .andExpect { status { isUnauthorized() } }
-    }
+        }
 }
