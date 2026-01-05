@@ -1,4 +1,4 @@
-package com.collederas.kroll.remoteconfig.auth
+package com.collederas.kroll.security.apikey
 
 import java.security.MessageDigest
 import java.util.Base64

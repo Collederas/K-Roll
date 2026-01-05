@@ -1,9 +1,8 @@
 package com.collederas.kroll.security.apikey
 
-import com.collederas.kroll.remoteconfig.auth.ApiKeyHelper
-import com.collederas.kroll.remoteconfig.environment.EnvironmentRepository
-import com.collederas.kroll.remoteconfig.exceptions.ApiKeyNotFoundException
-import com.collederas.kroll.remoteconfig.exceptions.EnvironmentNotFoundException
+import com.collederas.kroll.core.environment.EnvironmentRepository
+import com.collederas.kroll.core.exceptions.ApiKeyNotFoundException
+import com.collederas.kroll.core.exceptions.EnvironmentNotFoundException
 import com.collederas.kroll.security.apikey.dto.ApiKeyAuthResult
 import com.collederas.kroll.security.apikey.dto.ApiKeyMetadataDto
 import com.collederas.kroll.security.apikey.dto.CreateApiKeyResponseDto

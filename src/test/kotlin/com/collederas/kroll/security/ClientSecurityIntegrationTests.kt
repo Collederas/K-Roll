@@ -1,8 +1,8 @@
 package com.collederas.kroll.security
 
-import com.collederas.kroll.remoteconfig.auth.ApiKeyHelper
-import com.collederas.kroll.remoteconfig.environment.EnvironmentEntity
-import com.collederas.kroll.remoteconfig.project.ProjectEntity
+import com.collederas.kroll.security.apikey.ApiKeyHelper
+import com.collederas.kroll.core.environment.EnvironmentEntity
+import com.collederas.kroll.core.project.ProjectEntity
 import com.collederas.kroll.security.apikey.ApiKeyEntity
 import com.collederas.kroll.security.apikey.ApiKeyRepository
 import com.collederas.kroll.support.factories.UserFactory

@@ -1,8 +1,7 @@
 package com.collederas.kroll.security.apikey
 
-import com.collederas.kroll.remoteconfig.auth.ApiKeyHelper
-import com.collederas.kroll.remoteconfig.environment.EnvironmentRepository
-import com.collederas.kroll.remoteconfig.exceptions.EnvironmentNotFoundException
+import com.collederas.kroll.core.environment.EnvironmentRepository
+import com.collederas.kroll.core.exceptions.EnvironmentNotFoundException
 import com.collederas.kroll.security.apikey.exception.InvalidApiKeyExpiryException
 import com.collederas.kroll.support.factories.EnvironmentFactory
 import io.mockk.every
