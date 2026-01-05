@@ -4,6 +4,7 @@ import com.collederas.kroll.security.apikey.ApiKeyEntity
 import java.time.Instant
 import java.util.UUID
 
+// TODO: make test only @Profile("test")
 object ApiKeyFactory {
     fun create(
         id: UUID = UUID.randomUUID(),

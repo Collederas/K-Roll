@@ -1,21 +1,32 @@
 package com.collederas.kroll.security.apikey
 
+import com.collederas.kroll.support.MutableTestClock
+import com.collederas.kroll.support.TestClockConfig
 import com.collederas.kroll.support.factories.PersistedEnvironmentFactory
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.test.context.TestConfiguration
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Import
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
+import org.springframework.test.web.servlet.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
+import org.springframework.transaction.annotation.Transactional
+import java.time.Clock
 import java.time.Duration
 import java.time.Instant
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@Import(TestClockConfig::class)
+@Transactional
 @ActiveProfiles("test")
 class ApiKeyIntegrationTests {
+
     @Autowired
     lateinit var envFactory: PersistedEnvironmentFactory
 
@@ -25,28 +36,26 @@ class ApiKeyIntegrationTests {
     @Autowired
     lateinit var mvc: MockMvc
 
+    @Autowired
+    lateinit var clock: MutableTestClock
+
     @Test
     fun `deleted api key is immediately invalidated`() {
         val env = envFactory.create()
+        val created = apiKeyService.create(env.id, Instant.now().plus(Duration.ofDays(1)))
 
-        val created =
-            apiKeyService.create(
-                env.id,
-                Instant.now().plus(Duration.ofDays(1)),
-            )
-
-        mvc.get("/test/auth/whoami") {
+        mvc.post("/client/config/fetch") {
             header("X-Api-Key", created.key)
         }.andExpect {
-            jsonPath("$.authenticated").value(true)
+            status { isOk() }
         }
 
         apiKeyService.delete(created.id)
 
-        mvc.get("/test/auth/whoami") {
+        mvc.get("/client/config/fetch") {
             header("X-Api-Key", created.key)
         }.andExpect {
-            jsonPath("$.authenticated").value(false)
+            status { isUnauthorized() }
         }
     }
 
@@ -54,27 +63,26 @@ class ApiKeyIntegrationTests {
     fun `expired api key does not authenticate`() {
         val env = envFactory.create()
 
-        val created =
-            apiKeyService.create(
-                env.id,
-                Instant.now().minus(Duration.ofSeconds(1)),
-            )
+        val key = apiKeyService.create(
+            env.id,
+            clock.instant().plusSeconds(10)
+        )
 
-        mvc.get("/test/auth/whoami") {
-            header("X-Api-Key", created.key)
+        clock.advanceBy(Duration.ofSeconds(11))
+
+        mvc.post("/client/config/fetch") {
+            header("X-Api-Key", key.key)
         }.andExpect {
-            jsonPath("$.authenticated").value(false)
+            status { isUnauthorized() }
         }
     }
 
     @Test
     fun `unknown api key does not authenticate`() {
-        envFactory.create() // ensures DB is not empty
-
-        mvc.get("/test/auth/whoami") {
+        mvc.post("/client/config/fetch") {
             header("X-Api-Key", "rk_definitely_not_existing")
         }.andExpect {
-            jsonPath("$.authenticated").value(false)
+            status { isUnauthorized() }
         }
     }
 }
