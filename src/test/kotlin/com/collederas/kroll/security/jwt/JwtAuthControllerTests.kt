@@ -42,8 +42,7 @@ class JwtAuthControllerTests {
             .post("/auth/login") {
                 contentType = MediaType.APPLICATION_JSON
                 content = """{"identifier":"$identifier", "password":"$password"}"""
-            }
-            .andExpect {
+            }.andExpect {
                 status { isOk() }
                 jsonPath("$.access") { value("access") }
             }
@@ -58,11 +57,12 @@ class JwtAuthControllerTests {
 
         every { authService.revokeTokenFor(user) } just Runs
 
-        mvc.post("/auth/logout") {
-            with(user(authUser))
-        }.andExpect {
-            status { isNoContent() }
-        }
+        mvc
+            .post("/auth/logout") {
+                with(user(authUser))
+            }.andExpect {
+                status { isNoContent() }
+            }
 
         verify(exactly = 1) { authService.revokeTokenFor(user) }
     }
@@ -75,7 +75,6 @@ class JwtAuthControllerTests {
             .post("/auth/login") {
                 contentType = MediaType.APPLICATION_JSON
                 content = """{"identifier":"u", "password":"p"}"""
-            }
-            .andExpect { status { isUnauthorized() } }
+            }.andExpect { status { isUnauthorized() } }
     }
 }

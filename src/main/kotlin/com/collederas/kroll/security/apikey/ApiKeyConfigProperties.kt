@@ -5,5 +5,9 @@ import java.time.Duration
 
 @ConfigurationProperties(prefix = "auth.api-key")
 data class ApiKeyConfigProperties(
-    val maxLifetime: Duration = Duration.ofDays(365),
-)
+    val maxLifetime: Duration = Duration.ofDays(DEFAULT_API_KEY_LIFETIME_DAYS),
+) {
+    companion object {
+        private const val DEFAULT_API_KEY_LIFETIME_DAYS = 365L
+    }
+}

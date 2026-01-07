@@ -5,6 +5,8 @@ import com.collederas.kroll.core.configentry.ConfigType
 import com.collederas.kroll.core.configentry.dto.CreateConfigEntryDto
 import com.collederas.kroll.core.configentry.dto.UpdateConfigEntryDto
 import com.collederas.kroll.security.identity.AuthUserDetails
+import com.collederas.kroll.support.MutableTestClock
+import com.collederas.kroll.support.TestClockConfig
 import com.collederas.kroll.support.factories.PersistedEnvironmentFactory
 import com.collederas.kroll.support.factories.UserFactory
 import com.collederas.kroll.user.AppUserRepository
@@ -17,19 +19,18 @@ import org.junit.jupiter.params.provider.CsvSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.*
-import org.springframework.transaction.annotation.Transactional
 import java.time.Duration
-import java.time.Instant
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@Transactional
-@ActiveProfiles("test", "test-persistence")
-class ConfigEntryIntegrationTests() {
+@Import(TestClockConfig::class)
+@ActiveProfiles("test")
+class ConfigEntryIntegrationTests {
     @Autowired
     private lateinit var userRepository: AppUserRepository
 
@@ -37,13 +38,16 @@ class ConfigEntryIntegrationTests() {
     private lateinit var objectMapper: ObjectMapper
 
     @Autowired
-    lateinit var envFactory: PersistedEnvironmentFactory
+    private lateinit var envFactory: PersistedEnvironmentFactory
 
     @Autowired
-    lateinit var configEntryService: ConfigEntryService
+    private lateinit var configEntryService: ConfigEntryService
 
     @Autowired
-    lateinit var mvc: MockMvc
+    private lateinit var mvc: MockMvc
+
+    @Autowired
+    private lateinit var clock: MutableTestClock
 
     private val testedEndpoint = "/admin/environments/{envId}/configs"
 
@@ -51,42 +55,53 @@ class ConfigEntryIntegrationTests() {
     @CsvSource(
         "GET,       /admin/environments/{envId}/configs",
         "PUT,       /admin/environments/{envId}/configs/{configKey}",
-        "DELETE,    /admin/environments/{envId}/configs/{configKey}"
+        "DELETE,    /admin/environments/{envId}/configs/{configKey}",
     )
-    fun `users cannot access unowned config entries`(method: String, urlTemplate: String) {
+    fun `admins cannot access unowned config entries`(
+        method: String,
+        urlTemplate: String,
+    ) {
         val unauthorizedUser = UserFactory.create(roles = setOf(UserRole.ADMIN))
         val victimUser = UserFactory.create(roles = setOf(UserRole.ADMIN))
 
         userRepository.save(victimUser)
         val victimEnv = envFactory.create(victimUser)
-        val targetEntry = configEntryService.create(
-            victimUser.id, victimEnv.id, CreateConfigEntryDto(
-                type = ConfigType.STRING,
-                key = "victimKey",
-                value = "original"
+        val targetEntry =
+            configEntryService.create(
+                victimUser.id,
+                victimEnv.id,
+                CreateConfigEntryDto(
+                    type = ConfigType.STRING,
+                    key = "victimKey",
+                    value = "original",
+                ),
             )
-        )
 
-        val requestBody = UpdateConfigEntryDto(
-            value = "pwned"
-        )
+        val requestBody =
+            UpdateConfigEntryDto(
+                value = "pwned",
+            )
 
         val unauthorizedAuthUser = AuthUserDetails(unauthorizedUser)
-        val request = when (method) {
-            "PUT" -> mvc.put(urlTemplate, victimEnv.id, targetEntry.key) {
-                with(user(unauthorizedAuthUser))
-                contentType = MediaType.APPLICATION_JSON
-                content = objectMapper.writeValueAsString(requestBody)
-            }
+        val request =
+            when (method) {
+                "PUT" ->
+                    mvc.put(urlTemplate, victimEnv.id, targetEntry.key) {
+                        with(user(unauthorizedAuthUser))
+                        contentType = MediaType.APPLICATION_JSON
+                        content = objectMapper.writeValueAsString(requestBody)
+                    }
 
-            "DELETE" -> mvc.delete(urlTemplate, victimEnv.id, targetEntry.key) {
-                with(user(unauthorizedAuthUser))
-            }
+                "DELETE" ->
+                    mvc.delete(urlTemplate, victimEnv.id, targetEntry.key) {
+                        with(user(unauthorizedAuthUser))
+                    }
 
-            else -> mvc.get(urlTemplate, victimEnv.id) {
-                with(user(unauthorizedAuthUser))
+                else ->
+                    mvc.get(urlTemplate, victimEnv.id) {
+                        with(user(unauthorizedAuthUser))
+                    }
             }
-        }
 
         request.andExpect {
             status { isForbidden() }
@@ -98,31 +113,33 @@ class ConfigEntryIntegrationTests() {
         val user = userRepository.save(UserFactory.create(roles = setOf(UserRole.ADMIN)))
         val env = envFactory.create(user)
 
-        val activeFrom = Instant.now()
+        val activeFrom = clock.instant()
         val activeUntil = activeFrom.plus(Duration.ofHours(1))
 
-        val createRequest = mapOf(
-            "key" to "key.id",
-            "value" to "true",
-            "type" to "BOOLEAN",
-            "activeFrom" to activeFrom.toString(),
-            "activeUntil" to activeUntil.toString()
-        )
+        val createRequest =
+            mapOf(
+                "key" to "key.id",
+                "value" to "true",
+                "type" to "BOOLEAN",
+                "activeFrom" to activeFrom.toString(),
+                "activeUntil" to activeUntil.toString(),
+            )
 
         val authUser = AuthUserDetails(user)
 
-        mvc.post(testedEndpoint, env.id) {
-            with(user(authUser))
-            contentType = MediaType.APPLICATION_JSON
-            content = objectMapper.writeValueAsString(createRequest)
-        }.andExpect {
-            status { isCreated() }
-            jsonPath("$.key") { value("key.id") }
-            jsonPath("$.value") { value("true") }
-            jsonPath("$.type") { value("BOOLEAN") }
-            jsonPath("$.activeFrom") { value(activeFrom.toString()) }
-            jsonPath("$.activeUntil") { value(activeUntil.toString()) }
-        }
+        mvc
+            .post(testedEndpoint, env.id) {
+                with(user(authUser))
+                contentType = MediaType.APPLICATION_JSON
+                content = objectMapper.writeValueAsString(createRequest)
+            }.andExpect {
+                status { isCreated() }
+                jsonPath("$.key") { value("key.id") }
+                jsonPath("$.value") { value("true") }
+                jsonPath("$.type") { value("BOOLEAN") }
+                jsonPath("$.activeFrom") { value(activeFrom.toString()) }
+                jsonPath("$.activeUntil") { value(activeUntil.toString()) }
+            }
 
         val persisted = configEntryService.list(authUser.getId(), env.id).single()
         assertThat(persisted.key).isEqualTo("key.id")
@@ -131,7 +148,6 @@ class ConfigEntryIntegrationTests() {
         assertThat(persisted.activeFrom).isEqualTo(activeFrom)
         assertThat(persisted.activeUntil).isEqualTo(activeUntil)
     }
-
 
     @Test
     fun `update should persist and return updated config entry`() {
@@ -145,26 +161,28 @@ class ConfigEntryIntegrationTests() {
                 key = "key.id",
                 value = "old_value",
                 type = ConfigType.STRING,
-            )
+            ),
         )
 
-        val updateRequest = mapOf(
-            "value" to "new_value",
-            "type" to "STRING"
-        )
+        val updateRequest =
+            mapOf(
+                "value" to "new_value",
+                "type" to "STRING",
+            )
 
         val authUser = AuthUserDetails(user)
 
-        mvc.put("$testedEndpoint/{key}", env.id, "key.id") {
-            with(user(authUser))
-            contentType = MediaType.APPLICATION_JSON
-            content = objectMapper.writeValueAsString(updateRequest)
-        }.andExpect {
-            status { isOk() }
-            jsonPath("$.key") { value("key.id") }
-            jsonPath("$.value") { value("new_value") }
-            jsonPath("$.type") { value("STRING") }
-        }
+        mvc
+            .put("$testedEndpoint/{key}", env.id, "key.id") {
+                with(user(authUser))
+                contentType = MediaType.APPLICATION_JSON
+                content = objectMapper.writeValueAsString(updateRequest)
+            }.andExpect {
+                status { isOk() }
+                jsonPath("$.key") { value("key.id") }
+                jsonPath("$.value") { value("new_value") }
+                jsonPath("$.type") { value("STRING") }
+            }
 
         val persisted = configEntryService.list(authUser.getId(), env.id).single()
         assertThat(persisted.value).isEqualTo("new_value")

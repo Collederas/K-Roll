@@ -23,9 +23,7 @@ class AdminConfigController(
     fun list(
         @PathVariable envId: UUID,
         @AuthenticationPrincipal authUser: AuthUserDetails,
-    ): List<ConfigEntryResponseDto> {
-        return configEntryService.list(authUser.getId(), envId)
-    }
+    ): List<ConfigEntryResponseDto> = configEntryService.list(authUser.getId(), envId)
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -34,9 +32,7 @@ class AdminConfigController(
         @PathVariable envId: UUID,
         @RequestBody dto: CreateConfigEntryDto,
         @AuthenticationPrincipal authUser: AuthUserDetails,
-    ): ConfigEntryResponseDto {
-        return configEntryService.create(authUser.getId(), envId, dto)
-    }
+    ): ConfigEntryResponseDto = configEntryService.create(authUser.getId(), envId, dto)
 
     @PutMapping("/{key}")
     @Operation(summary = "Update config entry", description = "Update an existing config entry")
@@ -45,9 +41,7 @@ class AdminConfigController(
         @PathVariable key: String,
         @RequestBody dto: UpdateConfigEntryDto,
         @AuthenticationPrincipal authUser: AuthUserDetails,
-    ): ConfigEntryResponseDto {
-        return configEntryService.update(authUser.getId(), envId, key, dto)
-    }
+    ): ConfigEntryResponseDto = configEntryService.update(authUser.getId(), envId, key, dto)
 
     @DeleteMapping("/{key}")
     @Operation(summary = "Delete config entry", description = "Delete a config entry")
@@ -55,7 +49,5 @@ class AdminConfigController(
         @PathVariable envId: UUID,
         @PathVariable key: String,
         @AuthenticationPrincipal authUser: AuthUserDetails,
-    ) {
-        configEntryService.delete(authUser.getId(), envId, key)
-    }
+    ) = configEntryService.delete(authUser.getId(), envId, key)
 }

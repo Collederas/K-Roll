@@ -18,17 +18,14 @@ import org.springframework.test.web.servlet.delete
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
-import org.springframework.transaction.annotation.Transactional
 import java.time.Duration
 import java.time.Instant
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @Import(TestClockConfig::class)
-@Transactional
-@ActiveProfiles("test", "test-persistence")
+@ActiveProfiles("test")
 class ApiKeyIntegrationTests {
-
     @Autowired
     lateinit var envFactory: PersistedEnvironmentFactory
 
@@ -48,46 +45,51 @@ class ApiKeyIntegrationTests {
         val env = envFactory.create()
         val created = apiKeyService.create(env.id, Instant.now().plus(Duration.ofDays(1)))
 
-        mvc.post(protectedEndpoint) {
-            header("X-Api-Key", created.key)
-        }.andExpect {
-            status { isOk() }
-        }
+        mvc
+            .post(protectedEndpoint) {
+                header("X-Api-Key", created.key)
+            }.andExpect {
+                status { isOk() }
+            }
 
         apiKeyService.delete(created.id)
 
-        mvc.post(protectedEndpoint) {
-            header("X-Api-Key", created.key)
-        }.andExpect {
-            status { isUnauthorized() }
-        }
+        mvc
+            .post(protectedEndpoint) {
+                header("X-Api-Key", created.key)
+            }.andExpect {
+                status { isUnauthorized() }
+            }
     }
 
     @Test
     fun `expired api key does not authenticate`() {
         val env = envFactory.create()
 
-        val key = apiKeyService.create(
-            env.id,
-            clock.instant().plusSeconds(10)
-        )
+        val key =
+            apiKeyService.create(
+                env.id,
+                clock.instant().plusSeconds(10),
+            )
 
         clock.advanceBy(Duration.ofSeconds(11))
 
-        mvc.post(protectedEndpoint) {
-            header("X-Api-Key", key.key)
-        }.andExpect {
-            status { isUnauthorized() }
-        }
+        mvc
+            .post(protectedEndpoint) {
+                header("X-Api-Key", key.key)
+            }.andExpect {
+                status { isUnauthorized() }
+            }
     }
 
     @Test
     fun `unknown api key does not authenticate`() {
-        mvc.post(protectedEndpoint) {
-            header("X-Api-Key", "rk_definitely_not_existing")
-        }.andExpect {
-            status { isUnauthorized() }
-        }
+        mvc
+            .post(protectedEndpoint) {
+                header("X-Api-Key", "rk_definitely_not_existing")
+            }.andExpect {
+                status { isUnauthorized() }
+            }
     }
 
     @Test
@@ -97,10 +99,11 @@ class ApiKeyIntegrationTests {
         val expiresAt = clock.instant().plus(Duration.ofDays(1))
 
         val createResult =
-            mvc.post("/admin/environments/${env.id}/api-keys") {
-                contentType = MediaType.APPLICATION_JSON
-                content = "\"$expiresAt\""
-            }.andReturn()
+            mvc
+                .post("/admin/environments/${env.id}/api-keys") {
+                    contentType = MediaType.APPLICATION_JSON
+                    content = "\"$expiresAt\""
+                }.andReturn()
 
         val rawKey =
             JsonPath.read<String>(
@@ -108,7 +111,8 @@ class ApiKeyIntegrationTests {
                 "$.key",
             )
 
-        mvc.get("/admin/environments/${env.id}/api-keys")
+        mvc
+            .get("/admin/environments/${env.id}/api-keys")
             .andExpect {
                 jsonPath("$[*].truncated").exists()
                 jsonPath("$[*].key").doesNotExist()
@@ -124,10 +128,12 @@ class ApiKeyIntegrationTests {
         val env = envFactory.create()
         val key = apiKeyService.create(env.id, clock.instant().plusSeconds(10))
 
-        mvc.delete("/admin/environments/${env.id}/api-keys/${key.id}")
+        mvc
+            .delete("/admin/environments/${env.id}/api-keys/${key.id}")
             .andExpect { status { isNoContent() } }
 
-        mvc.delete("/admin/environments/${env.id}/api-keys/${key.id}")
+        mvc
+            .delete("/admin/environments/${env.id}/api-keys/${key.id}")
             .andExpect { status { isNoContent() } }
     }
 }

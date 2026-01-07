@@ -41,7 +41,10 @@ class ProjectService(
         return ProjectDto(project.id, project.name)
     }
 
-    fun delete(ownerId: UUID, projectId: UUID) {
+    fun delete(
+        ownerId: UUID,
+        projectId: UUID,
+    ) {
         projectAccessGuard.requireOwner(projectId, ownerId)
         repo.deleteById(projectId)
     }

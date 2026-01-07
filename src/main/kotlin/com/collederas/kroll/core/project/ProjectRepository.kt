@@ -14,6 +14,10 @@ interface ProjectRepository : JpaRepository<ProjectEntity, UUID> {
         name: String,
     ): Boolean
 
-    fun existsByIdAndOwnerId(projectId: UUID, ownerId: UUID): Boolean
+    fun existsByIdAndOwnerId(
+        projectId: UUID,
+        ownerId: UUID,
+    ): Boolean
+
     fun owner(owner: AppUser): MutableList<ProjectEntity>
 }

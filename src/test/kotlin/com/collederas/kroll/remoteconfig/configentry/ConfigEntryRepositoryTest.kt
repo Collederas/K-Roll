@@ -16,11 +16,11 @@ import java.time.Instant
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
-@ActiveProfiles("test", "test-persistence")
-class ConfigEntryRepositoryTest(
-    @Autowired val configEntryRepo: ConfigEntryRepository,
-    @Autowired val entityManager: TestEntityManager
-) {
+@ActiveProfiles("test")
+class ConfigEntryRepositoryTest {
+    @Autowired private lateinit var configEntryRepo: ConfigEntryRepository
+
+    @Autowired private lateinit var entityManager: TestEntityManager
 
     @Test
     fun `findActiveConfigs respects activeFrom and activeUntil`() {
@@ -29,18 +29,20 @@ class ConfigEntryRepositoryTest(
         val project = entityManager.persist(ProjectFactory.create(owner = user))
         val env = entityManager.persist(EnvironmentFactory.create(project = project))
 
-        val active = ConfigEntryFactory.create(
-            environment = env,
-            key = "active",
-            activeFrom = now.minusSeconds(60),
-            activeUntil = now.plusSeconds(60)
-        )
+        val active =
+            ConfigEntryFactory.create(
+                environment = env,
+                key = "active",
+                activeFrom = now.minusSeconds(60),
+                activeUntil = now.plusSeconds(60),
+            )
 
-        val future = ConfigEntryFactory.create(
-            environment = env,
-            key = "future",
-            activeFrom = now.plusSeconds(60)
-        )
+        val future =
+            ConfigEntryFactory.create(
+                environment = env,
+                key = "future",
+                activeFrom = now.plusSeconds(60),
+            )
 
         entityManager.persist(active)
         entityManager.persist(future)

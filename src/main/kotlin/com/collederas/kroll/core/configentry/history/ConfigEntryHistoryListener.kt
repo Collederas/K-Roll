@@ -7,18 +7,18 @@ import org.springframework.transaction.event.TransactionalEventListener
 
 @Component
 class ConfigEntryHistoryListener(
-    private val historyRepository: ConfigEntryHistoryRepository
+    private val historyRepository: ConfigEntryHistoryRepository,
 ) {
     @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
     fun onConfigUpdated(event: ConfigEntryUpdatedEvent) {
-
-        val historyEntry = ConfigEntryHistoryEntity(
-            configEntryId = event.configEntryId,
-            environmentId = event.environmentId,
-            changedBy = event.changedBy,
-            changeDescription = event.changeDescription,
-            configSnapshot = event.snapshot
-        )
+        val historyEntry =
+            ConfigEntryHistoryEntity(
+                configEntryId = event.configEntryId,
+                environmentId = event.environmentId,
+                changedBy = event.changedBy,
+                changeDescription = event.changeDescription,
+                configSnapshot = event.snapshot,
+            )
 
         historyRepository.save(historyEntry)
     }

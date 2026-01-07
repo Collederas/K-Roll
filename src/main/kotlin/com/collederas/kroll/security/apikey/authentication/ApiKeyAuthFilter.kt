@@ -26,34 +26,31 @@ class ApiKeyAuthenticationFilter(
         filterChain: FilterChain,
     ) {
         val existing = SecurityContextHolder.getContext().authentication
-        if (existing != null && existing.isAuthenticated) {
-            filterChain.doFilter(request, response)
-            return
+        val shouldAuthenticateWithApiKey = existing == null || !existing.isAuthenticated
+
+        if (shouldAuthenticateWithApiKey) {
+            val rawApiKey = request.getHeader("X-Api-Key")
+
+            if (!rawApiKey.isNullOrBlank()) {
+                val authResult = apiKeyService.validate(rawApiKey)
+                println(authResult)
+
+                if (authResult.apiKeyId != null && authResult.environmentId != null) {
+                    val principal = GameClientPrincipal(authResult.environmentId, authResult.apiKeyId)
+                    val authorities = authResult.roles.map { SimpleGrantedAuthority(it) }
+
+                    val authToken =
+                        UsernamePasswordAuthenticationToken(
+                            principal,
+                            null,
+                            authorities,
+                        )
+
+                    SecurityContextHolder.getContext().authentication = authToken
+                }
+            }
         }
 
-        val rawApiKey = request.getHeader("X-Api-Key")
-        if (rawApiKey.isNullOrBlank()) {
-            filterChain.doFilter(request, response)
-            return
-        }
-
-        val authResult = apiKeyService.validate(rawApiKey)
-        if (authResult.apiKeyId == null || authResult.environmentId == null) {
-            filterChain.doFilter(request, response)
-            return
-        }
-
-        val principal = GameClientPrincipal(authResult.environmentId, authResult.apiKeyId)
-        val authorities = authResult.roles.map { SimpleGrantedAuthority(it) }
-
-        val authToken =
-            UsernamePasswordAuthenticationToken(
-                principal,
-                null,
-                authorities,
-            )
-
-        SecurityContextHolder.getContext().authentication = authToken
         filterChain.doFilter(request, response)
     }
 }

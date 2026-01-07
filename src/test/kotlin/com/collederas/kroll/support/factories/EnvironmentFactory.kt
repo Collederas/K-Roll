@@ -15,14 +15,13 @@ import java.util.*
 object EnvironmentFactory {
     fun create(
         project: ProjectEntity = ProjectFactory.create(),
-        name: String = "Test Environment"
-    ): EnvironmentEntity {
-        return EnvironmentEntity(
+        name: String = "Test Environment",
+    ): EnvironmentEntity =
+        EnvironmentEntity(
             id = UUID.randomUUID(),
             project = project,
             name = name,
         )
-    }
 }
 
 @Component
@@ -33,7 +32,10 @@ class PersistedEnvironmentFactory(
     private val environmentRepo: EnvironmentRepository,
 ) {
     @Transactional
-    fun create(user: AppUser? = null, name: String = "Test Environment"): EnvironmentEntity {
+    fun create(
+        user: AppUser? = null,
+        name: String = "Test Environment",
+    ): EnvironmentEntity {
         var owner = user
         if (owner == null) {
             owner = userRepo.save(UserFactory.create())

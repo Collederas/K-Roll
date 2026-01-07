@@ -16,7 +16,10 @@ class EnvironmentService(
     private val projectRepository: ProjectRepository,
     private val environmentRepository: EnvironmentRepository,
 ) {
-    fun list(projectId: UUID, userId: UUID): List<EnvironmentResponseDto> {
+    fun list(
+        projectId: UUID,
+        userId: UUID,
+    ): List<EnvironmentResponseDto> {
         projectAccessGuard.requireOwner(projectId, userId)
 
         if (!projectRepository.existsById(projectId)) {

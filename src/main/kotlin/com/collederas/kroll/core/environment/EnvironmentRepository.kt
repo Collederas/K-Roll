@@ -7,5 +7,9 @@ import java.util.*
 @Repository
 interface EnvironmentRepository : JpaRepository<EnvironmentEntity, UUID> {
     fun findAllByProjectId(projectId: UUID): List<EnvironmentEntity>
-    fun existsByIdAndProjectOwnerId(envId: UUID, ownerId: UUID): Boolean
+
+    fun existsByIdAndProjectOwnerId(
+        envId: UUID,
+        ownerId: UUID,
+    ): Boolean
 }

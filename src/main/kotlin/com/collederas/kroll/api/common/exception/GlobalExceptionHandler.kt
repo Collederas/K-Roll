@@ -15,70 +15,67 @@ import java.net.URI
 @RestControllerAdvice
 class GlobalExceptionHandler {
     @ExceptionHandler(AuthenticationException::class)
-    fun handleAuthenticationException(e: AuthenticationException): ProblemDetail {
-        return ProblemDetail.forStatusAndDetail(
-            HttpStatus.UNAUTHORIZED,
-            e.message
-                ?: "Authentication failed",
-        ).apply {
-            title = "Authentication Error"
-            instance = URI("/errors/auth-failed")
-        }
-    }
+    fun handleAuthenticationException(e: AuthenticationException): ProblemDetail =
+        ProblemDetail
+            .forStatusAndDetail(
+                HttpStatus.UNAUTHORIZED,
+                e.message ?: "Authentication failed",
+            ).also {
+                it.title = "Authentication Error"
+                it.instance = URI("/errors/auth-failed")
+            }
 
     @ExceptionHandler(InvalidApiKeyExpiryException::class)
-    fun handleInvalidApiKeyExpiry(ex: InvalidApiKeyExpiryException): ProblemDetail {
-        return ProblemDetail.forStatusAndDetail(
-            HttpStatus.BAD_REQUEST,
-            ex.message
-                ?: "Invalid expiry",
-        ).apply {
-            title = "Invalid Expiry"
-            setProperty("error_code", "INVALID_API_KEY_EXPIRY")
-        }
-    }
+    fun handleInvalidApiKeyExpiry(ex: InvalidApiKeyExpiryException): ProblemDetail =
+        ProblemDetail
+            .forStatusAndDetail(
+                HttpStatus.BAD_REQUEST,
+                ex.message ?: "Invalid expiry",
+            ).also {
+                it.title = "Invalid Expiry"
+                it.setProperty("error_code", "INVALID_API_KEY_EXPIRY")
+            }
 
     @ExceptionHandler(ProjectAlreadyExistsException::class)
-    fun handleDuplicateProject(ex: ProjectAlreadyExistsException): ProblemDetail {
-        return ProblemDetail.forStatusAndDetail(
-            HttpStatus.CONFLICT,
-            ex.message
-                ?: "Project already exists",
-        ).apply {
-            title = "Project Conflict"
-            setProperty("error_code", "PROJECT_EXISTS")
-        }
-    }
+    fun handleDuplicateProject(ex: ProjectAlreadyExistsException): ProblemDetail =
+        ProblemDetail
+            .forStatusAndDetail(
+                HttpStatus.CONFLICT,
+                ex.message ?: "Project already exists",
+            ).also {
+                it.title = "Project Conflict"
+                it.setProperty("error_code", "PROJECT_EXISTS")
+            }
 
     @ExceptionHandler(InvalidConfigTypeException::class)
-    fun handleInvalidConfigType(ex: InvalidConfigTypeException): ProblemDetail {
-        return ProblemDetail.forStatusAndDetail(
-            HttpStatus.BAD_REQUEST,
-            ex.message
-                ?: "Invalid config type",
-        ).apply {
-            title = "Invalid Config Type"
-            setProperty("error_code", "INVALID_CONFIG_TYPE")
-        }
-    }
+    fun handleInvalidConfigType(ex: InvalidConfigTypeException): ProblemDetail =
+        ProblemDetail
+            .forStatusAndDetail(
+                HttpStatus.BAD_REQUEST,
+                ex.message ?: "Invalid config type",
+            ).also {
+                it.title = "Invalid Config Type"
+                it.setProperty("error_code", "INVALID_CONFIG_TYPE")
+            }
 
     @ExceptionHandler(DataIntegrityViolationException::class)
-    fun handleDataIntegrityViolation(ex: DataIntegrityViolationException): ProblemDetail {
-        val problem = ProblemDetail.forStatusAndDetail(
-            HttpStatus.CONFLICT,
-            "A resource with these unique identifiers already exists."
-        )
-        problem.title = "Conflict"
-        return problem
-    }
+    fun handleDataIntegrityViolation(ex: DataIntegrityViolationException): ProblemDetail =
+        ProblemDetail
+            .forStatusAndDetail(
+                HttpStatus.CONFLICT,
+                ex.message
+                    ?: "A resource with these unique identifiers already exists.",
+            ).also {
+                it.title = "Conflict"
+            }
 
     @ExceptionHandler(ForbiddenException::class)
-    fun handleForbidden(ex: ForbiddenException): ProblemDetail {
-        val problem = ProblemDetail.forStatusAndDetail(
-            HttpStatus.FORBIDDEN,
-            ex.message ?: "Access to this resource is forbidden."
-        )
-        problem.title = "Forbidden"
-        return problem
-    }
+    fun handleForbidden(ex: ForbiddenException): ProblemDetail =
+        ProblemDetail
+            .forStatusAndDetail(
+                HttpStatus.FORBIDDEN,
+                ex.message ?: "Access to this resource is forbidden.",
+            ).also {
+                it.title = "Forbidden"
+            }
 }

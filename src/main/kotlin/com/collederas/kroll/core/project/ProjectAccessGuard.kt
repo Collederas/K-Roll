@@ -6,13 +6,14 @@ import java.util.*
 
 @Component
 class ProjectAccessGuard(
-    private val projectRepository: ProjectRepository
+    private val projectRepository: ProjectRepository,
 ) {
-
-    fun requireOwner(projectId: UUID, userId: UUID) {
+    fun requireOwner(
+        projectId: UUID,
+        userId: UUID,
+    ) {
         if (!projectRepository.existsByIdAndOwnerId(projectId, userId)) {
             throw ForbiddenException("Project not owned by user")
         }
     }
 }
-

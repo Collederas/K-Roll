@@ -11,13 +11,12 @@ object ApiKeyFactory {
         keyHash: String = "default_hashed_value",
         mask: String = "rk_...test",
         expiresAt: Instant = Instant.now().plusSeconds(3600),
-    ): ApiKeyEntity {
-        return ApiKeyEntity(
+    ): ApiKeyEntity =
+        ApiKeyEntity(
             id = id,
             environment = EnvironmentFactory.create(),
             keyHash = keyHash,
             mask = mask,
             expiresAt = expiresAt,
         )
-    }
 }

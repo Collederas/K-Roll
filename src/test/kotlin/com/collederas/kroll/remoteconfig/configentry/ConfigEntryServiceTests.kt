@@ -11,6 +11,7 @@ import com.collederas.kroll.core.exceptions.ConfigEntryNotFoundException
 import com.collederas.kroll.core.exceptions.EnvironmentNotFoundException
 import com.collederas.kroll.support.factories.ConfigEntryFactory
 import com.collederas.kroll.support.factories.EnvironmentFactory
+import com.fasterxml.jackson.core.JsonParseException
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.mockk.*
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -28,11 +29,12 @@ class ConfigEntryServiceTests {
     private val accessGuard = mockk<EnvironmentAccessGuard>()
     private val envId = UUID.randomUUID()
 
-    private val configEntryService = ConfigEntryService(
-        accessGuard,
-        configEntryRepo,
-        environmentRepo
-    )
+    private val configEntryService =
+        ConfigEntryService(
+            accessGuard,
+            configEntryRepo,
+            environmentRepo,
+        )
 
     @Test
     fun `list throws when environment does not exist`() {
@@ -75,20 +77,22 @@ class ConfigEntryServiceTests {
 
     @Test
     fun `fetchEffectiveConfig returns parsed active values`() {
-        val entity = ConfigEntryFactory.create(
-            key = "flag",
-            value = "true",
-            type = ConfigType.BOOLEAN
-        )
+        val entity =
+            ConfigEntryFactory.create(
+                key = "flag",
+                value = "true",
+                type = ConfigType.BOOLEAN,
+            )
 
         val now = Instant.now()
         val fixedClock = Clock.fixed(now, ZoneOffset.UTC)
-        val service = ConfigEntryService(
-            accessGuard,
-            configEntryRepo,
-            environmentRepo,
-            fixedClock,
-        )
+        val service =
+            ConfigEntryService(
+                accessGuard,
+                configEntryRepo,
+                environmentRepo,
+                fixedClock,
+            )
 
         every { environmentRepo.existsById(entity.environment.id) } returns true
         every { configEntryRepo.findActiveConfigs(entity.environment.id, now) } returns listOf(entity)
@@ -98,22 +102,22 @@ class ConfigEntryServiceTests {
         assertEquals(true, result["flag"])
     }
 
-
     @Test
     fun `create rejects invalid json`() {
         val environment = EnvironmentFactory.create()
         every { environmentRepo.findByIdOrNull(envId) } returns environment
 
-        val dto = CreateConfigEntryDto(
-            key = "cfg",
-            value = "{invalid",
-            type = ConfigType.JSON,
-        )
+        val dto =
+            CreateConfigEntryDto(
+                key = "cfg",
+                value = "{invalid",
+                type = ConfigType.JSON,
+            )
         every {
             accessGuard.requireOwner(any(), any())
         } just Runs
 
-        assertThrows<IllegalArgumentException> {
+        assertThrows<JsonParseException> {
             configEntryService.create(UUID.randomUUID(), envId, dto)
         }
     }
@@ -128,11 +132,12 @@ class ConfigEntryServiceTests {
             accessGuard.requireOwner(any(), any())
         } just Runs
 
-        val dto = CreateConfigEntryDto(
-            key = "cfg",
-            value = objectMapper.writeValueAsString(mapOf("key" to "value")),
-            type = ConfigType.JSON,
-        )
+        val dto =
+            CreateConfigEntryDto(
+                key = "cfg",
+                value = objectMapper.writeValueAsString(mapOf("key" to "value")),
+                type = ConfigType.JSON,
+            )
         val result = configEntryService.create(UUID.randomUUID(), envId, dto)
 
         assertEquals(dto.key, result.key)
@@ -144,10 +149,11 @@ class ConfigEntryServiceTests {
             configEntryRepo.findByEnvironmentIdAndConfigKey(envId, "key")
         } returns null
 
-        val dto = UpdateConfigEntryDto(
-            value = "value",
-            type = ConfigType.STRING,
-        )
+        val dto =
+            UpdateConfigEntryDto(
+                value = "value",
+                type = ConfigType.STRING,
+            )
         every {
             accessGuard.requireOwner(any(), any())
         } just Runs
@@ -164,10 +170,11 @@ class ConfigEntryServiceTests {
         every { configEntryRepo.findByEnvironmentIdAndConfigKey(envId, "key") } returns entity
         every { configEntryRepo.save(any()) } answers { firstArg() }
 
-        val dto = UpdateConfigEntryDto(
-            value = "new",
-            type = null,
-        )
+        val dto =
+            UpdateConfigEntryDto(
+                value = "new",
+                type = null,
+            )
 
         every {
             accessGuard.requireOwner(any(), any())

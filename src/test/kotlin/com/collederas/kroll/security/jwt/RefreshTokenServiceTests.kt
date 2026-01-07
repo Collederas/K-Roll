@@ -12,7 +12,7 @@ import java.time.Duration
 import java.time.Instant
 import java.util.*
 
-class RefreshTokenServiceTests() {
+class RefreshTokenServiceTests {
     private lateinit var refreshTokenService: RefreshTokenService
     private lateinit var refreshTokenRepository: RefreshTokenRepository
     private lateinit var properties: RefreshTokenProperties

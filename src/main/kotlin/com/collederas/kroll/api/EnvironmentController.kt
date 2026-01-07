@@ -20,18 +20,14 @@ class EnvironmentController(
     @Operation(summary = "List environments", description = "List all environments for a project")
     fun list(
         @PathVariable projectId: UUID,
-        @AuthenticationPrincipal authUser: AuthUserDetails
-    ): List<EnvironmentResponseDto> {
-        return environmentService.list(projectId, authUser.getId())
-    }
+        @AuthenticationPrincipal authUser: AuthUserDetails,
+    ): List<EnvironmentResponseDto> = environmentService.list(projectId, authUser.getId())
 
     @PostMapping
     @Operation(summary = "Create environment", description = "Create a new environment for a project")
     fun create(
         @PathVariable projectId: UUID,
         @RequestBody dto: CreateEnvironmentDto,
-        @AuthenticationPrincipal authUser: AuthUserDetails
-    ): EnvironmentResponseDto {
-        return environmentService.create(authUser.getId(), projectId, dto)
-    }
+        @AuthenticationPrincipal authUser: AuthUserDetails,
+    ): EnvironmentResponseDto = environmentService.create(authUser.getId(), projectId, dto)
 }

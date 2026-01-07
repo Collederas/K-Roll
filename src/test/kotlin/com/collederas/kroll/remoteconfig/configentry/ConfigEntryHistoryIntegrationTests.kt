@@ -24,8 +24,8 @@ import java.time.Instant
 @SpringBootTest
 @Import(ConfigEntryHistoryListener::class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-@ActiveProfiles("test", "test-persistence")
-class ConfigEntryHistoryIntegrationTests() {
+@ActiveProfiles("test")
+class ConfigEntryHistoryIntegrationTests {
     @Autowired
     lateinit var appUserRepository: AppUserRepository
 
@@ -48,13 +48,14 @@ class ConfigEntryHistoryIntegrationTests() {
 
         val env = persistedEnvironmentFactory.create(user)
 
-        val dto = CreateConfigEntryDto(
-            key = "testkey",
-            type = ConfigType.BOOLEAN,
-            value = "true",
-            activeFrom = Instant.now(),
-            activeUntil = Instant.now() + Duration.ofHours(1),
-        )
+        val dto =
+            CreateConfigEntryDto(
+                key = "testkey",
+                type = ConfigType.BOOLEAN,
+                value = "true",
+                activeFrom = Instant.now(),
+                activeUntil = Instant.now() + Duration.ofHours(1),
+            )
         configEntryService.create(user.id, env.id, dto)
 
         val history = historyRepo.findAll()
@@ -71,20 +72,21 @@ class ConfigEntryHistoryIntegrationTests() {
         appUserRepository.save(user)
 
         val env = persistedEnvironmentFactory.create(user)
-        val entry = envFactory.create(
-            environment = env,
-            value = "true",
-            createdBy = user.id,
-        )
+        val entry =
+            envFactory.create(
+                environment = env,
+                value = "true",
+                createdBy = user.id,
+            )
 
         val updateMsg = "Updated to false"
-        val dto = UpdateConfigEntryDto(
-            value = "false",
-            changeDescription = updateMsg,
-        )
+        val dto =
+            UpdateConfigEntryDto(
+                value = "false",
+                changeDescription = updateMsg,
+            )
 
         configEntryService.update(user.id, env.id, entry.configKey, dto)
-
 
         val history = historyRepo.findAll()
         assertThat(history).hasSize(1)

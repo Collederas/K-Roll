@@ -41,3 +41,11 @@ out/
 
 ### Env ###
 .envrc
+
+### Anything looking like a secret container ###
+.env
+.env.*
+*.key
+*.pem
+*.p12
+*.keystore

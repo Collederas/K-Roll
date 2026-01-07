@@ -5,28 +5,39 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.security.SecureRandom
+import java.time.Clock
 import java.time.Duration
 import java.time.Instant
 import java.util.*
 
 @ConfigurationProperties(prefix = "auth.refresh")
 data class RefreshTokenProperties(
-    val expiration: Duration = Duration.ofDays(30),
-)
+    val expiration: Duration = DEFAULT_EXPIRATION,
+    val tokenBytes: Int = DEFAULT_TOKEN_BYTES,
+) {
+    companion object {
+        val DEFAULT_EXPIRATION: Duration = Duration.ofDays(30)
+        const val DEFAULT_TOKEN_BYTES: Int = 32
+    }
+}
 
 @Service
 class RefreshTokenService(
     private val repository: RefreshTokenRepository,
     private val properties: RefreshTokenProperties,
+    private val clock: Clock = Clock.systemUTC(),
 ) {
-    private fun generateSecureToken(bytes: Int = 32): String {
-        val buffer = ByteArray(bytes)
+    private fun generateSecureToken(): String {
+        val buffer = ByteArray(properties.tokenBytes)
         SecureRandom().nextBytes(buffer)
-        return Base64.getUrlEncoder().withoutPadding().encodeToString(buffer)
+        return Base64
+            .getUrlEncoder()
+            .withoutPadding()
+            .encodeToString(buffer)
     }
 
     fun issueTokenFor(user: AppUser): String {
-        val now = Instant.now()
+        val now = Instant.now(clock)
         val tokenValue = generateSecureToken()
 
         val token =
@@ -41,8 +52,8 @@ class RefreshTokenService(
     }
 
     /**
-     * Current behavior: only ONE refresh token can exist per user.
-     * Rotate = revoke all old tokens + issue one new.
+     * Only one refresh token per user.
+     * Rotation = revoke all existing tokens, then issue a new one.
      */
     @Transactional
     fun rotateAllTokensFor(user: AppUser): String {
@@ -53,8 +64,7 @@ class RefreshTokenService(
     @Transactional
     fun rotateFromRefresh(oldRefreshToken: String): Pair<AppUser, String> {
         val user = consumeToken(oldRefreshToken)
-        val newToken = issueTokenFor(user)
-        return user to newToken
+        return user to issueTokenFor(user)
     }
 
     @Transactional
@@ -68,12 +78,11 @@ class RefreshTokenService(
             repository.findByToken(tokenString)
                 ?: throw IllegalArgumentException("Invalid refresh token")
 
-        repository.delete(token)
-
-        if (token.expiresAt.isBefore(Instant.now())) {
-            throw IllegalArgumentException("Refresh token expired")
+        require(!token.expiresAt.isBefore(Instant.now(clock))) {
+            "Refresh token expired"
         }
 
+        repository.delete(token)
         return token.owner
     }
 }

@@ -8,12 +8,12 @@ import java.util.*
 
 @ActiveProfiles("test")
 class JwtServiceTests {
-    private val SECRET = "bzjKq1tb2/7FmHzg51eH8ZPqfm4twB4suaT2H8CYm8A="
+    private val secret = "bzjKq1tb2/7FmHzg51eH8ZPqfm4twB4suaT2H8CYm8A="
 
     private fun newService(exp: Duration = Duration.ofHours(1)): JwtTokenService {
         val props =
             JwtProperties(
-                secret = SECRET,
+                secret = secret,
                 expiration = exp,
             )
         return JwtTokenService(props)

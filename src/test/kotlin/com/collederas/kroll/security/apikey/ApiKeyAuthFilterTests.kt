@@ -23,9 +23,9 @@ import java.util.*
     excludeFilters = [
         ComponentScan.Filter(
             type = FilterType.ASSIGNABLE_TYPE,
-            classes = [JwtAuthFilter::class]
-        )
-    ]
+            classes = [JwtAuthFilter::class],
+        ),
+    ],
 )
 @Import(SecurityTestConfig::class)
 open class ApiKeyAuthFilterTests {
@@ -47,16 +47,17 @@ open class ApiKeyAuthFilterTests {
         val apiKey = ApiKeyFactory.create()
 
         every { apiKeyRepository.findByKeyHash(any()) } returns apiKey
-        every { apiKeyService.validate(rawKey) } returns ApiKeyAuthResult(
-            environmentId = UUID.randomUUID(),
-            apiKeyId = UUID.randomUUID(),
-            roles = listOf("ROLE_GAME_CLIENT"),
-        )
+        every { apiKeyService.validate(rawKey) } returns
+            ApiKeyAuthResult(
+                environmentId = UUID.randomUUID(),
+                apiKeyId = UUID.randomUUID(),
+                roles = listOf("ROLE_GAME_CLIENT"),
+            )
 
-        mvc.get(testEndpoint) {
-            header(authHeader, rawKey)
-        }
-            .andExpect {
+        mvc
+            .get(testEndpoint) {
+                header(authHeader, rawKey)
+            }.andExpect {
                 status { isOk() }
                 jsonPath("$.authenticated").value(true)
                 jsonPath("$.authorities[0]").value("ROLE_GAME_CLIENT")
@@ -65,7 +66,8 @@ open class ApiKeyAuthFilterTests {
 
     @Test
     fun `missing api key does not authenticate`() {
-        mvc.get("/test/auth/whoami")
+        mvc
+            .get("/test/auth/whoami")
             .andExpect {
                 status { isOk() }
                 jsonPath("$.authenticated").value(false)
@@ -74,10 +76,10 @@ open class ApiKeyAuthFilterTests {
 
     @Test
     fun `api key does not override existing authentication`() {
-        mvc.get("/test/auth/whoami") {
-            header(authHeader, "valid-key")
-            header("X-Simulate-PreAuth", "true")
-        }
-            .andExpect { jsonPath("$.authorities[0]").value("ROLE_PREAUTH") }
+        mvc
+            .get("/test/auth/whoami") {
+                header(authHeader, "valid-key")
+                header("X-Simulate-PreAuth", "true")
+            }.andExpect { jsonPath("$.authorities[0]").value("ROLE_PREAUTH") }
     }
 }

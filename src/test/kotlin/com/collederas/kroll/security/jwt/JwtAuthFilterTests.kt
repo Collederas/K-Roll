@@ -1,7 +1,6 @@
-package com.collederas.kroll.security
+package com.collederas.kroll.security.jwt
 
 import com.collederas.kroll.config.SecurityTestConfig
-import com.collederas.kroll.security.jwt.JwtTokenService
 import com.collederas.kroll.security.identity.AuthUserDetails
 import com.collederas.kroll.security.identity.AuthUserDetailsService
 import com.collederas.kroll.support.factories.UserFactory
@@ -47,14 +46,16 @@ class JwtAuthFilterTests {
         every { jwtService.validateAndGetUserId(token) } returns userId
         every { userDetailsService.loadUserById(userId) } returns details
 
-        mvc.perform(get("/test/auth/whoami").header("Authorization", "Bearer $token"))
+        mvc
+            .perform(get("/test/auth/whoami").header("Authorization", "Bearer $token"))
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.principal.user.id").value(userId.toString()))
     }
 
     @Test
     fun `missing Authorization header leaves context empty`() {
-        mvc.perform(get("/test/auth/whoami"))
+        mvc
+            .perform(get("/test/auth/whoami"))
             .andExpect(status().isOk)
             .andExpect(
                 jsonPath("$.authenticated").value(false),
@@ -63,7 +64,8 @@ class JwtAuthFilterTests {
 
     @Test
     fun `invalid scheme leaves context empty`() {
-        mvc.perform(get("/test/auth/whoami").header("Authorization", "Basic xyz"))
+        mvc
+            .perform(get("/test/auth/whoami").header("Authorization", "Basic xyz"))
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.authenticated").value(false))
     }
@@ -78,12 +80,12 @@ class JwtAuthFilterTests {
         every { userDetailsService.loadUserById(userId) } returns otherUser
 
         // even if a valid token is passed, we don't want to authenticate it
-        mvc.perform(
-            get("/test/auth/whoami")
-                .header("X-Simulate-PreAuth", "true")
-                .header("Authorization", "Bearer $token"),
-        )
-            .andExpect(status().isOk)
+        mvc
+            .perform(
+                get("/test/auth/whoami")
+                    .header("X-Simulate-PreAuth", "true")
+                    .header("Authorization", "Bearer $token"),
+            ).andExpect(status().isOk)
             .andExpect(jsonPath("$.authorities[0]").value("ROLE_PREAUTH"))
     }
 }

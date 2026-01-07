@@ -20,11 +20,7 @@ class AuthUserDetails(
             SimpleGrantedAuthority("ROLE_${it.name}")
         }
 
-    override fun getPassword(): String {
-        return user.passwordHash
-    }
+    override fun getPassword(): String = user.passwordHash
 
-    override fun getUsername(): String {
-        return user.username
-    }
+    override fun getUsername(): String = user.username
 }

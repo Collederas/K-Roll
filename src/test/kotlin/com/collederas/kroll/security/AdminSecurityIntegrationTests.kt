@@ -3,12 +3,12 @@ package com.collederas.kroll.security
 import com.collederas.kroll.api.ProjectController
 import com.collederas.kroll.api.auth.JwtAuthController
 import com.collederas.kroll.core.project.ProjectService
-import com.collederas.kroll.security.jwt.authentication.JwtAuthFilter
-import com.collederas.kroll.security.jwt.authentication.JwtAuthService
-import com.collederas.kroll.security.jwt.JwtSecurityConfig
-import com.collederas.kroll.security.jwt.JwtTokenService
 import com.collederas.kroll.security.identity.AuthUserDetails
 import com.collederas.kroll.security.identity.AuthUserDetailsService
+import com.collederas.kroll.security.jwt.JwtSecurityConfig
+import com.collederas.kroll.security.jwt.JwtTokenService
+import com.collederas.kroll.security.jwt.authentication.JwtAuthFilter
+import com.collederas.kroll.security.jwt.authentication.JwtAuthService
 import com.collederas.kroll.support.TestSecurityConfig
 import com.collederas.kroll.user.AppUser
 import com.collederas.kroll.user.UserRole
@@ -31,12 +31,11 @@ import java.util.*
     SecurityConfig::class,
     JwtSecurityConfig::class,
     TestSecurityConfig::class,
-    JwtAuthFilter::class
+    JwtAuthFilter::class,
 )
 @WebMvcTest(JwtAuthController::class, ProjectController::class)
 @ActiveProfiles("test")
 class AdminSecurityIntegrationTests {
-
     @Autowired
     lateinit var mvc: MockMvc
 
@@ -55,30 +54,31 @@ class AdminSecurityIntegrationTests {
     @MockkBean
     lateinit var projectService: ProjectService
 
-
     @Test
     fun `protected route - invalid token returns 401`() {
         every { jwtService.validateAndGetUserId("BAD") } returns null
 
-        mvc.get("/admin/projects") {
-            header("Authorization", "Bearer BAD")
-        }.andExpect {
-            status { isUnauthorized() }
-        }
+        mvc
+            .get("/admin/projects") {
+                header("Authorization", "Bearer BAD")
+            }.andExpect {
+                status { isUnauthorized() }
+            }
     }
 
     @Test
     fun `protected route - invalid token sets authenticate header`() {
         every { jwtService.validateAndGetUserId("BAD") } returns null
 
-        mvc.get("/admin/projects") {
-            header("Authorization", "Bearer BAD")
-        }.andExpect {
-            status { isUnauthorized() }
-            header {
-                string("WWW-Authenticate", "Bearer error=\"invalid_token\"")
+        mvc
+            .get("/admin/projects") {
+                header("Authorization", "Bearer BAD")
+            }.andExpect {
+                status { isUnauthorized() }
+                header {
+                    string("WWW-Authenticate", "Bearer error=\"invalid_token\"")
+                }
             }
-        }
     }
 
     @Test
@@ -87,16 +87,18 @@ class AdminSecurityIntegrationTests {
         mockUserAuthentication(adminUser, "jwt.admin")
         every { projectService.list(adminUser.getId()) } returns emptyList()
 
-        mvc.get("/admin/projects") {
-            header("Authorization", "Bearer jwt.admin")
-        }.andExpect {
-            status { isOk() }
-        }
+        mvc
+            .get("/admin/projects") {
+                header("Authorization", "Bearer jwt.admin")
+            }.andExpect {
+                status { isOk() }
+            }
     }
 
     @Test
     fun `protected route - logout requires authentication`() {
-        mvc.post("/auth/logout")
+        mvc
+            .post("/auth/logout")
             .andExpect {
                 status { isUnauthorized() }
             }
@@ -109,12 +111,13 @@ class AdminSecurityIntegrationTests {
 
         val loginPayload = mapOf("identifier" to "x", "password" to "y")
 
-        mvc.post("/auth/login") {
-            contentType = MediaType.APPLICATION_JSON
-            content = objectMapper.writeValueAsString(loginPayload)
-        }.andExpect {
-            status { isUnauthorized() }
-        }
+        mvc
+            .post("/auth/login") {
+                contentType = MediaType.APPLICATION_JSON
+                content = objectMapper.writeValueAsString(loginPayload)
+            }.andExpect {
+                status { isUnauthorized() }
+            }
     }
 
     @Test
@@ -124,12 +127,13 @@ class AdminSecurityIntegrationTests {
 
         val refreshPayload = mapOf("refresh" to "valid-refresh-token")
 
-        mvc.post("/auth/refresh") {
-            contentType = MediaType.APPLICATION_JSON
-            content = objectMapper.writeValueAsString(refreshPayload)
-        }.andExpect {
-            status { isOk() }
-        }
+        mvc
+            .post("/auth/refresh") {
+                contentType = MediaType.APPLICATION_JSON
+                content = objectMapper.writeValueAsString(refreshPayload)
+            }.andExpect {
+                status { isOk() }
+            }
     }
 
     private fun createMockUser(role: UserRole): AuthUserDetails {
@@ -141,11 +145,14 @@ class AdminSecurityIntegrationTests {
                 username = "test",
                 passwordHash = "xyz",
                 roles = setOf(role),
-            )
+            ),
         )
     }
 
-    private fun mockUserAuthentication(user: AuthUserDetails, token: String) {
+    private fun mockUserAuthentication(
+        user: AuthUserDetails,
+        token: String,
+    ) {
         every { jwtService.validateAndGetUserId(token) } returns user.getId()
         every { userDetailsService.loadUserById(user.getId()) } returns user
     }
