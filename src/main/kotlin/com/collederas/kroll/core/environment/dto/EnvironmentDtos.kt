@@ -1,6 +1,6 @@
 package com.collederas.kroll.core.environment.dto
 
-import java.util.UUID
+import java.util.*
 
 data class CreateEnvironmentDto(
     val name: String,

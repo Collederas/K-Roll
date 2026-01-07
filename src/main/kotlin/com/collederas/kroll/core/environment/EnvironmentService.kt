@@ -3,19 +3,22 @@ package com.collederas.kroll.core.environment
 import com.collederas.kroll.core.environment.dto.CreateEnvironmentDto
 import com.collederas.kroll.core.environment.dto.EnvironmentResponseDto
 import com.collederas.kroll.core.exceptions.ProjectNotFoundException
+import com.collederas.kroll.core.project.ProjectAccessGuard
 import com.collederas.kroll.core.project.ProjectRepository
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 @Service
 class EnvironmentService(
-    private val environmentRepository: EnvironmentRepository,
+    private val projectAccessGuard: ProjectAccessGuard,
     private val projectRepository: ProjectRepository,
+    private val environmentRepository: EnvironmentRepository,
 ) {
-    fun list(projectId: UUID): List<EnvironmentResponseDto> {
+    fun list(projectId: UUID, userId: UUID): List<EnvironmentResponseDto> {
+        projectAccessGuard.requireOwner(projectId, userId)
+
         if (!projectRepository.existsById(projectId)) {
             throw ProjectNotFoundException("Project with ID $projectId not found")
         }
@@ -26,14 +29,15 @@ class EnvironmentService(
 
     @Transactional
     fun create(
+        userId: UUID,
         projectId: UUID,
         dto: CreateEnvironmentDto,
     ): EnvironmentResponseDto {
+        projectAccessGuard.requireOwner(projectId, userId)
         val project =
             projectRepository.findByIdOrNull(projectId)
                 ?: throw ProjectNotFoundException("Project with ID $projectId not found")
 
-        val now = Instant.now()
         val environment =
             EnvironmentEntity(
                 project = project,

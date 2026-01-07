@@ -16,7 +16,7 @@ import java.time.Instant
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
-@ActiveProfiles("test")
+@ActiveProfiles("test", "test-persistence")
 class ConfigEntryRepositoryTest(
     @Autowired val configEntryRepo: ConfigEntryRepository,
     @Autowired val entityManager: TestEntityManager

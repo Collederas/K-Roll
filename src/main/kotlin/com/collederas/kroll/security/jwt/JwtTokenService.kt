@@ -10,16 +10,15 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.boot.context.properties.bind.ConstructorBinding
 import org.springframework.stereotype.Service
 import java.time.Duration
-import java.util.Date
-import java.util.UUID
+import java.util.*
 
 @ConfigurationProperties(prefix = "auth.jwt")
 data class JwtProperties
-    @ConstructorBinding
-    constructor(
-        val secret: String,
-        val expiration: Duration = Duration.ofHours(1),
-    )
+@ConstructorBinding
+constructor(
+    val secret: String,
+    val expiration: Duration = Duration.ofHours(1),
+)
 
 @Service
 class JwtTokenService(private val properties: JwtProperties) {

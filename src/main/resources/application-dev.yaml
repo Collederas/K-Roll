@@ -1,13 +1,13 @@
 spring:
-  datasource:
-    url: jdbc:postgresql://localhost:5432/krolldb
-    username: postgres
-    password: postgres
+    datasource:
+        url: jdbc:postgresql://localhost:5432/krolldb
+        username: postgres
+        password: postgres
 
 auth:
-  jwt:
-    secret: "4mMjQlzeBWMsrkjbchIyRNEQXKgUTQbCHwFkeEr8S34="
+    jwt:
+        secret: "4mMjQlzeBWMsrkjbchIyRNEQXKgUTQbCHwFkeEr8S34="
 
 logging:
-  level:
-    com.collederas.kroll: DEBUG
+    level:
+        com.collederas.kroll: DEBUG

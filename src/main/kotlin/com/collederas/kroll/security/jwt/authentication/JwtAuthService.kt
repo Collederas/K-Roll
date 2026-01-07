@@ -1,15 +1,15 @@
-package com.collederas.kroll.security
+package com.collederas.kroll.security.jwt.authentication
 
+import com.collederas.kroll.security.identity.AuthUserDetails
 import com.collederas.kroll.security.jwt.JwtTokenService
 import com.collederas.kroll.security.jwt.RefreshTokenService
-import com.collederas.kroll.security.user.AuthUserDetails
 import com.collederas.kroll.user.AppUser
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.stereotype.Service
 
 @Service
-class AuthenticationService(
+class JwtAuthService(
     private val authManager: AuthenticationManager,
     private val jwtTokenService: JwtTokenService,
     private val refreshTokenService: RefreshTokenService,

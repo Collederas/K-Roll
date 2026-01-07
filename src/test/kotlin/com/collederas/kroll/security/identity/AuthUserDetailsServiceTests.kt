@@ -1,4 +1,4 @@
-package com.collederas.kroll.security.user
+package com.collederas.kroll.security.identity
 
 import com.collederas.kroll.support.factories.UserFactory
 import com.collederas.kroll.user.AppUserRepository
@@ -10,8 +10,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertInstanceOf
 import org.junit.jupiter.api.assertThrows
 import org.springframework.security.core.userdetails.UsernameNotFoundException
-import java.util.Optional
-import java.util.UUID
+import java.util.*
 
 class AuthUserDetailsServiceTests {
     private val appUserRepository: AppUserRepository = mockk()

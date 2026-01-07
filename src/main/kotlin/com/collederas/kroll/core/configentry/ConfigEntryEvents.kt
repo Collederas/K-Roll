@@ -1,6 +1,6 @@
 package com.collederas.kroll.core.configentry
 
-import java.util.UUID
+import java.util.*
 
 data class ConfigEntryUpdatedEvent(
     val configEntryId: UUID,

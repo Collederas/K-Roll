@@ -1,7 +1,7 @@
 package com.collederas.kroll.core.project.dto
 
 import jakarta.validation.constraints.NotBlank
-import java.util.UUID
+import java.util.*
 
 data class CreateProjectDto(
     @field:NotBlank val name: String,

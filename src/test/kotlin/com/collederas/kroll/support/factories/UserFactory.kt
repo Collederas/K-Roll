@@ -1,9 +1,9 @@
 package com.collederas.kroll.support.factories
 
-import com.collederas.kroll.security.user.AuthUserDetails
+import com.collederas.kroll.security.identity.AuthUserDetails
 import com.collederas.kroll.user.AppUser
 import com.collederas.kroll.user.UserRole
-import java.util.UUID
+import java.util.*
 
 object UserFactory {
     fun create(

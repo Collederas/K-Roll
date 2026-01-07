@@ -2,13 +2,9 @@ package com.collederas.kroll.support
 
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean
-import java.time.Clock
-import java.time.Duration
-import java.time.Instant
-import java.time.ZoneId
-import java.time.ZoneOffset
+import java.time.*
 
-class MutableTestClock (
+class MutableTestClock(
     private var instant: Instant,
     private val zone: ZoneId = ZoneOffset.UTC
 ) : Clock() {

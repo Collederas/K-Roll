@@ -4,6 +4,7 @@ import com.collederas.kroll.core.configentry.dto.ConfigEntryResponseDto
 import com.collederas.kroll.core.configentry.dto.CreateConfigEntryDto
 import com.collederas.kroll.core.configentry.dto.UpdateConfigEntryDto
 import com.collederas.kroll.core.configentry.history.ConfigEntrySnapshot
+import com.collederas.kroll.core.environment.EnvironmentAccessGuard
 import com.collederas.kroll.core.environment.EnvironmentRepository
 import com.collederas.kroll.core.exceptions.ConfigEntryNotFoundException
 import com.collederas.kroll.core.exceptions.EnvironmentNotFoundException
@@ -17,13 +18,16 @@ import java.util.*
 
 @Service
 class ConfigEntryService(
+    private val envAccessGuard: EnvironmentAccessGuard,
     private val configEntryRepository: ConfigEntryRepository,
     private val environmentRepository: EnvironmentRepository,
     private val clock: Clock = Clock.systemUTC(),
     private val objectMapper: ObjectMapper = ObjectMapper(),
 
     ) {
-    fun list(envId: UUID): List<ConfigEntryResponseDto> {
+    fun list(userId: UUID, envId: UUID): List<ConfigEntryResponseDto> {
+        envAccessGuard.requireOwner(envId, userId)
+
         if (!environmentRepository.existsById(envId)) {
             throw EnvironmentNotFoundException("Environment with ID $envId not found")
         }
@@ -45,10 +49,12 @@ class ConfigEntryService(
 
     @Transactional
     fun create(
+        userId: UUID,
         envId: UUID,
-        createdBy: UUID,
         dto: CreateConfigEntryDto,
     ): ConfigEntryResponseDto {
+        envAccessGuard.requireOwner(envId, userId)
+
         val environment =
             environmentRepository.findByIdOrNull(envId)
                 ?: throw EnvironmentNotFoundException("Environment with ID $envId not found")
@@ -65,14 +71,18 @@ class ConfigEntryService(
             activeUntil = dto.activeUntil,
             environmentId = envId,
             changeDescription = "Initial Creation",
-            changedBy = createdBy,
+            changedBy = userId,
         )
         val snapshotJson = objectMapper.writeValueAsString(snapshotDto)
 
         val entity = ConfigEntryEntity.create(
             environment = environment,
-            createDto = dto,
-            createdBy = createdBy,
+            key = dto.key,
+            value = dto.value,
+            type = dto.type,
+            activeFrom = dto.activeFrom,
+            activeUntil = dto.activeUntil,
+            createdBy = userId,
             snapshotJson = snapshotJson
         )
 
@@ -81,11 +91,13 @@ class ConfigEntryService(
 
     @Transactional
     fun update(
-        editorUserId: UUID,
+        userId: UUID,
         envId: UUID,
         key: String,
         dto: UpdateConfigEntryDto,
     ): ConfigEntryResponseDto {
+        envAccessGuard.requireOwner(envId, userId)
+
         val entity = configEntryRepository.findByEnvironmentIdAndConfigKey(envId, key)
             ?: throw ConfigEntryNotFoundException("Config '$key' not found in env $envId")
 
@@ -96,21 +108,34 @@ class ConfigEntryService(
             activeFrom = dto.activeFrom ?: entity.activeFrom,
             activeUntil = dto.activeUntil ?: entity.activeUntil,
             changeDescription = dto.changeDescription,
-            changedBy = editorUserId,
+            changedBy = userId,
             environmentId = envId
         )
         val snapshotJson = objectMapper.writeValueAsString(snapshotDto)
 
-        entity.update(editorUserId, dto, snapshotJson)
+        entity.update(
+            editorId = userId,
+            newValue = dto.value,
+            newType = dto.type,
+            newActiveFrom = dto.activeFrom,
+            clearActiveFrom = dto.clearActiveFrom,
+            newActiveUntil = dto.activeUntil,
+            clearActiveUntil = dto.clearActiveUntil,
+            changeDescription = dto.changeDescription,
+            snapshotJson = snapshotJson
+        )
 
         return configEntryRepository.save(entity).toResponseDto()
     }
 
     @Transactional
     fun delete(
+        userId: UUID,
         envId: UUID,
         key: String,
     ) {
+        envAccessGuard.requireOwner(envId, userId)
+
         val entity =
             configEntryRepository.findByEnvironmentIdAndConfigKey(envId, key)
                 ?: throw ConfigEntryNotFoundException(

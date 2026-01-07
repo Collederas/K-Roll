@@ -1,7 +1,9 @@
 package com.collederas.kroll.security.jwt
 
-import com.collederas.kroll.security.AuthenticationService
+import com.collederas.kroll.api.auth.JwtAuthController
 import com.collederas.kroll.security.SecurityConfig
+import com.collederas.kroll.security.jwt.authentication.JwtAuthService
+import com.collederas.kroll.support.TestSecurityConfig
 import com.collederas.kroll.support.factories.AuthUserFactory
 import com.collederas.kroll.support.factories.UserFactory
 import com.ninjasquad.springmockk.MockkBean
@@ -11,9 +13,7 @@ import io.mockk.just
 import io.mockk.verify
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
-import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
 import org.springframework.security.authentication.BadCredentialsException
@@ -22,15 +22,15 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.post
 
-@SpringBootTest
-@AutoConfigureMockMvc
+@WebMvcTest(JwtAuthController::class)
+@Import(SecurityConfig::class, JwtSecurityConfig::class, TestSecurityConfig::class)
 @ActiveProfiles("test")
 class JwtAuthControllerTests {
     @Autowired
     lateinit var mvc: MockMvc
 
-    @MockkBean()
-    private lateinit var authService: AuthenticationService
+    @MockkBean
+    private lateinit var authService: JwtAuthService
 
     @Test
     fun `login with valid credentials returns valid tokens`() {
@@ -77,5 +77,5 @@ class JwtAuthControllerTests {
                 content = """{"identifier":"u", "password":"p"}"""
             }
             .andExpect { status { isUnauthorized() } }
-        }
+    }
 }

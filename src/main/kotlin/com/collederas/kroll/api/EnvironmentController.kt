@@ -1,16 +1,14 @@
-package com.collederas.kroll.core.environment
+package com.collederas.kroll.api
 
+import com.collederas.kroll.core.environment.EnvironmentService
 import com.collederas.kroll.core.environment.dto.CreateEnvironmentDto
 import com.collederas.kroll.core.environment.dto.EnvironmentResponseDto
+import com.collederas.kroll.security.identity.AuthUserDetails
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
-import java.util.UUID
+import org.springframework.security.core.annotation.AuthenticationPrincipal
+import org.springframework.web.bind.annotation.*
+import java.util.*
 
 @RestController
 @RequestMapping("/admin/projects/{projectId}/environments")
@@ -22,8 +20,9 @@ class EnvironmentController(
     @Operation(summary = "List environments", description = "List all environments for a project")
     fun list(
         @PathVariable projectId: UUID,
+        @AuthenticationPrincipal authUser: AuthUserDetails
     ): List<EnvironmentResponseDto> {
-        return environmentService.list(projectId)
+        return environmentService.list(projectId, authUser.getId())
     }
 
     @PostMapping
@@ -31,7 +30,8 @@ class EnvironmentController(
     fun create(
         @PathVariable projectId: UUID,
         @RequestBody dto: CreateEnvironmentDto,
+        @AuthenticationPrincipal authUser: AuthUserDetails
     ): EnvironmentResponseDto {
-        return environmentService.create(projectId, dto)
+        return environmentService.create(authUser.getId(), projectId, dto)
     }
 }

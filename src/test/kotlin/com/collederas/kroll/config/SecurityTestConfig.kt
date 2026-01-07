@@ -1,6 +1,6 @@
 package com.collederas.kroll.config
 
-import com.collederas.kroll.security.apikey.ApiKeyAuthenticationFilter
+import com.collederas.kroll.security.apikey.authentication.ApiKeyAuthenticationFilter
 import com.collederas.kroll.support.controllers.AuthIntrospectionController
 import com.collederas.kroll.support.filters.PreAuthTestFilter
 import org.springframework.boot.test.context.TestConfiguration

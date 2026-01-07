@@ -1,6 +1,6 @@
 package com.collederas.kroll.user.dto
 
-import java.util.UUID
+import java.util.*
 
 data class BasicUserDto(
     val id: UUID,

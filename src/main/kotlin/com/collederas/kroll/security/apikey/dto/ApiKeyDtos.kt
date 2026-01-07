@@ -1,7 +1,7 @@
 package com.collederas.kroll.security.apikey.dto
 
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 data class CreateApiKeyResponseDto(
     val id: UUID,

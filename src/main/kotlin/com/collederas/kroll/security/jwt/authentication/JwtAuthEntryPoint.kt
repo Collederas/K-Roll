@@ -1,4 +1,4 @@
-package com.collederas.kroll.security.jwt
+package com.collederas.kroll.security.jwt.authentication
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.servlet.http.HttpServletRequest

@@ -1,10 +1,10 @@
-package com.collederas.kroll.security.user
+package com.collederas.kroll.security.identity
 
 import com.collederas.kroll.user.AppUser
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
-import java.util.UUID
+import java.util.*
 
 class AuthUserDetails(
     private val user: AppUser,

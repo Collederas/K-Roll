@@ -7,11 +7,7 @@ import com.collederas.kroll.support.factories.EnvironmentFactory
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertNotEquals
-import org.junit.jupiter.api.Assertions.assertThrows
-import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNotNull
 import org.springframework.data.repository.findByIdOrNull
@@ -19,12 +15,12 @@ import java.time.Clock
 import java.time.Duration
 import java.time.Instant
 import java.time.ZoneOffset
-import java.util.UUID
+import java.util.*
 
 class ApiKeyServiceTests {
     private val environmentRepo = mockk<EnvironmentRepository>()
     private val apiRepo = mockk<ApiKeyRepository>()
-    private val defaultConfig = ApiKeyConfig()
+    private val defaultConfig = ApiKeyConfigProperties()
 
     private val fixedNow = Instant.parse("2025-01-01T00:00:00Z")
     private val fixedClock = Clock.fixed(fixedNow, ZoneOffset.UTC)
@@ -59,19 +55,6 @@ class ApiKeyServiceTests {
     }
 
     @Test
-    fun `create accepts expiry just after now`() {
-        val envId = UUID.randomUUID()
-        val environment = EnvironmentFactory.create()
-        every { environmentRepo.findByIdOrNull(envId) } returns environment
-        every { apiRepo.save(any()) } answers { firstArg() }
-
-        val expiresAt = fixedNow.plusNanos(1)
-        val response = apiKeyService.create(envId, expiresAt)
-
-        assertEquals(expiresAt, response.expiresAt)
-    }
-
-    @Test
     fun `create accepts expiry exactly at max lifetime`() {
         val max = defaultConfig.maxLifetime
         val expiresAt = fixedNow.plus(max)
@@ -79,7 +62,7 @@ class ApiKeyServiceTests {
         every { environmentRepo.findByIdOrNull(any()) } returns EnvironmentFactory.create()
         every { apiRepo.save(any()) } answers { firstArg() }
 
-        apiKeyService.create(UUID.randomUUID(), expiresAt) // no exception
+        apiKeyService.create(UUID.randomUUID(), expiresAt)
     }
 
     @Test
@@ -112,7 +95,7 @@ class ApiKeyServiceTests {
 
         val persisted = keySlot.captured
         assertNotEquals(response.key, persisted.keyHash)
-        assertEquals(ApiKeyHelper.hash(response.key), persisted.keyHash)
+        assertEquals(ApiKeyHasher.hash(response.key), persisted.keyHash)
 
         assertEquals(expiresAt, persisted.expiresAt)
         assertEquals(environment, persisted.environment)

@@ -102,7 +102,7 @@ CREATE TABLE config_entry_history
     changed_by         UUID      NOT NULL,
     changed_at         TIMESTAMP NOT NULL,
     change_description TEXT,
-    config_snapshot    TEXT     NOT NULL,  -- this should become JSONB at some point. Made it TEXT to simplify testing with H2
+    config_snapshot    TEXT      NOT NULL, -- this should become JSONB at some point. Made it TEXT to simplify testing with H2
 
     CONSTRAINT fk_history_entry
         FOREIGN KEY (config_entry_id) REFERENCES config_entries (id)

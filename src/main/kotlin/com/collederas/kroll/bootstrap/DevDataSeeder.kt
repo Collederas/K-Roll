@@ -7,8 +7,7 @@ import org.springframework.boot.CommandLineRunner
 import org.springframework.context.annotation.Profile
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Component
-import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 @Component
 @Profile("dev")

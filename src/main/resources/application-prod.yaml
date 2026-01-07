@@ -1,13 +1,13 @@
 spring:
-  datasource:
-    url: ${DB_URL}
-    username: ${DB_USER}
-    password: ${DB_PASS}
+    datasource:
+        url: ${DB_URL}
+        username: ${DB_USER}
+        password: ${DB_PASS}
 
 auth:
-  jwt:
-    secret: ${JWT_SECRET}
+    jwt:
+        secret: ${JWT_SECRET}
 
 logging:
-  level:
-    com.collederas.kroll: ${LOG_LEVEL:INFO}
+    level:
+        com.collederas.kroll: ${LOG_LEVEL:INFO}

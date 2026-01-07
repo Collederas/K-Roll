@@ -1,19 +1,19 @@
 package com.collederas.kroll.remoteconfig.project
 
+import com.collederas.kroll.core.project.ProjectAccessGuard
 import com.collederas.kroll.core.project.ProjectRepository
 import com.collederas.kroll.core.project.ProjectService
 import com.collederas.kroll.core.project.dto.CreateProjectDto
 import com.collederas.kroll.support.factories.UserFactory
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.verify
+import io.mockk.*
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import java.util.UUID
+import java.util.*
 
 class ProjectServiceTests {
     private val repo: ProjectRepository = mockk(relaxed = true)
-    private val projectService = ProjectService(repo)
+    private val projectAccessGuard: ProjectAccessGuard = mockk()
+    private val projectService = ProjectService(repo, projectAccessGuard)
 
     @Test
     fun `should create project successfully`() {
@@ -33,7 +33,11 @@ class ProjectServiceTests {
     fun `should delete project successfully`() {
         val projectId = UUID.randomUUID()
 
-        projectService.delete(projectId)
+        every {
+            projectAccessGuard.requireOwner(any(), any())
+        } just Runs
+
+        projectService.delete(UUID.randomUUID(), projectId)
 
         verify(exactly = 1) { repo.deleteById(projectId) }
     }

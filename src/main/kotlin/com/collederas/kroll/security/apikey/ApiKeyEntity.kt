@@ -1,11 +1,11 @@
 package com.collederas.kroll.security.apikey
 
-import com.collederas.kroll.remoteconfig.environment.EnvironmentEntity
+import com.collederas.kroll.core.environment.EnvironmentEntity
 import jakarta.persistence.*
 import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.annotation.LastModifiedDate
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 @Entity
 @Table(name = "api_keys")

@@ -12,5 +12,5 @@ class ConfigEntryNotFoundException(message: String) : RuntimeException(message)
 
 class InvalidConfigTypeException(message: String) : RuntimeException(message)
 
-class ApiKeyNotFoundException(message: String) : RuntimeException(message)
+class ForbiddenException(message: String) : RuntimeException(message)
 

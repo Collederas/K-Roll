@@ -1,9 +1,9 @@
 package com.collederas.kroll.security
 
-import com.collederas.kroll.security.apikey.ApiKeyHelper
 import com.collederas.kroll.core.environment.EnvironmentEntity
 import com.collederas.kroll.core.project.ProjectEntity
 import com.collederas.kroll.security.apikey.ApiKeyEntity
+import com.collederas.kroll.security.apikey.ApiKeyHasher
 import com.collederas.kroll.security.apikey.ApiKeyRepository
 import com.collederas.kroll.support.factories.UserFactory
 import com.ninjasquad.springmockk.MockkBean
@@ -16,7 +16,7 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -44,7 +44,7 @@ class ClientSecurityIntegrationTests {
             )
 
         val validKey = "api_key_12345"
-        val hashedKey = ApiKeyHelper.hash(validKey)
+        val hashedKey = ApiKeyHasher.hash(validKey)
 
         val mockKeyEntity =
             ApiKeyEntity(
@@ -65,7 +65,7 @@ class ClientSecurityIntegrationTests {
 
     @Test
     fun `api key route - invalid api key returns 401`() {
-        val key = ApiKeyHelper.hash("invalid-key")
+        val key = ApiKeyHasher.hash("invalid-key")
         every { apiKeyRepository.findByKeyHash(key) } returns null
 
         mvc.get("/client/ping") {

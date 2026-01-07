@@ -1,5 +1,5 @@
-import com.collederas.kroll.core.configentry.history.ConfigEntryHistoryEntity
 import com.collederas.kroll.core.configentry.ConfigEntryUpdatedEvent
+import com.collederas.kroll.core.configentry.history.ConfigEntryHistoryEntity
 import com.collederas.kroll.core.configentry.history.ConfigEntryHistoryRepository
 import org.springframework.stereotype.Component
 import org.springframework.transaction.event.TransactionPhase

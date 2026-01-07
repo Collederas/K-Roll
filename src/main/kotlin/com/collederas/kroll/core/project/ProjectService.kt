@@ -6,17 +6,20 @@ import com.collederas.kroll.core.project.dto.CreateProjectDto
 import com.collederas.kroll.core.project.dto.ProjectDto
 import com.collederas.kroll.user.AppUser
 import org.springframework.stereotype.Service
-import java.util.UUID
+import java.util.*
 
 @Service
-class ProjectService(private val repo: ProjectRepository) {
-    fun list(): List<ProjectDto> = repo.findAll().map { ProjectDto(it.id, it.name) }
+class ProjectService(
+    private val repo: ProjectRepository,
+    private val projectAccessGuard: ProjectAccessGuard,
+) {
+    fun list(ownerId: UUID): List<ProjectDto> = repo.findAllByOwnerId(ownerId).map { ProjectDto(it.id, it.name) }
 
     fun create(
         owner: AppUser,
         projectDto: CreateProjectDto,
     ): ProjectDto {
-        if (repo.existsByOwnerId(owner.id)) {
+        if (repo.existsByOwnerIdAndName(owner.id, projectDto.name)) {
             throw OwnerAlreadyHasProjectException(
                 "Owner ${owner.id} already has a project",
             )
@@ -38,7 +41,8 @@ class ProjectService(private val repo: ProjectRepository) {
         return ProjectDto(project.id, project.name)
     }
 
-    fun delete(projectId: UUID) {
+    fun delete(ownerId: UUID, projectId: UUID) {
+        projectAccessGuard.requireOwner(projectId, ownerId)
         repo.deleteById(projectId)
     }
 }

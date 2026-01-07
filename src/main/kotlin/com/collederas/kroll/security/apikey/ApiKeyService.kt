@@ -1,7 +1,6 @@
 package com.collederas.kroll.security.apikey
 
 import com.collederas.kroll.core.environment.EnvironmentRepository
-import com.collederas.kroll.core.exceptions.ApiKeyNotFoundException
 import com.collederas.kroll.core.exceptions.EnvironmentNotFoundException
 import com.collederas.kroll.security.apikey.dto.ApiKeyAuthResult
 import com.collederas.kroll.security.apikey.dto.ApiKeyMetadataDto
@@ -13,14 +12,13 @@ import org.springframework.transaction.annotation.Transactional
 import java.security.SecureRandom
 import java.time.Clock
 import java.time.Instant
-import java.util.Base64
-import java.util.UUID
+import java.util.*
 
 @Service
 class ApiKeyService(
     private val apiKeyRepository: ApiKeyRepository,
     private val environmentRepository: EnvironmentRepository,
-    private val properties: ApiKeyConfig,
+    private val properties: ApiKeyConfigProperties,
     private val clock: Clock = Clock.systemUTC(),
 ) {
     private val secureRandom = SecureRandom()
@@ -58,9 +56,8 @@ class ApiKeyService(
         }
 
         val rawKey = generateSecureKey()
-        val hashedKey = ApiKeyHelper.hash(rawKey)
+        val hashedKey = ApiKeyHasher.hash(rawKey)
 
-        // We take the first 4 chars + ellipses + last 4 chars for better identification
         val displayMask = "${rawKey.take(7)}...${rawKey.takeLast(4)}"
 
         val entity =
@@ -74,8 +71,9 @@ class ApiKeyService(
         return CreateApiKeyResponseDto(id = apiKey.id, key = rawKey, expiresAt = expiresAt)
     }
 
+    // TODO: this should go in its own service
     fun validate(rawApiKey: String): ApiKeyAuthResult {
-        val hashedKey = ApiKeyHelper.hash(rawApiKey)
+        val hashedKey = ApiKeyHasher.hash(rawApiKey)
 
         val entity =
             apiKeyRepository.findByKeyHash(hashedKey)
@@ -94,9 +92,6 @@ class ApiKeyService(
 
     @Transactional
     fun delete(apiKeyId: UUID) {
-        if (!apiKeyRepository.existsById(apiKeyId)) {
-            throw ApiKeyNotFoundException("API Key with ID $apiKeyId not found")
-        }
         apiKeyRepository.deleteById(apiKeyId)
     }
 

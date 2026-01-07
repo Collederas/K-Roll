@@ -1,5 +1,6 @@
 package com.collederas.kroll.api.common.exception
 
+import com.collederas.kroll.core.exceptions.ForbiddenException
 import com.collederas.kroll.core.exceptions.InvalidConfigTypeException
 import com.collederas.kroll.core.exceptions.ProjectAlreadyExistsException
 import com.collederas.kroll.security.apikey.exception.InvalidApiKeyExpiryException
@@ -68,6 +69,16 @@ class GlobalExceptionHandler {
             "A resource with these unique identifiers already exists."
         )
         problem.title = "Conflict"
+        return problem
+    }
+
+    @ExceptionHandler(ForbiddenException::class)
+    fun handleForbidden(ex: ForbiddenException): ProblemDetail {
+        val problem = ProblemDetail.forStatusAndDetail(
+            HttpStatus.FORBIDDEN,
+            ex.message ?: "Access to this resource is forbidden."
+        )
+        problem.title = "Forbidden"
         return problem
     }
 }

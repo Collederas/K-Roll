@@ -1,9 +1,10 @@
-package com.collederas.kroll.core.configentry
+package com.collederas.kroll.api
 
+import com.collederas.kroll.core.configentry.ConfigEntryService
 import com.collederas.kroll.core.configentry.dto.ConfigEntryResponseDto
 import com.collederas.kroll.core.configentry.dto.CreateConfigEntryDto
 import com.collederas.kroll.core.configentry.dto.UpdateConfigEntryDto
-import com.collederas.kroll.security.user.AuthUserDetails
+import com.collederas.kroll.security.identity.AuthUserDetails
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.HttpStatus
@@ -21,8 +22,9 @@ class AdminConfigController(
     @Operation(summary = "List config entries", description = "List all config entries for an environment")
     fun list(
         @PathVariable envId: UUID,
+        @AuthenticationPrincipal authUser: AuthUserDetails,
     ): List<ConfigEntryResponseDto> {
-        return configEntryService.list(envId)
+        return configEntryService.list(authUser.getId(), envId)
     }
 
     @PostMapping
@@ -31,9 +33,9 @@ class AdminConfigController(
     fun create(
         @PathVariable envId: UUID,
         @RequestBody dto: CreateConfigEntryDto,
-        @AuthenticationPrincipal user: AuthUserDetails,
+        @AuthenticationPrincipal authUser: AuthUserDetails,
     ): ConfigEntryResponseDto {
-        return configEntryService.create(envId, user.getId(), dto)
+        return configEntryService.create(authUser.getId(), envId, dto)
     }
 
     @PutMapping("/{key}")
@@ -42,18 +44,18 @@ class AdminConfigController(
         @PathVariable envId: UUID,
         @PathVariable key: String,
         @RequestBody dto: UpdateConfigEntryDto,
-        @AuthenticationPrincipal user: AuthUserDetails,
+        @AuthenticationPrincipal authUser: AuthUserDetails,
     ): ConfigEntryResponseDto {
-        return configEntryService.update(user.getId(), envId, key, dto)
+        return configEntryService.update(authUser.getId(), envId, key, dto)
     }
 
-    // TODO: add authprincipal as argument in service for auditing
     @DeleteMapping("/{key}")
     @Operation(summary = "Delete config entry", description = "Delete a config entry")
     fun delete(
         @PathVariable envId: UUID,
         @PathVariable key: String,
+        @AuthenticationPrincipal authUser: AuthUserDetails,
     ) {
-        configEntryService.delete(envId, key)
+        configEntryService.delete(authUser.getId(), envId, key)
     }
 }

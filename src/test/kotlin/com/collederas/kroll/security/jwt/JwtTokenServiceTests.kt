@@ -1,10 +1,10 @@
 package com.collederas.kroll.security.jwt
 
-import org.assertj.core.api.Assertions.*
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.springframework.test.context.ActiveProfiles
 import java.time.Duration
-import java.util.UUID
+import java.util.*
 
 @ActiveProfiles("test")
 class JwtServiceTests {

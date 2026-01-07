@@ -1,7 +1,5 @@
 package com.collederas.kroll.core.configentry
 
-import com.collederas.kroll.core.configentry.dto.CreateConfigEntryDto
-import com.collederas.kroll.core.configentry.dto.UpdateConfigEntryDto
 import com.collederas.kroll.core.environment.EnvironmentEntity
 import jakarta.persistence.*
 import org.springframework.data.domain.AbstractAggregateRoot
@@ -63,18 +61,22 @@ class ConfigEntryEntity(
 
     companion object {
         fun create(
-            createDto: CreateConfigEntryDto,
-            createdBy: UUID,
             environment: EnvironmentEntity,
+            key: String,
+            value: String,
+            type: ConfigType,
+            activeFrom: Instant?,
+            activeUntil: Instant?,
+            createdBy: UUID,
             snapshotJson: String
         ): ConfigEntryEntity {
             val entity = ConfigEntryEntity(
                 environment = environment,
-                configKey = createDto.key,
-                configValue = createDto.value,
-                configType = createDto.type,
-                activeFrom = createDto.activeFrom,
-                activeUntil = createDto.activeUntil,
+                configKey = key,
+                configValue = value,
+                configType = type,
+                activeFrom = activeFrom,
+                activeUntil = activeUntil,
                 createdBy = createdBy,
             )
             entity.validateState()
@@ -95,17 +97,23 @@ class ConfigEntryEntity(
 
     fun update(
         editorId: UUID,
-        updateDto: UpdateConfigEntryDto,
+        newValue: String?,
+        newType: ConfigType?,
+        newActiveFrom: Instant?,
+        clearActiveFrom: Boolean,
+        newActiveUntil: Instant?,
+        clearActiveUntil: Boolean,
+        changeDescription: String?,
         snapshotJson: String
     ): ConfigEntryEntity {
-        updateDto.value?.let { this.configValue = it }
-        updateDto.type?.let { this.configType = it }
+        newValue?.let { this.configValue = it }
+        newType?.let { this.configType = it }
 
-        if (updateDto.clearActiveFrom) this.activeFrom = null
-        else updateDto.activeFrom?.let { this.activeFrom = it }
+        if (clearActiveFrom) this.activeFrom = null
+        else newActiveFrom?.let { this.activeFrom = it }
 
-        if (updateDto.clearActiveUntil) this.activeUntil = null
-        else updateDto.activeUntil?.let { this.activeUntil = it }
+        if (clearActiveUntil) this.activeUntil = null
+        else newActiveUntil?.let { this.activeUntil = it }
 
         validateState()
 
@@ -114,7 +122,7 @@ class ConfigEntryEntity(
                 configEntryId = this.id,
                 environmentId = this.environment.id,
                 changedBy = editorId,
-                changeDescription = updateDto.changeDescription,
+                changeDescription = changeDescription,
                 snapshot = snapshotJson
             )
         )
@@ -151,8 +159,8 @@ class ConfigEntryEntity(
                 }
             }
 
-            else -> {
-
+            ConfigType.JSON -> {
+                // JSON validity enforced at service layer
             }
         }
     }

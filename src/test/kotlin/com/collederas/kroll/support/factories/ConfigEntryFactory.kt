@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 
 // TODO: make test only @Profile("test")
 object ConfigEntryFactory {

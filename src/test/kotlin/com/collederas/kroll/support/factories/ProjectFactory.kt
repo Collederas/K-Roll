@@ -2,7 +2,7 @@ package com.collederas.kroll.support.factories
 
 import com.collederas.kroll.core.project.ProjectEntity
 import com.collederas.kroll.user.AppUser
-import java.util.UUID
+import java.util.*
 
 // TODO: make test only @Profile("test")
 object ProjectFactory {

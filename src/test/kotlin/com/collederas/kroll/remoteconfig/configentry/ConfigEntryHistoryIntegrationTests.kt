@@ -8,6 +8,8 @@ import com.collederas.kroll.core.configentry.dto.UpdateConfigEntryDto
 import com.collederas.kroll.core.configentry.history.ConfigEntryHistoryRepository
 import com.collederas.kroll.support.factories.PersistedConfigEntryFactory
 import com.collederas.kroll.support.factories.PersistedEnvironmentFactory
+import com.collederas.kroll.support.factories.UserFactory
+import com.collederas.kroll.user.AppUserRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -18,13 +20,15 @@ import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ActiveProfiles
 import java.time.Duration
 import java.time.Instant
-import java.util.*
 
 @SpringBootTest
 @Import(ConfigEntryHistoryListener::class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-@ActiveProfiles("test")
-class ConfigEntryHistoryIntegrationTests {
+@ActiveProfiles("test", "test-persistence")
+class ConfigEntryHistoryIntegrationTests() {
+    @Autowired
+    lateinit var appUserRepository: AppUserRepository
+
     @Autowired
     lateinit var historyRepo: ConfigEntryHistoryRepository
 
@@ -35,11 +39,14 @@ class ConfigEntryHistoryIntegrationTests {
     lateinit var persistedEnvironmentFactory: PersistedEnvironmentFactory
 
     @Autowired
-    lateinit var persistedConfigEntryFactory: PersistedConfigEntryFactory
+    lateinit var envFactory: PersistedConfigEntryFactory
 
     @Test
     fun `creating config entry persists history`() {
-        val env = persistedEnvironmentFactory.create()
+        val user = UserFactory.create()
+        appUserRepository.save(user)
+
+        val env = persistedEnvironmentFactory.create(user)
 
         val dto = CreateConfigEntryDto(
             key = "testkey",
@@ -48,7 +55,7 @@ class ConfigEntryHistoryIntegrationTests {
             activeFrom = Instant.now(),
             activeUntil = Instant.now() + Duration.ofHours(1),
         )
-        configEntryService.create(env.id, UUID.randomUUID(), dto)
+        configEntryService.create(user.id, env.id, dto)
 
         val history = historyRepo.findAll()
         assertThat(history).hasSize(1)
@@ -60,12 +67,14 @@ class ConfigEntryHistoryIntegrationTests {
 
     @Test
     fun `updating config entry persists history`() {
-        val principalUserId = UUID.randomUUID()
-        val env = persistedEnvironmentFactory.create()
-        val entry = persistedConfigEntryFactory.create(
+        val user = UserFactory.create()
+        appUserRepository.save(user)
+
+        val env = persistedEnvironmentFactory.create(user)
+        val entry = envFactory.create(
             environment = env,
             value = "true",
-            createdBy = principalUserId,
+            createdBy = user.id,
         )
 
         val updateMsg = "Updated to false"
@@ -74,7 +83,7 @@ class ConfigEntryHistoryIntegrationTests {
             changeDescription = updateMsg,
         )
 
-        configEntryService.update(principalUserId, env.id, entry.configKey, dto)
+        configEntryService.update(user.id, env.id, entry.configKey, dto)
 
 
         val history = historyRepo.findAll()

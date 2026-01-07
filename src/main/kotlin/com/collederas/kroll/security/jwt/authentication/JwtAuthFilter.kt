@@ -1,6 +1,7 @@
-package com.collederas.kroll.security.jwt
+package com.collederas.kroll.security.jwt.authentication
 
-import com.collederas.kroll.security.user.AuthUserDetailsService
+import com.collederas.kroll.security.jwt.JwtTokenService
+import com.collederas.kroll.security.identity.AuthUserDetailsService
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
