@@ -1,8 +1,5 @@
-package com.collederas.kroll.remoteconfig.project
+package com.collederas.kroll.core.project
 
-import com.collederas.kroll.core.project.ProjectAccessGuard
-import com.collederas.kroll.core.project.ProjectRepository
-import com.collederas.kroll.core.project.ProjectService
 import com.collederas.kroll.core.project.dto.CreateProjectDto
 import com.collederas.kroll.support.factories.UserFactory
 import io.mockk.*

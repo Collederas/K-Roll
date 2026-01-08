@@ -1,29 +1,25 @@
 package com.collederas.kroll.core.exceptions
 
 class ProjectAlreadyExistsException(
-    message: String,
-) : RuntimeException(message)
-
-class OwnerAlreadyHasProjectException(
-    message: String,
+    message: String? = null,
 ) : RuntimeException(message)
 
 class ProjectNotFoundException(
-    message: String,
+    message: String? = null,
 ) : RuntimeException(message)
 
 class EnvironmentNotFoundException(
-    message: String,
+    message: String? = null,
 ) : RuntimeException(message)
 
 class ConfigEntryNotFoundException(
-    message: String,
+    message: String? = null,
 ) : RuntimeException(message)
 
 class InvalidConfigTypeException(
-    message: String,
+    message: String? = null,
 ) : RuntimeException(message)
 
 class ForbiddenException(
-    message: String,
+    message: String? = null,
 ) : RuntimeException(message)

@@ -1,6 +1,5 @@
 package com.collederas.kroll.core.project
 
-import com.collederas.kroll.core.exceptions.OwnerAlreadyHasProjectException
 import com.collederas.kroll.core.exceptions.ProjectAlreadyExistsException
 import com.collederas.kroll.core.project.dto.CreateProjectDto
 import com.collederas.kroll.core.project.dto.ProjectDto
@@ -20,15 +19,7 @@ class ProjectService(
         projectDto: CreateProjectDto,
     ): ProjectDto {
         if (repo.existsByOwnerIdAndName(owner.id, projectDto.name)) {
-            throw OwnerAlreadyHasProjectException(
-                "Owner ${owner.id} already has a project",
-            )
-        }
-
-        if (repo.existsByOwnerIdAndName(owner.id, projectDto.name)) {
-            throw ProjectAlreadyExistsException(
-                "Project with name '${projectDto.name}' already exists for this owner",
-            )
+            throw ProjectAlreadyExistsException()
         }
 
         val project =

@@ -1,7 +1,7 @@
-package com.collederas.kroll.security.jwt
+package com.collederas.kroll.api.auth
 
-import com.collederas.kroll.api.auth.JwtAuthController
 import com.collederas.kroll.security.SecurityConfig
+import com.collederas.kroll.security.jwt.JwtSecurityConfig
 import com.collederas.kroll.security.jwt.authentication.JwtAuthService
 import com.collederas.kroll.support.TestSecurityConfig
 import com.collederas.kroll.support.factories.AuthUserFactory
@@ -17,7 +17,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
 import org.springframework.security.authentication.BadCredentialsException
-import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.post
@@ -59,7 +59,7 @@ class JwtAuthControllerTests {
 
         mvc
             .post("/auth/logout") {
-                with(user(authUser))
+                with(SecurityMockMvcRequestPostProcessors.user(authUser))
             }.andExpect {
                 status { isNoContent() }
             }

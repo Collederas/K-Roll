@@ -4,7 +4,6 @@ import com.collederas.kroll.core.exceptions.ForbiddenException
 import com.collederas.kroll.core.exceptions.InvalidConfigTypeException
 import com.collederas.kroll.core.exceptions.ProjectAlreadyExistsException
 import com.collederas.kroll.security.apikey.exception.InvalidApiKeyExpiryException
-import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
 import org.springframework.security.core.AuthenticationException
@@ -36,17 +35,6 @@ class GlobalExceptionHandler {
                 it.setProperty("error_code", "INVALID_API_KEY_EXPIRY")
             }
 
-    @ExceptionHandler(ProjectAlreadyExistsException::class)
-    fun handleDuplicateProject(ex: ProjectAlreadyExistsException): ProblemDetail =
-        ProblemDetail
-            .forStatusAndDetail(
-                HttpStatus.CONFLICT,
-                ex.message ?: "Project already exists",
-            ).also {
-                it.title = "Project Conflict"
-                it.setProperty("error_code", "PROJECT_EXISTS")
-            }
-
     @ExceptionHandler(InvalidConfigTypeException::class)
     fun handleInvalidConfigType(ex: InvalidConfigTypeException): ProblemDetail =
         ProblemDetail
@@ -58,15 +46,15 @@ class GlobalExceptionHandler {
                 it.setProperty("error_code", "INVALID_CONFIG_TYPE")
             }
 
-    @ExceptionHandler(DataIntegrityViolationException::class)
-    fun handleDataIntegrityViolation(ex: DataIntegrityViolationException): ProblemDetail =
+    @ExceptionHandler(ProjectAlreadyExistsException::class)
+    fun handleDuplicateProject(ex: ProjectAlreadyExistsException): ProblemDetail =
         ProblemDetail
             .forStatusAndDetail(
                 HttpStatus.CONFLICT,
-                ex.message
-                    ?: "A resource with these unique identifiers already exists.",
+                ex.message ?: "You already have a Project with the same name",
             ).also {
-                it.title = "Conflict"
+                it.title = "Project Conflict"
+                it.setProperty("error_code", "PROJECT_EXISTS")
             }
 
     @ExceptionHandler(ForbiddenException::class)

@@ -1,8 +1,5 @@
-package com.collederas.kroll.remoteconfig.configentry
+package com.collederas.kroll.core.configentry
 
-import com.collederas.kroll.core.configentry.ConfigEntryRepository
-import com.collederas.kroll.core.configentry.ConfigEntryService
-import com.collederas.kroll.core.configentry.ConfigType
 import com.collederas.kroll.core.configentry.dto.CreateConfigEntryDto
 import com.collederas.kroll.core.configentry.dto.UpdateConfigEntryDto
 import com.collederas.kroll.core.environment.EnvironmentAccessGuard

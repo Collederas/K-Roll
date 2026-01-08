@@ -1,10 +1,11 @@
-package com.collederas.kroll.security.apikey
+package com.collederas.kroll.api.auth
 
+import com.collederas.kroll.security.apikey.ApiKeyService
 import com.collederas.kroll.support.MutableTestClock
 import com.collederas.kroll.support.TestClockConfig
 import com.collederas.kroll.support.factories.PersistedEnvironmentFactory
 import com.jayway.jsonpath.JsonPath
-import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
@@ -17,7 +18,7 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.delete
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.post
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import java.time.Duration
 import java.time.Instant
 
@@ -114,12 +115,12 @@ class ApiKeyIntegrationTests {
         mvc
             .get("/admin/environments/${env.id}/api-keys")
             .andExpect {
-                jsonPath("$[*].truncated").exists()
-                jsonPath("$[*].key").doesNotExist()
-                jsonPath("$[*].keyHash").doesNotExist()
+                MockMvcResultMatchers.jsonPath("$[*].truncated").exists()
+                MockMvcResultMatchers.jsonPath("$[*].key").doesNotExist()
+                MockMvcResultMatchers.jsonPath("$[*].keyHash").doesNotExist()
             }
 
-        assertThat(rawKey).startsWith("rk_")
+        Assertions.assertThat(rawKey).startsWith("rk_")
     }
 
     @Test

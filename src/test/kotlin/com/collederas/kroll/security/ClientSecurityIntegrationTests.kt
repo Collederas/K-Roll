@@ -37,7 +37,7 @@ class ClientSecurityIntegrationTests {
     @Test
     fun `public route - client api is not accessible without token`() {
         val user = userRepository.save(UserFactory.create(roles = setOf(UserRole.ADMIN)))
-        val env = envFactory.create(user)
+        envFactory.create(user)
 
         mvc
             .post(testedEndpoint)

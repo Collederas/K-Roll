@@ -1,4 +1,4 @@
-package com.collederas.kroll.remoteconfig.configentry
+package com.collederas.kroll.api
 
 import com.collederas.kroll.core.configentry.ConfigEntryService
 import com.collederas.kroll.core.configentry.ConfigType
@@ -12,7 +12,7 @@ import com.collederas.kroll.support.factories.UserFactory
 import com.collederas.kroll.user.AppUserRepository
 import com.collederas.kroll.user.UserRole
 import com.fasterxml.jackson.databind.ObjectMapper
-import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
@@ -21,9 +21,13 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
-import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors
 import org.springframework.test.context.ActiveProfiles
-import org.springframework.test.web.servlet.*
+import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.delete
+import org.springframework.test.web.servlet.get
+import org.springframework.test.web.servlet.post
+import org.springframework.test.web.servlet.put
 import java.time.Duration
 
 @SpringBootTest
@@ -87,19 +91,19 @@ class ConfigEntryIntegrationTests {
             when (method) {
                 "PUT" ->
                     mvc.put(urlTemplate, victimEnv.id, targetEntry.key) {
-                        with(user(unauthorizedAuthUser))
+                        with(SecurityMockMvcRequestPostProcessors.user(unauthorizedAuthUser))
                         contentType = MediaType.APPLICATION_JSON
                         content = objectMapper.writeValueAsString(requestBody)
                     }
 
                 "DELETE" ->
                     mvc.delete(urlTemplate, victimEnv.id, targetEntry.key) {
-                        with(user(unauthorizedAuthUser))
+                        with(SecurityMockMvcRequestPostProcessors.user(unauthorizedAuthUser))
                     }
 
                 else ->
                     mvc.get(urlTemplate, victimEnv.id) {
-                        with(user(unauthorizedAuthUser))
+                        with(SecurityMockMvcRequestPostProcessors.user(unauthorizedAuthUser))
                     }
             }
 
@@ -129,7 +133,7 @@ class ConfigEntryIntegrationTests {
 
         mvc
             .post(testedEndpoint, env.id) {
-                with(user(authUser))
+                with(SecurityMockMvcRequestPostProcessors.user(authUser))
                 contentType = MediaType.APPLICATION_JSON
                 content = objectMapper.writeValueAsString(createRequest)
             }.andExpect {
@@ -142,11 +146,11 @@ class ConfigEntryIntegrationTests {
             }
 
         val persisted = configEntryService.list(authUser.getId(), env.id).single()
-        assertThat(persisted.key).isEqualTo("key.id")
-        assertThat(persisted.value).isEqualTo("true")
-        assertThat(persisted.type).isEqualTo(ConfigType.BOOLEAN)
-        assertThat(persisted.activeFrom).isEqualTo(activeFrom)
-        assertThat(persisted.activeUntil).isEqualTo(activeUntil)
+        Assertions.assertThat(persisted.key).isEqualTo("key.id")
+        Assertions.assertThat(persisted.value).isEqualTo("true")
+        Assertions.assertThat(persisted.type).isEqualTo(ConfigType.BOOLEAN)
+        Assertions.assertThat(persisted.activeFrom).isEqualTo(activeFrom)
+        Assertions.assertThat(persisted.activeUntil).isEqualTo(activeUntil)
     }
 
     @Test
@@ -174,7 +178,7 @@ class ConfigEntryIntegrationTests {
 
         mvc
             .put("$testedEndpoint/{key}", env.id, "key.id") {
-                with(user(authUser))
+                with(SecurityMockMvcRequestPostProcessors.user(authUser))
                 contentType = MediaType.APPLICATION_JSON
                 content = objectMapper.writeValueAsString(updateRequest)
             }.andExpect {
@@ -185,7 +189,7 @@ class ConfigEntryIntegrationTests {
             }
 
         val persisted = configEntryService.list(authUser.getId(), env.id).single()
-        assertThat(persisted.value).isEqualTo("new_value")
-        assertThat(persisted.type).isEqualTo(ConfigType.STRING)
+        Assertions.assertThat(persisted.value).isEqualTo("new_value")
+        Assertions.assertThat(persisted.type).isEqualTo(ConfigType.STRING)
     }
 }
