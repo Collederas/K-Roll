@@ -39,7 +39,6 @@ ktlint {
 detekt {
     buildUponDefaultConfig.set(true)
     allRules.set(false)
-    failOnSeverity.set(FailOnSeverity.Never)
     config = files("config/detekt/detekt.yml")
 }
 
@@ -94,6 +93,8 @@ tasks.jacocoTestReport {
 }
 
 tasks.jacocoTestCoverageVerification {
+    dependsOn(tasks.jacocoTestReport)
+
     violationRules {
         rule {
             limit {
@@ -107,10 +108,6 @@ tasks.jacocoTestCoverageVerification {
 
 tasks.check {
     dependsOn(tasks.jacocoTestCoverageVerification)
-}
-
-tasks.named("ktlintTestSourceSetCheck") {
-    dependsOn("ktlintFormat")
 }
 
 tasks.withType<Test> {
