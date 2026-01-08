@@ -45,8 +45,9 @@ class JwtSecurityConfig(
                 it.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             }.authorizeHttpRequests {
                 it.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                it.requestMatchers("/admin/**").hasRole("ADMIN")
                 it
+                    .requestMatchers("/admin/**")
+                    .hasRole("ADMIN")
                     .requestMatchers(
                         "/auth/login",
                         "/auth/refresh",

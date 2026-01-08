@@ -33,7 +33,6 @@ class ApiKeyAuthenticationFilter(
 
             if (!rawApiKey.isNullOrBlank()) {
                 val authResult = apiKeyService.validate(rawApiKey)
-                println(authResult)
 
                 if (authResult.apiKeyId != null && authResult.environmentId != null) {
                     val principal = GameClientPrincipal(authResult.environmentId, authResult.apiKeyId)

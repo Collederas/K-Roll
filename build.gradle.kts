@@ -1,5 +1,3 @@
-import dev.detekt.gradle.extensions.FailOnSeverity
-
 plugins {
     kotlin("jvm") version "2.2.20"
     kotlin("plugin.spring") version "2.2.20"

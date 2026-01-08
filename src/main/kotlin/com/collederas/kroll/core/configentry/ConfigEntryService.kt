@@ -8,6 +8,8 @@ import com.collederas.kroll.core.environment.EnvironmentAccessGuard
 import com.collederas.kroll.core.environment.EnvironmentRepository
 import com.collederas.kroll.core.exceptions.ConfigEntryNotFoundException
 import com.collederas.kroll.core.exceptions.EnvironmentNotFoundException
+import com.collederas.kroll.core.exceptions.InvalidConfigTypeException
+import com.fasterxml.jackson.core.JacksonException
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
@@ -172,8 +174,12 @@ class ConfigEntryService(
             ConfigType.JSON -> objectMapper.readTree(value)
         }
 
+    @Suppress("SwallowedException")
     private fun validateJson(value: String) {
-        // TODO: very lazy
-        objectMapper.readTree(value)
+        try {
+            objectMapper.readTree(value)
+        } catch (e: JacksonException) {
+            throw InvalidConfigTypeException("Invalid JSON format")
+        }
     }
 }
