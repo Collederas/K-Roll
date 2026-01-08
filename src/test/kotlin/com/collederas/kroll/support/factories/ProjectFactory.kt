@@ -6,11 +6,10 @@ import java.util.*
 
 // TODO: make test only @Profile("test")
 object ProjectFactory {
-    fun create(owner: AppUser = UserFactory.create()): ProjectEntity {
-        return ProjectEntity(
+    fun create(owner: AppUser = UserFactory.create()): ProjectEntity =
+        ProjectEntity(
             id = UUID.randomUUID(),
             name = "Test Project",
             owner = owner,
         )
-    }
 }

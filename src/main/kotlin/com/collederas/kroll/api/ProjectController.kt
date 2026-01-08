@@ -13,14 +13,16 @@ import java.util.*
 @RestController
 @RequestMapping("/admin/projects")
 @Tag(name = "Project Management", description = "Endpoints for managing projects")
-class ProjectController(private val projectService: ProjectService) {
+class ProjectController(
+    private val projectService: ProjectService,
+) {
     @GetMapping
     @Operation(
         summary = "List all projects",
         description = "Returns a list of all projects with their IDs and names",
     )
     fun list(
-        @AuthenticationPrincipal authUser: AuthUserDetails
+        @AuthenticationPrincipal authUser: AuthUserDetails,
     ): List<ProjectDto> = projectService.list(authUser.getId())
 
     @PostMapping
@@ -37,7 +39,7 @@ class ProjectController(private val projectService: ProjectService) {
     @Operation(summary = "Delete a project", description = "Deletes the project with the given ID")
     fun delete(
         @PathVariable id: UUID,
-        @AuthenticationPrincipal authUser: AuthUserDetails
+        @AuthenticationPrincipal authUser: AuthUserDetails,
     ) {
         projectService.delete(authUser.getId(), id)
     }

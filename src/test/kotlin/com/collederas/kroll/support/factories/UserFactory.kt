@@ -8,23 +8,20 @@ import java.util.*
 object UserFactory {
     fun create(
         id: UUID = UUID.randomUUID(),
-        username: String = "testuser",
-        email: String = "test@example.com",
+        username: String = "user-${UUID.randomUUID()}",
+        email: String = "user-${UUID.randomUUID()}@example.com",
         passwordHash: String = "\$2a\$10\$fakehash",
         roles: Set<UserRole> = emptySet(),
-    ): AppUser {
-        return AppUser(
+    ): AppUser =
+        AppUser(
             id = id,
             username = username,
             email = email,
             passwordHash = passwordHash,
             roles = roles,
         )
-    }
 }
 
 object AuthUserFactory {
-    fun create(user: AppUser): AuthUserDetails {
-        return AuthUserDetails(user)
-    }
+    fun create(user: AppUser): AuthUserDetails = AuthUserDetails(user)
 }

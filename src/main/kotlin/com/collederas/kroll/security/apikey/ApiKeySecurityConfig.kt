@@ -18,7 +18,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 class ApiKeySecurityConfig(
     private val apiKeyAuthenticationFilter: ApiKeyAuthenticationFilter,
 ) {
-
     @Bean
     @Order(1)
     fun clientChain(http: HttpSecurity): SecurityFilterChain {
@@ -28,19 +27,16 @@ class ApiKeySecurityConfig(
             .csrf { it.disable() }
             .sessionManagement {
                 it.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            }
-            .exceptionHandling {
+            }.exceptionHandling {
                 it.authenticationEntryPoint(
-                    HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)
+                    HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
                 )
-            }
-            .authorizeHttpRequests {
+            }.authorizeHttpRequests {
                 it.requestMatchers(HttpMethod.OPTIONS, "/client/**").permitAll()
                 it.anyRequest().hasRole("GAME_CLIENT")
-            }
-            .addFilterBefore(
+            }.addFilterBefore(
                 apiKeyAuthenticationFilter,
-                UsernamePasswordAuthenticationFilter::class.java
+                UsernamePasswordAuthenticationFilter::class.java,
             )
 
         return http.build()

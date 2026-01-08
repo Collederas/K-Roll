@@ -21,13 +21,21 @@ class ApiKeyService(
     private val properties: ApiKeyConfigProperties,
     private val clock: Clock = Clock.systemUTC(),
 ) {
+    companion object {
+        private const val API_KEY_BYTE_LENGTH = 24
+        private const val API_KEY_PREFIX = "rk_"
+        private const val API_KEY_MASK_PREFIX_LENGTH = 7
+        private const val API_KEY_MASK_SUFFIX_LENGTH = 4
+        private const val API_KEY_MASK_ELLIPSIS = "..."
+    }
+
     private val secureRandom = SecureRandom()
 
     private fun generateSecureKey(): String {
-        val bytes = ByteArray(24)
+        val bytes = ByteArray(API_KEY_BYTE_LENGTH)
         secureRandom.nextBytes(bytes)
         // Creates a string like "rk_AbCd123..."
-        return "rk_" + Base64.getUrlEncoder().withoutPadding().encodeToString(bytes)
+        return API_KEY_PREFIX + Base64.getUrlEncoder().withoutPadding().encodeToString(bytes)
     }
 
     fun list(envId: UUID): List<ApiKeyMetadataDto> {
@@ -46,19 +54,15 @@ class ApiKeyService(
             environmentRepository.findByIdOrNull(envId)
                 ?: throw EnvironmentNotFoundException("Environment with ID $envId not found")
 
-        val now = Instant.now(clock)
-
-        if (!expiresAt.isAfter(now)) {
-            throw InvalidApiKeyExpiryException("expiresAt must be in the future")
-        }
-        if (expiresAt.isAfter(now.plus(properties.maxLifetime))) {
-            throw InvalidApiKeyExpiryException("expiresAt must be within ${properties.maxLifetime} days")
-        }
+        validateExpiryTime(expiresAt)
 
         val rawKey = generateSecureKey()
         val hashedKey = ApiKeyHasher.hash(rawKey)
 
-        val displayMask = "${rawKey.take(7)}...${rawKey.takeLast(4)}"
+        val displayMask =
+            rawKey.take(API_KEY_MASK_PREFIX_LENGTH) +
+                API_KEY_MASK_ELLIPSIS +
+                rawKey.takeLast(API_KEY_MASK_SUFFIX_LENGTH)
 
         val entity =
             ApiKeyEntity(
@@ -67,27 +71,38 @@ class ApiKeyService(
                 mask = displayMask,
                 expiresAt = expiresAt,
             )
+
         val apiKey = apiKeyRepository.save(entity)
         return CreateApiKeyResponseDto(id = apiKey.id, key = rawKey, expiresAt = expiresAt)
+    }
+
+    private fun validateExpiryTime(expiresAt: Instant) {
+        val now = Instant.now(clock)
+        val maxAllowedExpiry = now.plus(properties.maxLifetime)
+
+        when {
+            !expiresAt.isAfter(now) ->
+                throw InvalidApiKeyExpiryException("expiresAt must be in the future")
+
+            expiresAt.isAfter(maxAllowedExpiry) ->
+                throw InvalidApiKeyExpiryException("expiresAt must be within ${properties.maxLifetime} days")
+        }
     }
 
     // TODO: this should go in its own service
     fun validate(rawApiKey: String): ApiKeyAuthResult {
         val hashedKey = ApiKeyHasher.hash(rawApiKey)
 
-        val entity =
-            apiKeyRepository.findByKeyHash(hashedKey)
-                ?: return ApiKeyAuthResult.invalid()
-
-        if (!entity.isActive()) {
-            return ApiKeyAuthResult.invalid()
-        }
-
-        return ApiKeyAuthResult(
-            entity.environment.id,
-            entity.id,
-            roles = listOf("ROLE_GAME_CLIENT"),
-        )
+        return apiKeyRepository
+            .findByKeyHash(hashedKey)
+            ?.takeIf { it.isActive() }
+            ?.let { entity ->
+                ApiKeyAuthResult(
+                    entity.environment.id,
+                    entity.id,
+                    roles = listOf("ROLE_GAME_CLIENT"),
+                )
+            } ?: ApiKeyAuthResult.invalid()
     }
 
     @Transactional

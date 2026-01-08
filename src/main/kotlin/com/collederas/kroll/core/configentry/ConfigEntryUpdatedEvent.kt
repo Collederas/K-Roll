@@ -7,5 +7,5 @@ data class ConfigEntryUpdatedEvent(
     val environmentId: UUID,
     val changedBy: UUID,
     val changeDescription: String?,
-    val snapshot: String
+    val snapshot: String,
 )

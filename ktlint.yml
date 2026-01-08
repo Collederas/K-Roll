@@ -1,4 +1,0 @@
-max_line_length: 100
-indent_size: 4
-trailing_comma_on_declaration_site: true
-trailing_comma_on_call_site: true

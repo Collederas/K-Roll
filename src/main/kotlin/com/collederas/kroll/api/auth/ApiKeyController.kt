@@ -20,9 +20,7 @@ class ApiKeyController(
     @Operation(summary = "List API keys", description = "List all API keys for an environment")
     fun list(
         @PathVariable envId: UUID,
-    ): List<ApiKeyMetadataDto> {
-        return apiKeyService.list(envId)
-    }
+    ): List<ApiKeyMetadataDto> = apiKeyService.list(envId)
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -30,16 +28,12 @@ class ApiKeyController(
     fun create(
         @PathVariable envId: UUID,
         @RequestBody expiresAt: Instant,
-    ): CreateApiKeyResponseDto {
-        return apiKeyService.create(envId, expiresAt)
-    }
+    ): CreateApiKeyResponseDto = apiKeyService.create(envId, expiresAt)
 
     @DeleteMapping("{apiKeyId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "Delete API key", description = "Delete an API key")
     fun delete(
         @PathVariable apiKeyId: UUID,
-    ) {
-        return apiKeyService.delete(apiKeyId)
-    }
+    ) = apiKeyService.delete(apiKeyId)
 }

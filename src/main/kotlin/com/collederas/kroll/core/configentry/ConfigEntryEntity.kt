@@ -7,18 +7,21 @@ import java.time.Instant
 import java.util.*
 
 enum class ConfigType {
-    BOOLEAN, STRING, NUMBER, JSON
+    BOOLEAN,
+    STRING,
+    NUMBER,
+    JSON,
 }
 
 @Entity
 @Table(
     name = "config_entries",
     uniqueConstraints = [
-        UniqueConstraint(columnNames = ["environment_id", "config_key"])
+        UniqueConstraint(columnNames = ["environment_id", "config_key"]),
     ],
     indexes = [
-        Index(name = "idx_config_entry_key", columnList = "config_key")
-    ]
+        Index(name = "idx_config_entry_key", columnList = "config_key"),
+    ],
 )
 class ConfigEntryEntity(
     @Id
@@ -68,17 +71,18 @@ class ConfigEntryEntity(
             activeFrom: Instant?,
             activeUntil: Instant?,
             createdBy: UUID,
-            snapshotJson: String
+            snapshotJson: String,
         ): ConfigEntryEntity {
-            val entity = ConfigEntryEntity(
-                environment = environment,
-                configKey = key,
-                configValue = value,
-                configType = type,
-                activeFrom = activeFrom,
-                activeUntil = activeUntil,
-                createdBy = createdBy,
-            )
+            val entity =
+                ConfigEntryEntity(
+                    environment = environment,
+                    configKey = key,
+                    configValue = value,
+                    configType = type,
+                    activeFrom = activeFrom,
+                    activeUntil = activeUntil,
+                    createdBy = createdBy,
+                )
             entity.validateState()
 
             entity.registerEvent(
@@ -87,8 +91,8 @@ class ConfigEntryEntity(
                     environmentId = environment.id,
                     changedBy = createdBy,
                     changeDescription = "Initial Creation",
-                    snapshot = snapshotJson
-                )
+                    snapshot = snapshotJson,
+                ),
             )
 
             return entity
@@ -104,16 +108,22 @@ class ConfigEntryEntity(
         newActiveUntil: Instant?,
         clearActiveUntil: Boolean,
         changeDescription: String?,
-        snapshotJson: String
+        snapshotJson: String,
     ): ConfigEntryEntity {
         newValue?.let { this.configValue = it }
         newType?.let { this.configType = it }
 
-        if (clearActiveFrom) this.activeFrom = null
-        else newActiveFrom?.let { this.activeFrom = it }
+        if (clearActiveFrom) {
+            this.activeFrom = null
+        } else {
+            newActiveFrom?.let { this.activeFrom = it }
+        }
 
-        if (clearActiveUntil) this.activeUntil = null
-        else newActiveUntil?.let { this.activeUntil = it }
+        if (clearActiveUntil) {
+            this.activeUntil = null
+        } else {
+            newActiveUntil?.let { this.activeUntil = it }
+        }
 
         validateState()
 
@@ -123,8 +133,8 @@ class ConfigEntryEntity(
                 environmentId = this.environment.id,
                 changedBy = editorId,
                 changeDescription = changeDescription,
-                snapshot = snapshotJson
-            )
+                snapshot = snapshotJson,
+            ),
         )
         return this
     }
@@ -132,32 +142,30 @@ class ConfigEntryEntity(
     fun validateState() {
         // Date sanity
         if (activeFrom != null && activeUntil != null) {
-            if (activeUntil!!.isBefore(activeFrom)) {
-                throw IllegalArgumentException("activeUntil ($activeUntil) cannot be before activeFrom ($activeFrom)")
+            require(!activeUntil!!.isBefore(activeFrom)) {
+                "activeUntil ($activeUntil) cannot be before activeFrom ($activeFrom)"
             }
         }
 
         // Type safety
         when (configType) {
-            ConfigType.NUMBER -> {
-                if (configValue.toBigDecimalOrNull() == null) {
-                    throw IllegalArgumentException("Value '$configValue' is not a valid NUMBER")
+            ConfigType.NUMBER ->
+                require(configValue.toBigDecimalOrNull() != null) {
+                    "Value '$configValue' is not a valid NUMBER"
                 }
-            }
 
-            ConfigType.BOOLEAN -> {
-                if (!configValue.equals("true", ignoreCase = true) &&
-                    !configValue.equals("false", ignoreCase = true)
+            ConfigType.BOOLEAN ->
+                require(
+                    configValue.equals("true", ignoreCase = true) ||
+                        configValue.equals("false", ignoreCase = true),
                 ) {
-                    throw IllegalArgumentException("Value '$configValue' is not a valid BOOLEAN")
+                    "Value '$configValue' is not a valid BOOLEAN"
                 }
-            }
 
-            ConfigType.STRING -> {
-                if (configValue.isBlank()) {
-                    throw IllegalArgumentException("Config value cannot be empty")
+            ConfigType.STRING ->
+                require(configValue.isNotBlank()) {
+                    "Config value cannot be empty"
                 }
-            }
 
             ConfigType.JSON -> {
                 // JSON validity enforced at service layer

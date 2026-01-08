@@ -6,9 +6,12 @@ import java.util.*
 
 @Component
 class EnvironmentAccessGuard(
-    private val environmentRepository: EnvironmentRepository
+    private val environmentRepository: EnvironmentRepository,
 ) {
-    fun requireOwner(envId: UUID, userId: UUID) {
+    fun requireOwner(
+        envId: UUID,
+        userId: UUID,
+    ) {
         if (!environmentRepository.existsByIdAndProjectOwnerId(envId, userId)) {
             throw ForbiddenException("Environment not owned by user")
         }

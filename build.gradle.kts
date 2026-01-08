@@ -1,17 +1,24 @@
 plugins {
-    kotlin("jvm") version "1.9.25"
-    kotlin("plugin.spring") version "1.9.25"
-    kotlin("plugin.jpa") version "1.9.22"
+    kotlin("jvm") version "2.2.20"
+    kotlin("plugin.spring") version "2.2.20"
+    kotlin("plugin.jpa") version "2.2.20"
     id("org.springframework.boot") version "3.5.7"
     id("io.swagger.core.v3.swagger-gradle-plugin") version "2.2.40"
     id("io.spring.dependency-management") version "1.1.7"
     id("org.flywaydb.flyway") version "11.17.0"
-    id("org.jlleitschuh.gradle.ktlint") version "12.1.0"
+    id("org.jlleitschuh.gradle.ktlint") version "14.0.1"
+    id("dev.detekt") version("2.0.0-alpha.1")
+
+    jacoco
 }
 
 group = "com.collederas"
 version = "0.0.1-SNAPSHOT"
 description = "KRoll is a remote configuration and feature-flag service for games."
+
+repositories {
+    mavenCentral()
+}
 
 java {
     toolchain {
@@ -20,14 +27,19 @@ java {
 }
 
 ktlint {
-    version.set("1.2.1")
-    enableExperimentalRules.set(true)
+    version.set("1.4.1")
+    filter {
+        exclude { it.file.extension == "kts" }
+    }
     outputToConsole.set(true)
 }
 
-repositories {
-    mavenCentral()
+detekt {
+    buildUponDefaultConfig.set(true)
+    allRules.set(false)
+    config = files("config/detekt/detekt.yml")
 }
+
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
@@ -44,7 +56,7 @@ dependencies {
     implementation("com.github.ben-manes.caffeine:caffeine")
     implementation("org.flywaydb:flyway-core")
     implementation("org.flywaydb:flyway-database-postgresql")
-    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0")
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0")
     implementation("io.swagger.core.v3:swagger-annotations:2.2.20")
 
     implementation("org.jetbrains.kotlin:kotlin-reflect")
@@ -69,6 +81,35 @@ allOpen {
     annotation("jakarta.persistence.Embeddable")
 }
 
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+    reports {
+        xml.required.set(true)
+        html.required.set(false)
+        csv.required.set(false)
+    }
+}
+
+tasks.jacocoTestCoverageVerification {
+    dependsOn(tasks.jacocoTestReport)
+
+    violationRules {
+        rule {
+            limit {
+                counter = "INSTRUCTION"
+                value = "COVEREDRATIO"
+                minimum = "0.30".toBigDecimal()  // TODO: after MVP, raise
+            }
+        }
+    }
+}
+
+tasks.check {
+    dependsOn(tasks.jacocoTestCoverageVerification)
+}
+
 tasks.withType<Test> {
     useJUnitPlatform()
+    systemProperty("spring.profiles.active", "test")
+    finalizedBy(tasks.jacocoTestReport)
 }

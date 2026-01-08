@@ -19,14 +19,11 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.delete
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.post
-import org.springframework.transaction.annotation.Transactional
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@Transactional
-@ActiveProfiles("test", "test-persistence")
+@ActiveProfiles("test")
 class ProjectIntegrationTests {
-
     @Autowired
     lateinit var mvc: MockMvc
 
@@ -43,43 +40,47 @@ class ProjectIntegrationTests {
 
     @Test
     fun `list should return only user projects`() {
-        val user = userRepository.save(
-            UserFactory.create(roles = setOf(UserRole.ADMIN))
-        )
+        val user =
+            userRepository.save(
+                UserFactory.create(roles = setOf(UserRole.ADMIN)),
+            )
 
         val authUser = user.asAuth()
 
         projectService.create(user, CreateProjectDto("Project A"))
         projectService.create(user, CreateProjectDto("Project B"))
 
-        mvc.get(endpoint) {
-            with(user(authUser))
-        }.andExpect {
-            status { isOk() }
-            jsonPath("$.length()") { value(2) }
-            jsonPath("$[0].name") { value("Project A") }
-            jsonPath("$[1].name") { value("Project B") }
-        }
+        mvc
+            .get(endpoint) {
+                with(user(authUser))
+            }.andExpect {
+                status { isOk() }
+                jsonPath("$.length()") { value(2) }
+                jsonPath("$[0].name") { value("Project A") }
+                jsonPath("$[1].name") { value("Project B") }
+            }
     }
 
     @Test
     fun `create should persist and return project`() {
-        val user = userRepository.save(
-            UserFactory.create(roles = setOf(UserRole.ADMIN))
-        )
+        val user =
+            userRepository.save(
+                UserFactory.create(roles = setOf(UserRole.ADMIN)),
+            )
 
         val authUser = user.asAuth()
 
         val request = CreateProjectDto("New Project")
 
-        mvc.post(endpoint) {
-            with(user(authUser))
-            contentType = MediaType.APPLICATION_JSON
-            content = objectMapper.writeValueAsString(request)
-        }.andExpect {
-            status { isOk() }
-            jsonPath("$.name") { value("New Project") }
-        }
+        mvc
+            .post(endpoint) {
+                with(user(authUser))
+                contentType = MediaType.APPLICATION_JSON
+                content = objectMapper.writeValueAsString(request)
+            }.andExpect {
+                status { isOk() }
+                jsonPath("$.name") { value("New Project") }
+            }
 
         val persisted = projectService.list(user.id)
         assertThat(persisted).hasSize(1)
@@ -88,27 +89,31 @@ class ProjectIntegrationTests {
 
     @Test
     fun `delete should remove project`() {
-        val user = userRepository.save(
-            UserFactory.create(roles = setOf(UserRole.ADMIN))
-        )
+        val user =
+            userRepository.save(
+                UserFactory.create(roles = setOf(UserRole.ADMIN)),
+            )
 
         val authUser = user.asAuth()
 
-        val project = projectService.create(
-            user,
-            CreateProjectDto("To Be Deleted")
-        )
+        val project =
+            projectService.create(
+                user,
+                CreateProjectDto("To Be Deleted"),
+            )
 
-        mvc.delete("$endpoint/{id}", project.id) {
-            with(user(authUser))
-        }.andExpect {
-            status { isOk() }
-        }
+        mvc
+            .delete("$endpoint/{id}", project.id) {
+                with(user(authUser))
+            }.andExpect {
+                status { isOk() }
+            }
 
         val remaining = projectService.list(user.id)
         assertThat(remaining).isEmpty()
     }
 
     private fun com.collederas.kroll.user.AppUser.asAuth(): UserDetails =
-        com.collederas.kroll.security.identity.AuthUserDetails(this)
+        com.collederas.kroll.security.identity
+            .AuthUserDetails(this)
 }

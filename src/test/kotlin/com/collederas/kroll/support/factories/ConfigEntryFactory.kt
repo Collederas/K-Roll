@@ -13,7 +13,6 @@ import java.util.*
 
 // TODO: make test only @Profile("test")
 object ConfigEntryFactory {
-
     fun create(
         environment: EnvironmentEntity = EnvironmentFactory.create(),
         key: String = "test.flag",
@@ -23,8 +22,8 @@ object ConfigEntryFactory {
         activeFrom: Instant? = null,
         activeUntil: Instant? = null,
         id: UUID = UUID.randomUUID(),
-    ): ConfigEntryEntity {
-        return ConfigEntryEntity(
+    ): ConfigEntryEntity =
+        ConfigEntryEntity(
             id = id,
             environment = environment,
             createdBy = createdBy,
@@ -34,9 +33,7 @@ object ConfigEntryFactory {
             activeFrom = activeFrom,
             activeUntil = activeUntil,
         )
-    }
 
-    /** Common presets to avoid repetition */
     fun activeBoolean(
         environment: EnvironmentEntity,
         key: String = "flag.enabled",
@@ -76,13 +73,14 @@ class PersistedConfigEntryFactory(
         createdBy: UUID,
     ): ConfigEntryEntity {
         val persistedEnv = environmentRepository.save(environment)
-        val entry = ConfigEntryFactory.create(
-            environment = persistedEnv,
-            key = key,
-            type = type,
-            value = value,
-            createdBy = createdBy
-        )
+        val entry =
+            ConfigEntryFactory.create(
+                environment = persistedEnv,
+                key = key,
+                type = type,
+                value = value,
+                createdBy = createdBy,
+            )
         return configEntryRepository.save(entry)
     }
 
@@ -94,15 +92,18 @@ class PersistedConfigEntryFactory(
         value: String = "true",
         createdBy: UUID,
     ): ConfigEntryEntity {
-        val env = environmentRepository.findById(environmentId)
-            .orElseThrow { IllegalArgumentException("Environment $environmentId not found") }
-        val entry = ConfigEntryFactory.create(
-            environment = env,
-            key = key,
-            type = type,
-            value = value,
-            createdBy = createdBy
-        )
+        val env =
+            environmentRepository
+                .findById(environmentId)
+                .orElseThrow { IllegalArgumentException("Environment $environmentId not found") }
+        val entry =
+            ConfigEntryFactory.create(
+                environment = env,
+                key = key,
+                type = type,
+                value = value,
+                createdBy = createdBy,
+            )
         return configEntryRepository.save(entry)
     }
 }

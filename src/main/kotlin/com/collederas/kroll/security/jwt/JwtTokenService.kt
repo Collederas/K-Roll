@@ -14,14 +14,16 @@ import java.util.*
 
 @ConfigurationProperties(prefix = "auth.jwt")
 data class JwtProperties
-@ConstructorBinding
-constructor(
-    val secret: String,
-    val expiration: Duration = Duration.ofHours(1),
-)
+    @ConstructorBinding
+    constructor(
+        val secret: String,
+        val expiration: Duration = Duration.ofHours(1),
+    )
 
 @Service
-class JwtTokenService(private val properties: JwtProperties) {
+class JwtTokenService(
+    private val properties: JwtProperties,
+) {
     private val logger: Logger = LoggerFactory.getLogger(javaClass)
 
     private val jwtSigningKey =
@@ -44,7 +46,8 @@ class JwtTokenService(private val properties: JwtProperties) {
         val signingKey = jwtSigningKey
 
         val token =
-            Jwts.builder()
+            Jwts
+                .builder()
                 .subject(userId.toString())
                 .claim("username", username)
                 .issuedAt(now)
@@ -58,12 +61,14 @@ class JwtTokenService(private val properties: JwtProperties) {
      * Parse a JWT token and validate its signature.
      * @return UUID the user UUID
      */
+    @Suppress("SwallowedException")
     fun validateAndGetUserId(token: String): UUID? {
         return try {
             if (token.isBlank()) return null
 
             val claims =
-                Jwts.parser()
+                Jwts
+                    .parser()
                     .verifyWith(jwtSigningKey)
                     .build()
                     .parseSignedClaims(token)
@@ -71,6 +76,7 @@ class JwtTokenService(private val properties: JwtProperties) {
 
             UUID.fromString(claims.subject)
         } catch (e: JwtException) {
+            // TODO: logging, overall
             logger.debug("Invalid JWT: ${e.message}")
             null
         } catch (e: IllegalArgumentException) {

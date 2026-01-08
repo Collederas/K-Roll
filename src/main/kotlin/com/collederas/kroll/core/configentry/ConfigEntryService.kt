@@ -8,6 +8,8 @@ import com.collederas.kroll.core.environment.EnvironmentAccessGuard
 import com.collederas.kroll.core.environment.EnvironmentRepository
 import com.collederas.kroll.core.exceptions.ConfigEntryNotFoundException
 import com.collederas.kroll.core.exceptions.EnvironmentNotFoundException
+import com.collederas.kroll.core.exceptions.InvalidConfigTypeException
+import com.fasterxml.jackson.core.JacksonException
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
@@ -23,9 +25,11 @@ class ConfigEntryService(
     private val environmentRepository: EnvironmentRepository,
     private val clock: Clock = Clock.systemUTC(),
     private val objectMapper: ObjectMapper = ObjectMapper(),
-
-    ) {
-    fun list(userId: UUID, envId: UUID): List<ConfigEntryResponseDto> {
+) {
+    fun list(
+        userId: UUID,
+        envId: UUID,
+    ): List<ConfigEntryResponseDto> {
         envAccessGuard.requireOwner(envId, userId)
 
         if (!environmentRepository.existsById(envId)) {
@@ -63,28 +67,30 @@ class ConfigEntryService(
             validateJson(dto.value)
         }
 
-        val snapshotDto = ConfigEntrySnapshot(
-            key = dto.key,
-            value = dto.value,
-            type = dto.type,
-            activeFrom = dto.activeFrom,
-            activeUntil = dto.activeUntil,
-            environmentId = envId,
-            changeDescription = "Initial Creation",
-            changedBy = userId,
-        )
+        val snapshotDto =
+            ConfigEntrySnapshot(
+                key = dto.key,
+                value = dto.value,
+                type = dto.type,
+                activeFrom = dto.activeFrom,
+                activeUntil = dto.activeUntil,
+                environmentId = envId,
+                changeDescription = "Initial Creation",
+                changedBy = userId,
+            )
         val snapshotJson = objectMapper.writeValueAsString(snapshotDto)
 
-        val entity = ConfigEntryEntity.create(
-            environment = environment,
-            key = dto.key,
-            value = dto.value,
-            type = dto.type,
-            activeFrom = dto.activeFrom,
-            activeUntil = dto.activeUntil,
-            createdBy = userId,
-            snapshotJson = snapshotJson
-        )
+        val entity =
+            ConfigEntryEntity.create(
+                environment = environment,
+                key = dto.key,
+                value = dto.value,
+                type = dto.type,
+                activeFrom = dto.activeFrom,
+                activeUntil = dto.activeUntil,
+                createdBy = userId,
+                snapshotJson = snapshotJson,
+            )
 
         return configEntryRepository.save(entity).toResponseDto()
     }
@@ -98,19 +104,21 @@ class ConfigEntryService(
     ): ConfigEntryResponseDto {
         envAccessGuard.requireOwner(envId, userId)
 
-        val entity = configEntryRepository.findByEnvironmentIdAndConfigKey(envId, key)
-            ?: throw ConfigEntryNotFoundException("Config '$key' not found in env $envId")
+        val entity =
+            configEntryRepository.findByEnvironmentIdAndConfigKey(envId, key)
+                ?: throw ConfigEntryNotFoundException("Config '$key' not found in env $envId")
 
-        val snapshotDto = ConfigEntrySnapshot(
-            key = key,
-            value = dto.value ?: entity.configValue,
-            type = dto.type ?: entity.configType,
-            activeFrom = dto.activeFrom ?: entity.activeFrom,
-            activeUntil = dto.activeUntil ?: entity.activeUntil,
-            changeDescription = dto.changeDescription,
-            changedBy = userId,
-            environmentId = envId
-        )
+        val snapshotDto =
+            ConfigEntrySnapshot(
+                key = key,
+                value = dto.value ?: entity.configValue,
+                type = dto.type ?: entity.configType,
+                activeFrom = dto.activeFrom ?: entity.activeFrom,
+                activeUntil = dto.activeUntil ?: entity.activeUntil,
+                changeDescription = dto.changeDescription,
+                changedBy = userId,
+                environmentId = envId,
+            )
         val snapshotJson = objectMapper.writeValueAsString(snapshotDto)
 
         entity.update(
@@ -122,7 +130,7 @@ class ConfigEntryService(
             newActiveUntil = dto.activeUntil,
             clearActiveUntil = dto.clearActiveUntil,
             changeDescription = dto.changeDescription,
-            snapshotJson = snapshotJson
+            snapshotJson = snapshotJson,
         )
 
         return configEntryRepository.save(entity).toResponseDto()
@@ -140,7 +148,7 @@ class ConfigEntryService(
             configEntryRepository.findByEnvironmentIdAndConfigKey(envId, key)
                 ?: throw ConfigEntryNotFoundException(
                     "Config with key '$key' " +
-                        "not found in environment $envId"
+                        "not found in environment $envId",
                 )
         configEntryRepository.delete(entity)
     }
@@ -155,20 +163,23 @@ class ConfigEntryService(
             environmentId = environment.id,
         )
 
-    private fun parseValue(value: String, type: ConfigType): Any {
-        return when (type) {
+    private fun parseValue(
+        value: String,
+        type: ConfigType,
+    ): Any =
+        when (type) {
             ConfigType.BOOLEAN -> value.toBoolean()
             ConfigType.NUMBER -> value.toBigDecimal()
             ConfigType.STRING -> value
             ConfigType.JSON -> objectMapper.readTree(value)
         }
-    }
 
+    @Suppress("SwallowedException")
     private fun validateJson(value: String) {
         try {
             objectMapper.readTree(value)
-        } catch (e: Exception) {
-            throw IllegalArgumentException("Invalid JSON format")
+        } catch (e: JacksonException) {
+            throw InvalidConfigTypeException("Invalid JSON format")
         }
     }
 }

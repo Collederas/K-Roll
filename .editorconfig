@@ -2,12 +2,12 @@ root = true
 
 [*]
 indent_style = space
-indent_size = 4
 end_of_line = lf
 charset = utf-8
 trim_trailing_whitespace = true
 insert_final_newline = true
 
-# Ktlint specific settings
-ktlint_max_line_length = 100
-ktlint_code_style = ktlint_official
+[*.kt]
+indent_size = 4
+max_line_length = 120
+ktlint_standard_no-wildcard-imports = disabled

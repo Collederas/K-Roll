@@ -1,8 +1,8 @@
 package com.collederas.kroll.api.auth
 
-import com.collederas.kroll.security.jwt.authentication.JwtAuthService
 import com.collederas.kroll.security.identity.AuthUserDetails
-import com.collederas.kroll.user.dto.BasicUserDto
+import com.collederas.kroll.security.jwt.authentication.JwtAuthService
+import com.collederas.kroll.user.dto.AppUserDto
 import jakarta.validation.constraints.NotBlank
 import org.springframework.http.HttpStatus
 import org.springframework.security.core.annotation.AuthenticationPrincipal
@@ -42,25 +42,24 @@ class JwtAuthController(
     @GetMapping("/me")
     fun me(
         @AuthenticationPrincipal user: AuthUserDetails,
-    ): BasicUserDto {
-        return BasicUserDto(
+    ): AppUserDto =
+        AppUserDto(
             id = user.getId(),
             username = user.username,
             email = user.getEmail(),
         )
-    }
+
+    data class LoginRequest(
+        @field:NotBlank val identifier: String,
+        @field:NotBlank val password: String,
+    )
+
+    data class LoginResponse(
+        val access: String,
+        val refresh: String,
+    )
+
+    data class RefreshTokenRequest(
+        val refresh: String,
+    )
 }
-
-data class LoginRequest(
-    @field:NotBlank val identifier: String,
-    @field:NotBlank val password: String,
-)
-
-data class LoginResponse(
-    val access: String,
-    val refresh: String,
-)
-
-data class RefreshTokenRequest(
-    val refresh: String,
-)
