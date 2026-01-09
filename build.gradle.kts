@@ -7,7 +7,7 @@ plugins {
     id("io.spring.dependency-management") version "1.1.7"
     id("org.flywaydb.flyway") version "11.17.0"
     id("org.jlleitschuh.gradle.ktlint") version "14.0.1"
-    id("dev.detekt") version("2.0.0-alpha.1")
+    id("dev.detekt") version ("2.0.0-alpha.1")
 
     jacoco
 }
@@ -56,7 +56,7 @@ dependencies {
     implementation("com.github.ben-manes.caffeine:caffeine")
     implementation("org.flywaydb:flyway-core")
     implementation("org.flywaydb:flyway-database-postgresql")
-    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0")
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.15")
     implementation("io.swagger.core.v3:swagger-annotations:2.2.20")
 
     implementation("org.jetbrains.kotlin:kotlin-reflect")

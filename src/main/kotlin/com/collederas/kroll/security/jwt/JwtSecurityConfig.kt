@@ -1,39 +1,25 @@
 package com.collederas.kroll.security.jwt
 
+import com.collederas.kroll.security.AuthEntryPoint
 import com.collederas.kroll.security.identity.AuthUserDetailsService
-import com.collederas.kroll.security.jwt.authentication.JwtAuthEntryPoint
 import com.collederas.kroll.security.jwt.authentication.JwtAuthFilter
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.annotation.Order
 import org.springframework.http.HttpMethod
-import org.springframework.security.authentication.AuthenticationManager
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.config.http.SessionCreationPolicy
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 
 @Configuration
-@EnableWebSecurity
 class JwtSecurityConfig(
-    private val jwtAuthEntryPoint: JwtAuthEntryPoint,
-    private val jwtAuthFilter: JwtAuthFilter,
+    private val authEntryPoint: AuthEntryPoint,
+    private val jwtService: JwtTokenService,
     private val userDetailsService: AuthUserDetailsService,
-    private val passwordEncoder: BCryptPasswordEncoder,
 ) {
     @Bean
-    fun authenticationProvider(): DaoAuthenticationProvider =
-        DaoAuthenticationProvider(userDetailsService).apply {
-            setPasswordEncoder(passwordEncoder)
-        }
-
-    @Bean
-    fun authenticationManager(authConfig: AuthenticationConfiguration): AuthenticationManager =
-        authConfig.authenticationManager
+    fun jwtAuthFilter(): JwtAuthFilter = JwtAuthFilter(jwtService, userDetailsService)
 
     @Bean
     @Order(2)
@@ -58,9 +44,9 @@ class JwtSecurityConfig(
                 it.requestMatchers("/auth/logout").authenticated()
                 it.anyRequest().denyAll()
             }.exceptionHandling {
-                it.authenticationEntryPoint(jwtAuthEntryPoint)
+                it.authenticationEntryPoint(authEntryPoint)
             }.addFilterBefore(
-                jwtAuthFilter,
+                jwtAuthFilter(),
                 UsernamePasswordAuthenticationFilter::class.java,
             )
 
