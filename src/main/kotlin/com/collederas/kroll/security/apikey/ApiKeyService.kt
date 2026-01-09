@@ -54,7 +54,7 @@ class ApiKeyService(
             environmentRepository.findByIdOrNull(envId)
                 ?: throw EnvironmentNotFoundException("Environment with ID $envId not found")
 
-        validateExpiryTime(expiresAt)
+        validateExpiryTime(expiresAt, clock.instant())
 
         val rawKey = generateSecureKey()
         val hashedKey = ApiKeyHasher.hash(rawKey)
@@ -76,8 +76,10 @@ class ApiKeyService(
         return CreateApiKeyResponseDto(id = apiKey.id, key = rawKey, expiresAt = expiresAt)
     }
 
-    private fun validateExpiryTime(expiresAt: Instant) {
-        val now = Instant.now(clock)
+    private fun validateExpiryTime(
+        expiresAt: Instant,
+        now: Instant,
+    ) {
         val maxAllowedExpiry = now.plus(properties.maxLifetime)
 
         when {
@@ -85,7 +87,9 @@ class ApiKeyService(
                 throw InvalidApiKeyExpiryException("expiresAt must be in the future")
 
             expiresAt.isAfter(maxAllowedExpiry) ->
-                throw InvalidApiKeyExpiryException("expiresAt must be within ${properties.maxLifetime} days")
+                throw InvalidApiKeyExpiryException(
+                    "expiresAt must be within ${properties.maxLifetime}",
+                )
         }
     }
 

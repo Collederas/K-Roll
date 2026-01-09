@@ -1,4 +1,4 @@
-package com.collederas.kroll.security.jwt.authentication
+package com.collederas.kroll.security
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.servlet.http.HttpServletRequest
@@ -18,7 +18,7 @@ import org.springframework.stereotype.Component
  * using the WWW-Authenticate method as per HTTP Challenge Spec."
  */
 @Component
-class JwtAuthEntryPoint(
+class AuthEntryPoint(
     private val objectMapper: ObjectMapper,
 ) : AuthenticationEntryPoint {
     override fun commence(

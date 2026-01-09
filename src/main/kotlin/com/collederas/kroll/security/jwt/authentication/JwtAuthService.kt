@@ -7,6 +7,7 @@ import com.collederas.kroll.user.AppUser
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service
 class JwtAuthService(
@@ -14,6 +15,7 @@ class JwtAuthService(
     private val jwtTokenService: JwtTokenService,
     private val refreshTokenService: RefreshTokenService,
 ) {
+    @Transactional
     fun login(
         usernameOrEmail: String,
         password: String,
@@ -28,6 +30,7 @@ class JwtAuthService(
         return accessToken to refreshToken
     }
 
+    @Transactional
     fun refreshToken(refreshToken: String): Pair<String, String> {
         val (user, newRefreshEntity) = refreshTokenService.rotateFromRefresh(refreshToken)
         val newAccessToken = jwtTokenService.generateToken(user.id, user.username)

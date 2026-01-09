@@ -9,7 +9,7 @@ import com.collederas.kroll.security.jwt.JwtSecurityConfig
 import com.collederas.kroll.security.jwt.JwtTokenService
 import com.collederas.kroll.security.jwt.authentication.JwtAuthFilter
 import com.collederas.kroll.security.jwt.authentication.JwtAuthService
-import com.collederas.kroll.support.TestSecurityConfig
+import com.collederas.kroll.support.TestSecurityMocks
 import com.collederas.kroll.user.AppUser
 import com.collederas.kroll.user.UserRole
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -30,7 +30,7 @@ import java.util.*
 @Import(
     SecurityConfig::class,
     JwtSecurityConfig::class,
-    TestSecurityConfig::class,
+    TestSecurityMocks::class,
     JwtAuthFilter::class,
 )
 @WebMvcTest(JwtAuthController::class, ProjectController::class)

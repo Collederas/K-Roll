@@ -1,10 +1,12 @@
 package com.collederas.kroll.api.auth
 
+import com.collederas.kroll.security.apikey.ApiKeyRepository
 import com.collederas.kroll.security.apikey.ApiKeyService
 import com.collederas.kroll.support.MutableTestClock
 import com.collederas.kroll.support.TestClockConfig
 import com.collederas.kroll.support.factories.PersistedEnvironmentFactory
 import com.jayway.jsonpath.JsonPath
+import jakarta.transaction.Transactional
 import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -25,8 +27,12 @@ import java.time.Instant
 @SpringBootTest
 @AutoConfigureMockMvc
 @Import(TestClockConfig::class)
+@Transactional
 @ActiveProfiles("test")
 class ApiKeyIntegrationTests {
+    @Autowired
+    private lateinit var apiKeyRepository: ApiKeyRepository
+
     @Autowired
     lateinit var envFactory: PersistedEnvironmentFactory
 
@@ -73,6 +79,7 @@ class ApiKeyIntegrationTests {
                 clock.instant().plusSeconds(10),
             )
 
+        apiKeyRepository.flush()
         clock.advanceBy(Duration.ofSeconds(11))
 
         mvc

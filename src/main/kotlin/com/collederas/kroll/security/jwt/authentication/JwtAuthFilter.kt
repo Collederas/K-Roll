@@ -9,14 +9,12 @@ import org.springframework.security.authentication.AnonymousAuthenticationToken
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource
-import org.springframework.stereotype.Component
 import org.springframework.web.filter.OncePerRequestFilter
 
 /**
  * _devnotes: "Part of Spring filter chain logic: filters requests looking for a valid
  * JWT token to populate the SecurityContext with an authenticated principal."
  * */
-@Component
 class JwtAuthFilter(
     private val jwtService: JwtTokenService,
     private val userDetailsService: AuthUserDetailsService,

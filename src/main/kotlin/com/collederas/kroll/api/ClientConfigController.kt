@@ -1,7 +1,7 @@
 package com.collederas.kroll.api
 
 import com.collederas.kroll.core.configentry.ConfigEntryService
-import com.collederas.kroll.security.apikey.authentication.GameClientPrincipal
+import com.collederas.kroll.security.apikey.identity.GameClientPrincipal
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.security.core.Authentication

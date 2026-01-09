@@ -3,7 +3,7 @@ package com.collederas.kroll.api.auth
 import com.collederas.kroll.security.SecurityConfig
 import com.collederas.kroll.security.jwt.JwtSecurityConfig
 import com.collederas.kroll.security.jwt.authentication.JwtAuthService
-import com.collederas.kroll.support.TestSecurityConfig
+import com.collederas.kroll.support.TestSecurityMocks
 import com.collederas.kroll.support.factories.AuthUserFactory
 import com.collederas.kroll.support.factories.UserFactory
 import com.ninjasquad.springmockk.MockkBean
@@ -23,7 +23,7 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.post
 
 @WebMvcTest(JwtAuthController::class)
-@Import(SecurityConfig::class, JwtSecurityConfig::class, TestSecurityConfig::class)
+@Import(SecurityConfig::class, JwtSecurityConfig::class, TestSecurityMocks::class)
 @ActiveProfiles("test")
 class JwtAuthControllerTests {
     @Autowired

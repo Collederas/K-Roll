@@ -4,13 +4,12 @@ import com.collederas.kroll.security.apikey.ApiKeyEntity
 import com.collederas.kroll.security.apikey.ApiKeyHasher
 import com.collederas.kroll.security.apikey.ApiKeyRepository
 import com.collederas.kroll.support.factories.PersistedEnvironmentFactory
-import com.collederas.kroll.support.factories.UserFactory
 import com.collederas.kroll.user.AppUserRepository
-import com.collederas.kroll.user.UserRole
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.context.annotation.Import
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.post
@@ -18,6 +17,7 @@ import java.time.Instant
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@Import(ConfigEntryHistoryListener::class)
 @ActiveProfiles("test")
 class ClientSecurityIntegrationTests {
     @Autowired
@@ -36,8 +36,7 @@ class ClientSecurityIntegrationTests {
 
     @Test
     fun `public route - client api is not accessible without token`() {
-        val user = userRepository.save(UserFactory.create(roles = setOf(UserRole.ADMIN)))
-        envFactory.create(user)
+        envFactory.create()
 
         mvc
             .post(testedEndpoint)
@@ -46,8 +45,7 @@ class ClientSecurityIntegrationTests {
 
     @Test
     fun `api key route - valid api key returns 200`() {
-        val user = userRepository.save(UserFactory.create(roles = setOf(UserRole.ADMIN)))
-        val env = envFactory.create(user)
+        val env = envFactory.create()
 
         val rawKey = "api_key_12345"
         val hashedKey = ApiKeyHasher.hash(rawKey)
@@ -69,8 +67,7 @@ class ClientSecurityIntegrationTests {
 
     @Test
     fun `api key route - invalid api key returns 401`() {
-        val user = userRepository.save(UserFactory.create(roles = setOf(UserRole.ADMIN)))
-        val env = envFactory.create(user)
+        envFactory.create()
 
         mvc
             .post(testedEndpoint) {

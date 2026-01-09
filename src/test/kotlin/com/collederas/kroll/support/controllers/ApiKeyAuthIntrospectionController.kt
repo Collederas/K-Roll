@@ -6,8 +6,8 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@RequestMapping("/test/auth/")
-class AuthIntrospectionController {
+@RequestMapping("/test/auth/apikey/")
+class ApiKeyAuthIntrospectionController {
     @GetMapping("/whoami")
     fun whoAmI(authentication: Authentication?): Any {
         if (authentication == null) {
