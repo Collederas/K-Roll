@@ -11,7 +11,7 @@ import java.time.Instant
 import java.util.*
 
 @RestController
-@RequestMapping("/admin/environments/{envId}/api-keys")
+@RequestMapping("/api/environments/{envId}/api-keys")
 @Tag(name = "API Key Management", description = "Endpoints for managing API keys")
 class ApiKeyController(
     private val apiKeyService: ApiKeyService,

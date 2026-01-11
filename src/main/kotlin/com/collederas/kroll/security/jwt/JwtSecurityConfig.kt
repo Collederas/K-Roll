@@ -32,7 +32,7 @@ class JwtSecurityConfig(
             }.authorizeHttpRequests {
                 it.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 it
-                    .requestMatchers("/admin/**")
+                    .requestMatchers("/api/**")
                     .hasRole("ADMIN")
                     .requestMatchers(
                         "/auth/login",
@@ -42,7 +42,7 @@ class JwtSecurityConfig(
                         "/v3/api-docs/**",
                     ).permitAll()
                 it.requestMatchers("/auth/logout").authenticated()
-                it.anyRequest().denyAll()
+                it.anyRequest().permitAll()
             }.exceptionHandling {
                 it.authenticationEntryPoint(authEntryPoint)
             }.addFilterBefore(

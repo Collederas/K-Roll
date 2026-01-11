@@ -53,13 +53,13 @@ class ConfigEntryIntegrationTests {
     @Autowired
     private lateinit var clock: MutableTestClock
 
-    private val testedEndpoint = "/admin/environments/{envId}/configs"
+    private val testedEndpoint = "/api/environments/{envId}/configs"
 
     @ParameterizedTest(name = "{0} to {1} should be Forbidden")
     @CsvSource(
-        "GET,       /admin/environments/{envId}/configs",
-        "PUT,       /admin/environments/{envId}/configs/{configKey}",
-        "DELETE,    /admin/environments/{envId}/configs/{configKey}",
+        "GET,       /api/environments/{envId}/configs",
+        "PUT,       /api/environments/{envId}/configs/{configKey}",
+        "DELETE,    /api/environments/{envId}/configs/{configKey}",
     )
     fun `admins cannot access unowned config entries`(
         method: String,
@@ -191,5 +191,44 @@ class ConfigEntryIntegrationTests {
         val persisted = configEntryService.list(authUser.getId(), env.id).single()
         Assertions.assertThat(persisted.value).isEqualTo("new_value")
         Assertions.assertThat(persisted.type).isEqualTo(ConfigType.STRING)
+    }
+
+    @Test
+    fun `update supports dotted config keys`() {
+        val user = userRepository.save(UserFactory.create(roles = setOf(UserRole.ADMIN)))
+        val env = envFactory.create(user)
+
+        configEntryService.create(
+            user.id,
+            env.id,
+            CreateConfigEntryDto(
+                key = "db.password.prod",
+                value = "old",
+                type = ConfigType.STRING,
+            ),
+        )
+
+        val updateRequest =
+            UpdateConfigEntryDto(
+                value = "new",
+            )
+
+        val authUser = AuthUserDetails(user)
+
+        mvc
+            .put("$testedEndpoint/{key}", env.id, "db.password.prod") {
+                with(SecurityMockMvcRequestPostProcessors.user(authUser))
+                contentType = MediaType.APPLICATION_JSON
+                content = objectMapper.writeValueAsString(updateRequest)
+            }
+            .andExpect {
+                status { isOk() }
+                jsonPath("$.key") { value("db.password.prod") }
+                jsonPath("$.value") { value("new") }
+            }
+
+        val persisted = configEntryService.list(authUser.getId(), env.id).single()
+        Assertions.assertThat(persisted.key).isEqualTo("db.password.prod")
+        Assertions.assertThat(persisted.value).isEqualTo("new")
     }
 }

@@ -55,20 +55,18 @@ CREATE TABLE api_keys
 );
 
 -- ==== CONFIG ENTRIES ====
-CREATE TYPE config_type_enum AS ENUM ('BOOLEAN', 'STRING', 'NUMBER', 'JSON');
-
 CREATE TABLE config_entries
 (
     id             UUID PRIMARY KEY,
-    environment_id UUID             NOT NULL,
-    config_key     TEXT             NOT NULL,
-    config_value   TEXT             NOT NULL,
-    config_type    config_type_enum NOT NULL,
-    active_from    TIMESTAMP,
-    active_until   TIMESTAMP,
+    environment_id UUID                      NOT NULL,
+    config_key     TEXT                      NOT NULL,
+    config_value   TEXT                      NOT NULL,
+    config_type    TEXT                      NOT NULL,
+    active_from    TIMESTAMP WITH TIME ZONE,
+    active_until   TIMESTAMP WITH TIME ZONE,
     created_by     UUID,
-    created_at     TIMESTAMP        NOT NULL,
-    updated_at     TIMESTAMP        NOT NULL,
+    created_at     TIMESTAMP WITH TIME ZONE  NOT NULL,
+    updated_at     TIMESTAMP WITH TIME ZONE  NOT NULL,
 
     CONSTRAINT fk_config_env
         FOREIGN KEY (environment_id)
@@ -82,6 +80,9 @@ CREATE TABLE config_entries
     CONSTRAINT uq_config_env_key
         UNIQUE (environment_id, config_key),
 
+    CONSTRAINT chk_config_type_valid
+        CHECK (config_type IN ('BOOLEAN', 'STRING', 'NUMBER', 'JSON')),
+
     CONSTRAINT chk_config_entry_valid_window
         CHECK (
             active_from IS NULL
@@ -89,6 +90,7 @@ CREATE TABLE config_entries
                 OR active_from <= active_until
             )
 );
+
 
 CREATE INDEX idx_config_entry_key
     ON config_entries (config_key);

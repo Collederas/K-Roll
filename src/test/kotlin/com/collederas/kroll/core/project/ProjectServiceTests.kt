@@ -8,16 +8,16 @@ import org.junit.jupiter.api.Test
 import java.util.*
 
 class ProjectServiceTests {
+
     private val repo: ProjectRepository = mockk(relaxed = true)
-    private val projectAccessGuard: ProjectAccessGuard = mockk()
-    private val projectService = ProjectService(repo, projectAccessGuard)
+    private val projectService = ProjectService(repo)
 
     @Test
     fun `should create project successfully`() {
         val owner = UserFactory.create()
-
         val createDto = CreateProjectDto("My New Project")
 
+        every { repo.existsByOwnerIdAndName(owner.id, createDto.name) } returns false
         every { repo.save(any()) } returnsArgument 0
 
         val result = projectService.create(owner, createDto)
@@ -28,14 +28,23 @@ class ProjectServiceTests {
 
     @Test
     fun `should delete project successfully`() {
+        val owner = UserFactory.create()
         val projectId = UUID.randomUUID()
 
-        every {
-            projectAccessGuard.requireOwner(any(), any())
-        } just Runs
+        val slot = slot<ProjectEntity>()
 
-        projectService.delete(UUID.randomUUID(), projectId)
+        val project =
+            ProjectEntity(
+                id = projectId,
+                name = "Test Project",
+                owner = owner
+            )
 
-        verify(exactly = 1) { repo.deleteById(projectId) }
+        every { repo.findById(projectId) } returns Optional.of(project)
+        every { repo.delete(project) } just Runs
+
+        projectService.delete(owner.id, projectId)
+
+        verify(exactly = 1) { repo.delete(capture(slot)) }
     }
 }

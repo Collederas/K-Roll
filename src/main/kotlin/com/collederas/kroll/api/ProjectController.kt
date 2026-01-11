@@ -1,5 +1,6 @@
 package com.collederas.kroll.api
 
+import com.collederas.kroll.core.project.ProjectEntity
 import com.collederas.kroll.core.project.ProjectService
 import com.collederas.kroll.core.project.dto.CreateProjectDto
 import com.collederas.kroll.core.project.dto.ProjectDto
@@ -11,11 +12,18 @@ import org.springframework.web.bind.annotation.*
 import java.util.*
 
 @RestController
-@RequestMapping("/admin/projects")
+@RequestMapping("/api/projects")
 @Tag(name = "Project Management", description = "Endpoints for managing projects")
 class ProjectController(
     private val projectService: ProjectService,
 ) {
+    @GetMapping("/{id}")
+    @Operation(summary = "Get project details", description = "Returns details for the project with the given ID")
+    fun get(
+        @PathVariable id: UUID,
+        @AuthenticationPrincipal authUser: AuthUserDetails,
+    ): ProjectDto = projectService.get(authUser.getId(), id)
+
     @GetMapping
     @Operation(
         summary = "List all projects",

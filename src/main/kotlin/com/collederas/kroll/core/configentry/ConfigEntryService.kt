@@ -7,6 +7,7 @@ import com.collederas.kroll.core.configentry.history.ConfigEntrySnapshot
 import com.collederas.kroll.core.environment.EnvironmentAccessGuard
 import com.collederas.kroll.core.environment.EnvironmentRepository
 import com.collederas.kroll.core.exceptions.ConfigEntryNotFoundException
+import com.collederas.kroll.core.exceptions.ConfigValidationException
 import com.collederas.kroll.core.exceptions.EnvironmentNotFoundException
 import com.collederas.kroll.core.exceptions.InvalidConfigTypeException
 import com.fasterxml.jackson.core.JacksonException
@@ -26,6 +27,7 @@ class ConfigEntryService(
     private val clock: Clock = Clock.systemUTC(),
     private val objectMapper: ObjectMapper = ObjectMapper(),
 ) {
+    @Transactional(readOnly = true)
     fun list(
         userId: UUID,
         envId: UUID,
@@ -63,8 +65,10 @@ class ConfigEntryService(
             environmentRepository.findByIdOrNull(envId)
                 ?: throw EnvironmentNotFoundException("Environment with ID $envId not found")
 
-        if (dto.type == ConfigType.JSON) {
-            validateJson(dto.value)
+        if (configEntryRepository.existsByEnvironmentIdAndConfigKey(envId, dto.key)) {
+            throw ConfigValidationException(
+                listOf("Config entry with key '${dto.key}' already exists in environment $envId")
+            )
         }
 
         val snapshotDto =
@@ -173,13 +177,4 @@ class ConfigEntryService(
             ConfigType.STRING -> value
             ConfigType.JSON -> objectMapper.readTree(value)
         }
-
-    @Suppress("SwallowedException")
-    private fun validateJson(value: String) {
-        try {
-            objectMapper.readTree(value)
-        } catch (e: JacksonException) {
-            throw InvalidConfigTypeException("Invalid JSON format")
-        }
-    }
 }

@@ -5,7 +5,7 @@ import com.collederas.kroll.core.exceptions.EnvironmentNotFoundException
 import com.collederas.kroll.security.apikey.dto.ApiKeyAuthResult
 import com.collederas.kroll.security.apikey.dto.ApiKeyMetadataDto
 import com.collederas.kroll.security.apikey.dto.CreateApiKeyResponseDto
-import com.collederas.kroll.security.apikey.exception.InvalidApiKeyExpiryException
+import com.collederas.kroll.core.exceptions.InvalidApiKeyExpiryException
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional

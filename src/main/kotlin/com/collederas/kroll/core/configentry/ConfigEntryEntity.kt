@@ -1,6 +1,10 @@
 package com.collederas.kroll.core.configentry
 
 import com.collederas.kroll.core.environment.EnvironmentEntity
+import com.collederas.kroll.core.exceptions.ConfigValidationException
+import com.fasterxml.jackson.core.JsonProcessingException
+import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.persistence.*
 import org.springframework.data.domain.AbstractAggregateRoot
 import java.time.Instant
@@ -27,23 +31,31 @@ class ConfigEntryEntity(
     @Id
     @Column(nullable = false)
     val id: UUID = UUID.randomUUID(),
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "environment_id", nullable = false)
     val environment: EnvironmentEntity,
+
     @Column(name = "created_by")
     var createdBy: UUID? = null,
+
     @Column(name = "config_key", nullable = false)
     var configKey: String,
+
     @Column(name = "config_value", nullable = false)
     var configValue: String,
+
     @Enumerated(EnumType.STRING)
     @Column(name = "config_type", nullable = false)
     var configType: ConfigType,
+
     @Column(name = "active_from")
     var activeFrom: Instant? = null,
+
     @Column(name = "active_until")
     var activeUntil: Instant? = null,
 ) : AbstractAggregateRoot<ConfigEntryEntity>() {
+
     @Column(name = "created_at", nullable = false)
     var createdAt: Instant = Instant.now()
 
@@ -63,6 +75,10 @@ class ConfigEntryEntity(
     }
 
     companion object {
+        private val STRICT_JSON_MAPPER: ObjectMapper =
+            ObjectMapper()
+                .enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS)
+
         fun create(
             environment: EnvironmentEntity,
             key: String,
@@ -83,6 +99,7 @@ class ConfigEntryEntity(
                     activeUntil = activeUntil,
                     createdBy = createdBy,
                 )
+
             entity.validateState()
 
             entity.registerEvent(
@@ -136,40 +153,70 @@ class ConfigEntryEntity(
                 snapshot = snapshotJson,
             ),
         )
+
         return this
     }
 
     fun validateState() {
-        // Date sanity
-        if (activeFrom != null && activeUntil != null) {
-            require(!activeUntil!!.isBefore(activeFrom)) {
-                "activeUntil ($activeUntil) cannot be before activeFrom ($activeFrom)"
+        val errors = mutableListOf<String>()
+
+        if (activeFrom != null && activeUntil != null && activeUntil!!.isBefore(activeFrom)) {
+            errors.add("Active Until date ($activeUntil) cannot be before Active From date ($activeFrom)")
+        }
+
+        when (configType) {
+            ConfigType.NUMBER -> {
+                if (configValue.toBigDecimalOrNull() == null) {
+                    errors.add("Value '$configValue' is not a valid NUMBER")
+                }
+            }
+
+            ConfigType.BOOLEAN -> {
+                if (
+                    !configValue.equals("true", ignoreCase = true) &&
+                    !configValue.equals("false", ignoreCase = true)
+                ) {
+                    errors.add("Value '$configValue' is not a valid BOOLEAN")
+                }
+            }
+
+            ConfigType.STRING -> {
+                if (configValue.isBlank()) {
+                    errors.add("Config value cannot be empty for STRING type")
+                }
+            }
+
+            ConfigType.JSON -> {
+                validateJsonConfig(configValue, errors)
             }
         }
 
-        // Type safety
-        when (configType) {
-            ConfigType.NUMBER ->
-                require(configValue.toBigDecimalOrNull() != null) {
-                    "Value '$configValue' is not a valid NUMBER"
-                }
+        if (errors.isNotEmpty()) {
+            throw ConfigValidationException(errors)
+        }
+    }
 
-            ConfigType.BOOLEAN ->
-                require(
-                    configValue.equals("true", ignoreCase = true) ||
-                        configValue.equals("false", ignoreCase = true),
-                ) {
-                    "Value '$configValue' is not a valid BOOLEAN"
-                }
+    private fun validateJsonConfig(value: String, errors: MutableList<String>) {
+        if (value.isBlank()) {
+            errors.add("JSON value cannot be blank")
+            return
+        }
 
-            ConfigType.STRING ->
-                require(configValue.isNotBlank()) {
-                    "Config value cannot be empty"
-                }
-
-            ConfigType.JSON -> {
-                // JSON validity enforced at service layer
+        val node =
+            try {
+                STRICT_JSON_MAPPER.readTree(value)
+            } catch (_: JsonProcessingException) {
+                errors.add("Value is not valid JSON")
+                return
             }
+
+        if (!node.isObject && !node.isArray) {
+            errors.add("JSON value must be a JSON object or array")
+        }
+
+        val maxBytes = 64 * 1024
+        if (value.toByteArray(Charsets.UTF_8).size > maxBytes) {
+            errors.add("JSON value exceeds maximum size of 64KB")
         }
     }
 }

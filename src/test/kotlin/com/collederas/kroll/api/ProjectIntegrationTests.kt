@@ -38,7 +38,7 @@ class ProjectIntegrationTests {
     @Autowired
     lateinit var userRepository: AppUserRepository
 
-    private val endpoint = "/admin/projects"
+    private val endpoint = "/api/projects"
 
     @Test
     fun `list should return only user projects`() {
@@ -145,8 +145,8 @@ class ProjectIntegrationTests {
                 content = objectMapper.writeValueAsString(request)
             }.andExpect {
                 status { isConflict() }
-                jsonPath("$.title") { value("Project Conflict") }
-                jsonPath("$.error_code") { value("PROJECT_EXISTS") }
+                jsonPath("$.title") { value("Project Already Exists") }
+                jsonPath("$.error_code") { value("PROJECT_ALREADY_EXISTS") }
             }
 
         // Verify idempotency - still only one project exists
@@ -203,6 +203,25 @@ class ProjectIntegrationTests {
 
         Assertions.assertThat(user2Projects).hasSize(1)
         Assertions.assertThat(user2Projects.first().name).isEqualTo("Shared Project Name")
+    }
+
+    @Test
+    fun `should return 404 when project does not exist`() {
+        val user =
+            userRepository.save(
+                UserFactory.create(roles = setOf(UserRole.ADMIN)),
+            )
+        val authUser = user.asAuth()
+        val nonExistentProjectId = java.util.UUID.randomUUID()
+
+        mvc
+            .delete("$endpoint/{id}", nonExistentProjectId) {
+                with(SecurityMockMvcRequestPostProcessors.user(authUser))
+            }.andExpect {
+                status { isNotFound() }
+                jsonPath("$.title") { value("Project Not Found") }
+                jsonPath("$.error_code") { value("PROJECT_NOT_FOUND") }
+            }
     }
 
     private fun AppUser.asAuth(): UserDetails = AuthUserDetails(this)

@@ -7,13 +7,14 @@ import com.collederas.kroll.core.configentry.dto.UpdateConfigEntryDto
 import com.collederas.kroll.security.identity.AuthUserDetails
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
+import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 import java.util.*
 
 @RestController
-@RequestMapping("/admin/environments/{envId}/configs")
+@RequestMapping("/api/environments/{envId}/configs")
 @Tag(name = "Config Entry Management", description = "Endpoints for managing config entries")
 class AdminConfigController(
     private val configEntryService: ConfigEntryService,
@@ -30,20 +31,21 @@ class AdminConfigController(
     @Operation(summary = "Create config entry", description = "Create a new config entry")
     fun create(
         @PathVariable envId: UUID,
-        @RequestBody dto: CreateConfigEntryDto,
+        @Valid @RequestBody dto: CreateConfigEntryDto,
         @AuthenticationPrincipal authUser: AuthUserDetails,
     ): ConfigEntryResponseDto = configEntryService.create(authUser.getId(), envId, dto)
 
-    @PutMapping("/{key}")
+    @PutMapping("/{key:.+}")
     @Operation(summary = "Update config entry", description = "Update an existing config entry")
     fun update(
         @PathVariable envId: UUID,
         @PathVariable key: String,
-        @RequestBody dto: UpdateConfigEntryDto,
+        @Valid @RequestBody dto: UpdateConfigEntryDto,
         @AuthenticationPrincipal authUser: AuthUserDetails,
     ): ConfigEntryResponseDto = configEntryService.update(authUser.getId(), envId, key, dto)
 
-    @DeleteMapping("/{key}")
+    @DeleteMapping("/{key:.+}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "Delete config entry", description = "Delete a config entry")
     fun delete(
         @PathVariable envId: UUID,

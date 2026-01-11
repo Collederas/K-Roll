@@ -2,7 +2,7 @@ package com.collederas.kroll.security.apikey
 
 import com.collederas.kroll.core.environment.EnvironmentRepository
 import com.collederas.kroll.core.exceptions.EnvironmentNotFoundException
-import com.collederas.kroll.security.apikey.exception.InvalidApiKeyExpiryException
+import com.collederas.kroll.core.exceptions.InvalidApiKeyExpiryException
 import com.collederas.kroll.support.factories.EnvironmentFactory
 import io.mockk.every
 import io.mockk.mockk

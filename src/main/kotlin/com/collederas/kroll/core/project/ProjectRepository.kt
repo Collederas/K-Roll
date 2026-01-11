@@ -12,10 +12,10 @@ interface ProjectRepository : JpaRepository<ProjectEntity, UUID> {
         name: String,
     ): Boolean
 
-    fun existsByIdAndOwnerId(
-        projectId: UUID,
+    fun findByIdAndOwnerId(
+        id: UUID,
         ownerId: UUID,
-    ): Boolean
+    ): ProjectEntity?
 
     fun owner(owner: AppUser): MutableList<ProjectEntity>
 }

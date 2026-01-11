@@ -6,10 +6,12 @@ import java.util.*
 
 @Repository
 interface EnvironmentRepository : JpaRepository<EnvironmentEntity, UUID> {
+    fun findAllByProjectOwnerId(ownerId: UUID): List<EnvironmentEntity>
+
     fun findAllByProjectId(projectId: UUID): List<EnvironmentEntity>
 
-    fun existsByIdAndProjectOwnerId(
-        envId: UUID,
-        ownerId: UUID,
+    fun existsByProjectIdAndName(
+        projectId: UUID,
+        name: String,
     ): Boolean
 }

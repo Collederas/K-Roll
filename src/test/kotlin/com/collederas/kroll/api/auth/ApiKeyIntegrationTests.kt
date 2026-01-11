@@ -108,7 +108,7 @@ class ApiKeyIntegrationTests {
 
         val createResult =
             mvc
-                .post("/admin/environments/${env.id}/api-keys") {
+                .post("/api/environments/${env.id}/api-keys") {
                     contentType = MediaType.APPLICATION_JSON
                     content = "\"$expiresAt\""
                 }.andReturn()
@@ -120,7 +120,7 @@ class ApiKeyIntegrationTests {
             )
 
         mvc
-            .get("/admin/environments/${env.id}/api-keys")
+            .get("/api/environments/${env.id}/api-keys")
             .andExpect {
                 MockMvcResultMatchers.jsonPath("$[*].truncated").exists()
                 MockMvcResultMatchers.jsonPath("$[*].key").doesNotExist()
@@ -137,11 +137,11 @@ class ApiKeyIntegrationTests {
         val key = apiKeyService.create(env.id, clock.instant().plusSeconds(10))
 
         mvc
-            .delete("/admin/environments/${env.id}/api-keys/${key.id}")
+            .delete("/api/environments/${env.id}/api-keys/${key.id}")
             .andExpect { status { isNoContent() } }
 
         mvc
-            .delete("/admin/environments/${env.id}/api-keys/${key.id}")
+            .delete("/api/environments/${env.id}/api-keys/${key.id}")
             .andExpect { status { isNoContent() } }
     }
 }
