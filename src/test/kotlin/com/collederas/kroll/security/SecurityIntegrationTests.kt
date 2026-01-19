@@ -17,7 +17,8 @@ class SecurityIntegrationTests {
 
     @Test
     fun `request to non-existent endpoint should return 404`() {
-        mvc.get("/non-existent-endpoint-${java.util.UUID.randomUUID()}")
+        mvc
+            .get("/non-existent-endpoint-${java.util.UUID.randomUUID()}")
             .andExpect {
                 status { isNotFound() }
             }

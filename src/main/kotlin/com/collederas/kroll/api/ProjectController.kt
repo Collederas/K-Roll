@@ -1,6 +1,5 @@
 package com.collederas.kroll.api
 
-import com.collederas.kroll.core.project.ProjectEntity
 import com.collederas.kroll.core.project.ProjectService
 import com.collederas.kroll.core.project.dto.CreateProjectDto
 import com.collederas.kroll.core.project.dto.ProjectDto

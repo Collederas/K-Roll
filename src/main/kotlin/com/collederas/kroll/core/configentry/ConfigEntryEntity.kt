@@ -31,31 +31,23 @@ class ConfigEntryEntity(
     @Id
     @Column(nullable = false)
     val id: UUID = UUID.randomUUID(),
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "environment_id", nullable = false)
     val environment: EnvironmentEntity,
-
     @Column(name = "created_by")
     var createdBy: UUID? = null,
-
     @Column(name = "config_key", nullable = false)
     var configKey: String,
-
     @Column(name = "config_value", nullable = false)
     var configValue: String,
-
     @Enumerated(EnumType.STRING)
     @Column(name = "config_type", nullable = false)
     var configType: ConfigType,
-
     @Column(name = "active_from")
     var activeFrom: Instant? = null,
-
     @Column(name = "active_until")
     var activeUntil: Instant? = null,
 ) : AbstractAggregateRoot<ConfigEntryEntity>() {
-
     @Column(name = "created_at", nullable = false)
     var createdAt: Instant = Instant.now()
 
@@ -196,7 +188,10 @@ class ConfigEntryEntity(
         }
     }
 
-    private fun validateJsonConfig(value: String, errors: MutableList<String>) {
+    private fun validateJsonConfig(
+        value: String,
+        errors: MutableList<String>,
+    ) {
         if (value.isBlank()) {
             errors.add("JSON value cannot be blank")
             return

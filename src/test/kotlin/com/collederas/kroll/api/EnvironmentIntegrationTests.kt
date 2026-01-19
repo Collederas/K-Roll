@@ -1,24 +1,24 @@
 package com.collederas.kroll.api
 
+import com.collederas.kroll.core.environment.dto.CreateEnvironmentDto
 import com.collederas.kroll.security.identity.AuthUserDetails
 import com.collederas.kroll.support.TestClockConfig
+import com.collederas.kroll.support.factories.PersistedEnvironmentFactory
 import com.collederas.kroll.support.factories.UserFactory
 import com.collederas.kroll.user.AppUserRepository
 import com.collederas.kroll.user.UserRole
-import com.collederas.kroll.support.factories.PersistedEnvironmentFactory
-import com.collederas.kroll.core.environment.dto.CreateEnvironmentDto
 import com.fasterxml.jackson.databind.ObjectMapper
-import org.springframework.http.MediaType
-import org.springframework.test.web.servlet.post
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Import
+import org.springframework.http.MediaType
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
+import org.springframework.test.web.servlet.post
 import java.util.*
 
 @SpringBootTest
@@ -44,13 +44,14 @@ class EnvironmentIntegrationTests {
         val authUser = AuthUserDetails(user)
         val nonExistentEnvId = UUID.randomUUID()
 
-        mvc.get("/api/environments/{envId}/configs", nonExistentEnvId) {
-            with(SecurityMockMvcRequestPostProcessors.user(authUser))
-        }.andExpect {
-            status { isNotFound() }
-            jsonPath("$.title") { value("Environment Not Found") }
-            jsonPath("$.error_code") { value("ENVIRONMENT_NOT_FOUND") }
-        }
+        mvc
+            .get("/api/environments/{envId}/configs", nonExistentEnvId) {
+                with(SecurityMockMvcRequestPostProcessors.user(authUser))
+            }.andExpect {
+                status { isNotFound() }
+                jsonPath("$.title") { value("Environment Not Found") }
+                jsonPath("$.error_code") { value("ENVIRONMENT_NOT_FOUND") }
+            }
     }
 
     @Test
@@ -59,19 +60,21 @@ class EnvironmentIntegrationTests {
         val authUser = AuthUserDetails(user)
         val existingEnv = persistedEnvironmentFactory.create(user = user)
 
-        val dto = CreateEnvironmentDto(
-            name = existingEnv.name,
-            projectId = existingEnv.project.id
-        )
+        val dto =
+            CreateEnvironmentDto(
+                name = existingEnv.name,
+                projectId = existingEnv.project.id,
+            )
 
-        mvc.post("/api/environments") {
-            with(SecurityMockMvcRequestPostProcessors.user(authUser))
-            contentType = MediaType.APPLICATION_JSON
-            content = objectMapper.writeValueAsString(dto)
-        }.andDo {
-            print()
-        }.andExpect {
-            status { isConflict() }
-        }
+        mvc
+            .post("/api/environments") {
+                with(SecurityMockMvcRequestPostProcessors.user(authUser))
+                contentType = MediaType.APPLICATION_JSON
+                content = objectMapper.writeValueAsString(dto)
+            }.andDo {
+                print()
+            }.andExpect {
+                status { isConflict() }
+            }
     }
 }

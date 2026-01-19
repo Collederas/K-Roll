@@ -36,5 +36,5 @@ class ApiKeyEntity(
         updatedAt = Instant.now()
     }
 
-    fun isActive(now: Instant = Instant.now()): Boolean = expiresAt.isAfter(now)
+    fun isActive(now: Instant): Boolean = expiresAt.isAfter(now)
 }

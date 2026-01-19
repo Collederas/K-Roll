@@ -4,10 +4,7 @@ import com.collederas.kroll.core.environment.dto.CreateEnvironmentDto
 import com.collederas.kroll.core.environment.dto.EnvironmentResponseDto
 import com.collederas.kroll.core.exceptions.EnvironmentAlreadyExistsException
 import com.collederas.kroll.core.exceptions.EnvironmentNotFoundException
-import com.collederas.kroll.core.exceptions.ProjectNotFoundException
-import com.collederas.kroll.core.project.ProjectRepository
 import com.collederas.kroll.core.project.ProjectService
-import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.util.*
@@ -22,7 +19,6 @@ class EnvironmentService(
         projectId: UUID?,
         userId: UUID,
     ): List<EnvironmentResponseDto> {
-
         if (projectId != null) {
             projectService.resolveOwnedProject(projectId, userId)
 
@@ -40,15 +36,14 @@ class EnvironmentService(
             }
     }
 
-
     @Transactional(readOnly = true)
     fun get(
         envId: UUID,
         userId: UUID,
     ): EnvironmentResponseDto {
-
         val environment =
-            environmentRepository.findById(envId)
+            environmentRepository
+                .findById(envId)
                 .orElseThrow {
                     EnvironmentNotFoundException("Environment not found")
                 }
@@ -72,7 +67,7 @@ class EnvironmentService(
 
         if (environmentRepository.existsByProjectIdAndName(project.id, dto.name)) {
             throw EnvironmentAlreadyExistsException(
-                "Environment with name '${dto.name}' already exists in this project."
+                "Environment with name '${dto.name}' already exists in this project.",
             )
         }
 

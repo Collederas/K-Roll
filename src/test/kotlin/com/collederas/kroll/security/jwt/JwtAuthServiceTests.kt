@@ -11,15 +11,14 @@ import io.mockk.verify
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
-import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
-import org.springframework.web.server.ResponseStatusException
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.userdetails.UsernameNotFoundException
+import org.springframework.web.server.ResponseStatusException
 
 class JwtAuthServiceTests {
     private val authManager: AuthenticationManager = mockk()
@@ -96,9 +95,10 @@ class JwtAuthServiceTests {
                 "bad",
             )
 
-        val exception = assertThrows(ResponseStatusException::class.java) {
-            authService.login("user@example.com", "wrong")
-        }
+        val exception =
+            assertThrows(ResponseStatusException::class.java) {
+                authService.login("user@example.com", "wrong")
+            }
         assertEquals(HttpStatus.BAD_REQUEST, exception.statusCode)
     }
 

@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Test
 import java.util.*
 
 class ProjectServiceTests {
-
     private val repo: ProjectRepository = mockk(relaxed = true)
     private val projectService = ProjectService(repo)
 
@@ -37,7 +36,7 @@ class ProjectServiceTests {
             ProjectEntity(
                 id = projectId,
                 name = "Test Project",
-                owner = owner
+                owner = owner,
             )
 
         every { repo.findById(projectId) } returns Optional.of(project)

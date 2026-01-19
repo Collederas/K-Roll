@@ -9,8 +9,6 @@ import com.collederas.kroll.core.environment.EnvironmentRepository
 import com.collederas.kroll.core.exceptions.ConfigEntryNotFoundException
 import com.collederas.kroll.core.exceptions.ConfigValidationException
 import com.collederas.kroll.core.exceptions.EnvironmentNotFoundException
-import com.collederas.kroll.core.exceptions.InvalidConfigTypeException
-import com.fasterxml.jackson.core.JacksonException
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
@@ -67,7 +65,7 @@ class ConfigEntryService(
 
         if (configEntryRepository.existsByEnvironmentIdAndConfigKey(envId, dto.key)) {
             throw ConfigValidationException(
-                listOf("Config entry with key '${dto.key}' already exists in environment $envId")
+                listOf("Config entry with key '${dto.key}' already exists in environment $envId"),
             )
         }
 

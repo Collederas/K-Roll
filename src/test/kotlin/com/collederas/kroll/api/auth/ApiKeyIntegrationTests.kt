@@ -2,6 +2,7 @@ package com.collederas.kroll.api.auth
 
 import com.collederas.kroll.security.apikey.ApiKeyRepository
 import com.collederas.kroll.security.apikey.ApiKeyService
+import com.collederas.kroll.security.apikey.dto.CreateApiKeyRequest
 import com.collederas.kroll.support.MutableTestClock
 import com.collederas.kroll.support.TestClockConfig
 import com.collederas.kroll.support.factories.PersistedEnvironmentFactory
@@ -22,7 +23,6 @@ import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import java.time.Duration
-import java.time.Instant
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -48,9 +48,54 @@ class ApiKeyIntegrationTests {
     private val protectedEndpoint = "/client/config/fetch"
 
     @Test
+    @WithMockUser(roles = ["ADMIN"])
+    fun `create api key persists key and returns 201 with key metadata`() {
+        val env = envFactory.create()
+        val expiresAt = clock.instant().plus(Duration.ofDays(1))
+
+        val createResult =
+            mvc
+                .post("/api/environments/${env.id}/api-keys") {
+                    contentType = MediaType.APPLICATION_JSON
+                    content =
+                        """
+                        {
+                          "expiresAt": "$expiresAt"
+                        }
+                        """.trimIndent()
+                }.andExpect {
+                    status { isCreated() }
+                }.andReturn()
+
+        val id =
+            JsonPath.read<String>(
+                createResult.response.contentAsString,
+                "$.id",
+            )
+
+        val key =
+            JsonPath.read<String>(
+                createResult.response.contentAsString,
+                "$.key",
+            )
+
+        Assertions.assertThat(id).isNotBlank()
+        Assertions.assertThat(key).startsWith("rk_")
+
+        val keys = apiKeyRepository.findAll()
+
+        Assertions.assertThat(keys).hasSize(1)
+
+        val createdKey = keys.first()
+        Assertions.assertThat(createdKey.environment.id).isEqualTo(env.id)
+        Assertions.assertThat(createdKey.expiresAt).isEqualTo(expiresAt)
+    }
+
+    @Test
     fun `deleted api key is immediately invalidated`() {
         val env = envFactory.create()
-        val created = apiKeyService.create(env.id, Instant.now().plus(Duration.ofDays(1)))
+        val dto = CreateApiKeyRequest(clock.instant().plus(Duration.ofDays(1)))
+        val created = apiKeyService.create(env.id, dto)
 
         mvc
             .post(protectedEndpoint) {
@@ -70,13 +115,27 @@ class ApiKeyIntegrationTests {
     }
 
     @Test
+    @WithMockUser(roles = ["ADMIN"])
     fun `expired api key does not authenticate`() {
         val env = envFactory.create()
+        val expiresAt = clock.instant().plusSeconds(10)
 
-        val key =
-            apiKeyService.create(
-                env.id,
-                clock.instant().plusSeconds(10),
+        val createResult =
+            mvc
+                .post("/api/environments/${env.id}/api-keys") {
+                    contentType = MediaType.APPLICATION_JSON
+                    content =
+                        """
+                        {
+                          "expiresAt": "$expiresAt"
+                        }
+                        """.trimIndent()
+                }.andReturn()
+
+        val rawKey =
+            JsonPath.read<String>(
+                createResult.response.contentAsString,
+                "$.key",
             )
 
         apiKeyRepository.flush()
@@ -84,7 +143,7 @@ class ApiKeyIntegrationTests {
 
         mvc
             .post(protectedEndpoint) {
-                header("X-Api-Key", key.key)
+                header("X-Api-Key", rawKey)
             }.andExpect {
                 status { isUnauthorized() }
             }
@@ -110,7 +169,12 @@ class ApiKeyIntegrationTests {
             mvc
                 .post("/api/environments/${env.id}/api-keys") {
                     contentType = MediaType.APPLICATION_JSON
-                    content = "\"$expiresAt\""
+                    content =
+                        """
+                        {
+                          "expiresAt": "$expiresAt"
+                        }
+                        """.trimIndent()
                 }.andReturn()
 
         val rawKey =
@@ -134,14 +198,32 @@ class ApiKeyIntegrationTests {
     @WithMockUser(roles = ["ADMIN"])
     fun `delete api key is idempotent`() {
         val env = envFactory.create()
-        val key = apiKeyService.create(env.id, clock.instant().plusSeconds(10))
+        val expiresAt = clock.instant().plusSeconds(10)
+
+        val createResult =
+            mvc
+                .post("/api/environments/${env.id}/api-keys") {
+                    contentType = MediaType.APPLICATION_JSON
+                    content =
+                        """
+                        {
+                          "expiresAt": "$expiresAt"
+                        }
+                        """.trimIndent()
+                }.andReturn()
+
+        val keyId =
+            JsonPath.read<String>(
+                createResult.response.contentAsString,
+                "$.id",
+            )
 
         mvc
-            .delete("/api/environments/${env.id}/api-keys/${key.id}")
+            .delete("/api/environments/${env.id}/api-keys/$keyId")
             .andExpect { status { isNoContent() } }
 
         mvc
-            .delete("/api/environments/${env.id}/api-keys/${key.id}")
+            .delete("/api/environments/${env.id}/api-keys/$keyId")
             .andExpect { status { isNoContent() } }
     }
 }

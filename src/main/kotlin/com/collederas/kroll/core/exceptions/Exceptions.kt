@@ -1,30 +1,25 @@
 package com.collederas.kroll.core.exceptions
 
-import org.springframework.http.HttpStatus
-
 /**
- * Base sealed class for all API exceptions.
- * Each exception carries its own HTTP status, error code, and message.
- * This enables a single exception handler with consistent error responses.
+ * Base sealed class for all Domain exceptions.
  */
-sealed class ApiException(
-    val status: HttpStatus,
+sealed class KrollException(
     val errorCode: String,
     override val message: String,
 ) : RuntimeException(message) {
     /**
-     * Additional properties to include in the ProblemDetail response.
-     * Override in subclasses that need extra fields (e.g., validation errors).
+     * Pure data extensions.
+     * The API layer will decide how to serialize this.
      */
-    open fun additionalProperties(): Map<String, Any?> = emptyMap()
+    open fun additionalDetails(): Map<String, Any?> = emptyMap()
 }
 
-// ==================== 404 NOT FOUND ====================
+// ==================== NOT FOUND (404) CATEGORY ====================
 
 sealed class NotFoundException(
     errorCode: String,
     message: String,
-) : ApiException(HttpStatus.NOT_FOUND, errorCode, message)
+) : KrollException(errorCode, message)
 
 class ProjectNotFoundException(
     message: String = "Project not found",
@@ -38,27 +33,29 @@ class ConfigEntryNotFoundException(
     message: String = "Config entry not found",
 ) : NotFoundException("CONFIG_ENTRY_NOT_FOUND", message)
 
-// ==================== 409 CONFLICT ====================
+// ==================== CONFLICT (409) CATEGORY ====================
 
 sealed class ConflictException(
     errorCode: String,
     message: String,
-) : ApiException(HttpStatus.CONFLICT, errorCode, message)
+) : KrollException(errorCode, message)
 
 class ProjectAlreadyExistsException(
     message: String = "A project with this name already exists",
 ) : ConflictException("PROJECT_ALREADY_EXISTS", message)
 
 class EnvironmentAlreadyExistsException(
-    message: String = "An environment with this name already exists in this project",
+    message: String = "Environment already exists",
 ) : ConflictException("ENVIRONMENT_ALREADY_EXISTS", message)
 
-// ==================== 400 BAD REQUEST ====================
+// ==================== BAD REQUEST (400) CATEGORY ====================
 
+// Renamed from 'ValidationException' to 'BadRequestException' so the API handler
+// can catch this generic type for 400 errors.
 sealed class BadRequestException(
     errorCode: String,
     message: String,
-) : ApiException(HttpStatus.BAD_REQUEST, errorCode, message)
+) : KrollException(errorCode, message)
 
 class InvalidConfigTypeException(
     message: String = "Invalid configuration type",
@@ -72,11 +69,11 @@ class ConfigValidationException(
     val errors: List<String>,
     message: String = "Configuration validation failed",
 ) : BadRequestException("CONFIG_VALIDATION_FAILED", message) {
-    override fun additionalProperties(): Map<String, Any?> = mapOf("errors" to errors)
+    override fun additionalDetails(): Map<String, Any?> = mapOf("errors" to errors)
 }
 
-// ==================== 403 FORBIDDEN ====================
+// ==================== FORBIDDEN (403) CATEGORY ====================
 
 class ForbiddenException(
     message: String = "Access to this resource is forbidden",
-) : ApiException(HttpStatus.FORBIDDEN, "ACCESS_FORBIDDEN", message)
+) : KrollException("ACCESS_FORBIDDEN", message)

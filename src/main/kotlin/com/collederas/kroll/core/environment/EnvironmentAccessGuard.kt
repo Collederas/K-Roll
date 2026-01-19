@@ -13,8 +13,10 @@ class EnvironmentAccessGuard(
         envId: UUID,
         userId: UUID,
     ) {
-        val environment = environmentRepository.findById(envId)
-            .orElseThrow { EnvironmentNotFoundException("Environment not found") }
+        val environment =
+            environmentRepository
+                .findById(envId)
+                .orElseThrow { EnvironmentNotFoundException("Environment not found") }
 
         if (environment.project.owner.id != userId) {
             throw ForbiddenException("Project not owned by user")

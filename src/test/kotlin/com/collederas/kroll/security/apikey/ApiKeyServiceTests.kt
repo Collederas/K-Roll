@@ -3,6 +3,7 @@ package com.collederas.kroll.security.apikey
 import com.collederas.kroll.core.environment.EnvironmentRepository
 import com.collederas.kroll.core.exceptions.EnvironmentNotFoundException
 import com.collederas.kroll.core.exceptions.InvalidApiKeyExpiryException
+import com.collederas.kroll.security.apikey.dto.CreateApiKeyRequest
 import com.collederas.kroll.support.factories.EnvironmentFactory
 import io.mockk.every
 import io.mockk.mockk
@@ -16,6 +17,7 @@ import java.time.Duration
 import java.time.Instant
 import java.time.ZoneOffset
 import java.util.*
+import kotlin.math.exp
 
 class ApiKeyServiceTests {
     private val environmentRepo = mockk<EnvironmentRepository>()
@@ -37,8 +39,9 @@ class ApiKeyServiceTests {
         val envId = UUID.randomUUID()
         every { environmentRepo.findByIdOrNull(envId) } returns null
 
+        val dto = CreateApiKeyRequest(fixedNow.plus(Duration.ofDays(1)))
         assertThrows(EnvironmentNotFoundException::class.java) {
-            apiKeyService.create(envId, fixedNow.plus(Duration.ofDays(1)))
+            apiKeyService.create(envId, dto)
         }
     }
 
@@ -49,8 +52,9 @@ class ApiKeyServiceTests {
 
         every { environmentRepo.findByIdOrNull(envId) } returns environment
 
+        val dto = CreateApiKeyRequest(fixedNow)
         assertThrows(InvalidApiKeyExpiryException::class.java) {
-            apiKeyService.create(envId, fixedNow)
+            apiKeyService.create(envId, dto)
         }
     }
 
@@ -62,7 +66,8 @@ class ApiKeyServiceTests {
         every { environmentRepo.findByIdOrNull(any()) } returns EnvironmentFactory.create()
         every { apiRepo.save(any()) } answers { firstArg() }
 
-        apiKeyService.create(UUID.randomUUID(), expiresAt)
+        val dto = CreateApiKeyRequest(expiresAt)
+        apiKeyService.create(UUID.randomUUID(), dto)
     }
 
     @Test
@@ -72,8 +77,11 @@ class ApiKeyServiceTests {
         val expiresAt = fixedNow.plus(max).plus(Duration.ofMillis(1))
 
         every { environmentRepo.findByIdOrNull(any()) } returns environment
+
+        val dto = CreateApiKeyRequest(expiresAt)
+
         assertThrows(InvalidApiKeyExpiryException::class.java) {
-            apiKeyService.create(environment.id, expiresAt)
+            apiKeyService.create(environment.id, dto)
         }
     }
 
@@ -87,7 +95,8 @@ class ApiKeyServiceTests {
         val keySlot = slot<ApiKeyEntity>()
         every { apiRepo.save(capture(keySlot)) } answers { keySlot.captured }
 
-        val response = apiKeyService.create(envId, expiresAt)
+        val dto = CreateApiKeyRequest(expiresAt)
+        val response = apiKeyService.create(envId, dto)
 
         assertNotNull(response.id)
         assertNotNull(response.key)
@@ -111,9 +120,10 @@ class ApiKeyServiceTests {
         every { apiRepo.save(any()) } answers { firstArg() }
 
         val expiresAt = fixedNow.plus(Duration.ofDays(1))
+        val dto = CreateApiKeyRequest(expiresAt)
 
-        val r1 = apiKeyService.create(environment.id, expiresAt)
-        val r2 = apiKeyService.create(environment.id, expiresAt)
+        val r1 = apiKeyService.create(environment.id, dto)
+        val r2 = apiKeyService.create(environment.id, dto)
 
         assertNotEquals(r1.key, r2.key)
     }

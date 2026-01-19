@@ -1,10 +1,12 @@
 package com.collederas.kroll.api.common.exception
 
-import com.collederas.kroll.core.exceptions.ApiException
+import com.collederas.kroll.core.exceptions.* // Importing the "Pure" Core exceptions
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
+import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.security.core.AuthenticationException
+import org.springframework.web.HttpRequestMethodNotSupportedException
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
@@ -14,19 +16,25 @@ import java.net.URI
 class GlobalExceptionHandler {
     private val logger = LoggerFactory.getLogger(GlobalExceptionHandler::class.java)
 
-    /**
-     * Primary handler for all custom API exceptions.
-     * The sealed class hierarchy ensures consistent handling.
-     */
-    @ExceptionHandler(ApiException::class)
-    fun handleApiException(ex: ApiException): ProblemDetail =
-        createProblemDetail(
-            status = ex.status,
-            errorCode = ex.errorCode,
-            title = formatTitle(ex.errorCode),
-            detail = ex.message,
-            additionalProperties = ex.additionalProperties(),
-        )
+    // ==================================================================
+    // DOMAIN EXCEPTION MAPPING (Core -> HTTP)
+    // ==================================================================
+
+    @ExceptionHandler(NotFoundException::class)
+    fun handleNotFound(ex: NotFoundException): ProblemDetail = mapToProblem(HttpStatus.NOT_FOUND, ex)
+
+    @ExceptionHandler(ConflictException::class)
+    fun handleConflict(ex: ConflictException): ProblemDetail = mapToProblem(HttpStatus.CONFLICT, ex)
+
+    @ExceptionHandler(BadRequestException::class)
+    fun handleBadRequest(ex: BadRequestException): ProblemDetail = mapToProblem(HttpStatus.BAD_REQUEST, ex)
+
+    @ExceptionHandler(ForbiddenException::class)
+    fun handleForbidden(ex: ForbiddenException): ProblemDetail = mapToProblem(HttpStatus.FORBIDDEN, ex)
+
+    // ==================================================================
+    // FRAMEWORK / INFRASTRUCTURE EXCEPTIONS
+    // ==================================================================
 
     /**
      * Handle Spring Security authentication exceptions.
@@ -36,7 +44,6 @@ class GlobalExceptionHandler {
         createProblemDetail(
             status = HttpStatus.UNAUTHORIZED,
             errorCode = "AUTHENTICATION_FAILED",
-            title = "Authentication Failed",
             detail = ex.message ?: "Authentication failed",
         )
 
@@ -57,21 +64,33 @@ class GlobalExceptionHandler {
         return createProblemDetail(
             status = HttpStatus.BAD_REQUEST,
             errorCode = "VALIDATION_FAILED",
-            title = "Validation Failed",
             detail = "One or more fields failed validation",
             additionalProperties = mapOf("fieldErrors" to fieldErrors),
         )
     }
 
+    @ExceptionHandler(HttpMessageNotReadableException::class)
+    fun handleHttpMessageNotReadable(ex: HttpMessageNotReadableException): ProblemDetail =
+        createProblemDetail(
+            status = HttpStatus.BAD_REQUEST,
+            errorCode = "INVALID_REQUEST_BODY",
+            detail = "Request body is missing or malformed",
+        )
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException::class)
+    fun handleHttpMessageNotReadable(ex: HttpRequestMethodNotSupportedException): ProblemDetail =
+        createProblemDetail(
+            status = HttpStatus.METHOD_NOT_ALLOWED,
+            errorCode = "METHOD_NOT_ALLOWED",
+            detail = "Method not allowed",
+        )
+
     /**
      * Catch-all handler for unexpected exceptions.
-     * Logs the full stack trace but returns a generic message to clients.
-     * Note: Spring's ResponseStatusException and servlet exceptions are excluded
-     * to allow Spring's default handling for 404s on non-existent endpoints.
      */
     @ExceptionHandler(Exception::class)
     fun handleUnexpectedException(ex: Exception): ProblemDetail {
-        // Let Spring handle its own exceptions (e.g., NoHandlerFoundException for 404)
+        // Let Spring handle its own control flow exceptions
         if (ex.javaClass.name.startsWith("org.springframework.web.servlet")) {
             throw ex
         }
@@ -81,10 +100,27 @@ class GlobalExceptionHandler {
         return createProblemDetail(
             status = HttpStatus.INTERNAL_SERVER_ERROR,
             errorCode = "INTERNAL_ERROR",
-            title = "Internal Server Error",
             detail = "An unexpected error occurred. Please try again later.",
         )
     }
+
+    // ==================================================================
+    // HELPERS
+    // ==================================================================
+
+    /**
+     * Bridge method to convert a Core ApiException (Domain) to a ProblemDetail (Web).
+     */
+    private fun mapToProblem(
+        status: HttpStatus,
+        ex: KrollException,
+    ): ProblemDetail =
+        createProblemDetail(
+            status = status,
+            errorCode = ex.errorCode,
+            detail = ex.message,
+            additionalProperties = ex.additionalDetails(),
+        )
 
     /**
      * Factory method for creating consistent ProblemDetail responses.
@@ -92,11 +128,12 @@ class GlobalExceptionHandler {
     private fun createProblemDetail(
         status: HttpStatus,
         errorCode: String,
-        title: String,
         detail: String,
         additionalProperties: Map<String, Any?> = emptyMap(),
-    ): ProblemDetail =
-        ProblemDetail.forStatusAndDetail(status, detail).also { problem ->
+    ): ProblemDetail {
+        val title = formatTitle(errorCode)
+
+        return ProblemDetail.forStatusAndDetail(status, detail).also { problem ->
             problem.title = title
             problem.setProperty("error_code", errorCode)
             problem.instance = URI("/errors/${errorCode.lowercase().replace('_', '-')}")
@@ -105,11 +142,8 @@ class GlobalExceptionHandler {
                 problem.setProperty(key, value)
             }
         }
+    }
 
-    /**
-     * Convert error code to human-readable title.
-     * Example: "PROJECT_NOT_FOUND" -> "Project Not Found"
-     */
     private fun formatTitle(errorCode: String): String =
         errorCode
             .split('_')

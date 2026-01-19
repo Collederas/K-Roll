@@ -4,13 +4,13 @@ import com.collederas.kroll.security.identity.AuthUserDetails
 import com.collederas.kroll.security.jwt.JwtTokenService
 import com.collederas.kroll.security.jwt.RefreshTokenService
 import com.collederas.kroll.user.AppUser
-import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.http.HttpStatus
+import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
-import org.springframework.web.server.ResponseStatusException
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import org.springframework.web.server.ResponseStatusException
 
 @Service
 class JwtAuthService(
@@ -24,11 +24,12 @@ class JwtAuthService(
         password: String,
     ): Pair<String, String> {
         val auth = UsernamePasswordAuthenticationToken(usernameOrEmail, password)
-        val authentication = try {
-            authManager.authenticate(auth)
-        } catch (e: BadCredentialsException) {
-            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid credentials")
-        }
+        val authentication =
+            try {
+                authManager.authenticate(auth)
+            } catch (e: BadCredentialsException) {
+                throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid credentials")
+            }
 
         val principal = authentication.principal as AuthUserDetails
 

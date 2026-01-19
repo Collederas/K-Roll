@@ -17,8 +17,9 @@ class ProjectService(
         projectId: UUID,
         userId: UUID,
     ): ProjectEntity {
-        val project = repo.findByIdAndOwnerId(projectId, userId)
-            ?: throw ProjectNotFoundException("Project with ID $projectId not found")
+        val project =
+            repo.findByIdAndOwnerId(projectId, userId)
+                ?: throw ProjectNotFoundException("Project with ID $projectId not found")
         return project
     }
 
@@ -27,7 +28,10 @@ class ProjectService(
         repo.findAllByOwnerId(ownerId).map { ProjectDto(it.id, it.name, it.createdAt) }
 
     @Transactional(readOnly = true)
-    fun get(ownerId: UUID, projectId: UUID): ProjectDto {
+    fun get(
+        ownerId: UUID,
+        projectId: UUID,
+    ): ProjectDto {
         val project = resolveOwnedProject(projectId, ownerId)
         return ProjectDto(project.id, project.name, project.createdAt)
     }

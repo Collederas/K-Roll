@@ -5,6 +5,7 @@ import com.collederas.kroll.core.configentry.dto.UpdateConfigEntryDto
 import com.collederas.kroll.core.environment.EnvironmentAccessGuard
 import com.collederas.kroll.core.environment.EnvironmentRepository
 import com.collederas.kroll.core.exceptions.ConfigEntryNotFoundException
+import com.collederas.kroll.core.exceptions.ConfigValidationException
 import com.collederas.kroll.core.exceptions.EnvironmentNotFoundException
 import com.collederas.kroll.core.exceptions.InvalidConfigTypeException
 import com.collederas.kroll.support.factories.ConfigEntryFactory
@@ -22,7 +23,7 @@ import java.util.*
 
 class ConfigEntryServiceTests {
     private val environmentRepo = mockk<EnvironmentRepository>()
-    private val configEntryRepo = mockk<ConfigEntryRepository>()
+    private val configEntryRepo = mockk<ConfigEntryRepository>(relaxed = true)
     private val accessGuard = mockk<EnvironmentAccessGuard>()
     private val envId = UUID.randomUUID()
 
@@ -114,7 +115,7 @@ class ConfigEntryServiceTests {
             accessGuard.requireOwner(any(), any())
         } just Runs
 
-        assertThrows<InvalidConfigTypeException> {
+        assertThrows<ConfigValidationException> {
             configEntryService.create(UUID.randomUUID(), envId, dto)
         }
     }

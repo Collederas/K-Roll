@@ -3,6 +3,10 @@ package com.collederas.kroll.security.apikey.dto
 import java.time.Instant
 import java.util.*
 
+data class CreateApiKeyRequest(
+    val expiresAt: Instant,
+)
+
 data class CreateApiKeyResponseDto(
     val id: UUID,
     val key: String,
@@ -16,12 +20,13 @@ data class ApiKeyMetadataDto(
     val createdAt: Instant,
 )
 
-data class ApiKeyAuthResult(
-    val environmentId: UUID?,
-    val apiKeyId: UUID?,
-    val roles: List<String>,
-) {
-    companion object {
-        fun invalid() = ApiKeyAuthResult(null, null, emptyList())
-    }
+sealed interface ApiKeyAuthResult{
+    data class Valid(
+        val environmentId: UUID,
+        val apiKeyId: UUID,
+        val roles: List<String>,
+        ) : ApiKeyAuthResult
+
+data object Invalid : ApiKeyAuthResult
+data object Expired : ApiKeyAuthResult
 }

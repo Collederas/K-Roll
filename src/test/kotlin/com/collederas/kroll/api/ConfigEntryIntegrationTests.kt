@@ -220,8 +220,7 @@ class ConfigEntryIntegrationTests {
                 with(SecurityMockMvcRequestPostProcessors.user(authUser))
                 contentType = MediaType.APPLICATION_JSON
                 content = objectMapper.writeValueAsString(updateRequest)
-            }
-            .andExpect {
+            }.andExpect {
                 status { isOk() }
                 jsonPath("$.key") { value("db.password.prod") }
                 jsonPath("$.value") { value("new") }

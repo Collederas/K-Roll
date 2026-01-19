@@ -3,6 +3,7 @@ package com.collederas.kroll.security.apikey
 import com.collederas.kroll.security.AuthEntryPoint
 import com.collederas.kroll.security.apikey.authentication.ApiKeyAuthenticationFilter
 import com.collederas.kroll.security.apikey.authentication.ApiKeyAuthenticationProvider
+import jakarta.servlet.http.HttpServletResponse
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.annotation.Order
@@ -36,8 +37,12 @@ class ApiKeySecurityConfig {
             .csrf { it.disable() }
             .sessionManagement {
                 it.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            }.exceptionHandling {
+            }.anonymous { it.disable() }
+            .exceptionHandling {
                 it.authenticationEntryPoint(authEntryPoint)
+                it.accessDeniedHandler { _, response, _ ->
+                    response.sendError(HttpServletResponse.SC_UNAUTHORIZED)
+                }
             }.authorizeHttpRequests {
                 it.requestMatchers(HttpMethod.OPTIONS, "/client/**").permitAll()
                 it.anyRequest().hasRole("GAME_CLIENT")

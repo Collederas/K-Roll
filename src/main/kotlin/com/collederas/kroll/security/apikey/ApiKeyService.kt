@@ -2,10 +2,11 @@ package com.collederas.kroll.security.apikey
 
 import com.collederas.kroll.core.environment.EnvironmentRepository
 import com.collederas.kroll.core.exceptions.EnvironmentNotFoundException
+import com.collederas.kroll.core.exceptions.InvalidApiKeyExpiryException
 import com.collederas.kroll.security.apikey.dto.ApiKeyAuthResult
 import com.collederas.kroll.security.apikey.dto.ApiKeyMetadataDto
+import com.collederas.kroll.security.apikey.dto.CreateApiKeyRequest
 import com.collederas.kroll.security.apikey.dto.CreateApiKeyResponseDto
-import com.collederas.kroll.core.exceptions.InvalidApiKeyExpiryException
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -48,13 +49,13 @@ class ApiKeyService(
     @Transactional
     fun create(
         envId: UUID,
-        expiresAt: Instant,
+        dto: CreateApiKeyRequest,
     ): CreateApiKeyResponseDto {
         val environment =
             environmentRepository.findByIdOrNull(envId)
                 ?: throw EnvironmentNotFoundException("Environment with ID $envId not found")
 
-        validateExpiryTime(expiresAt, clock.instant())
+        validateExpiryTime(dto.expiresAt, clock.instant())
 
         val rawKey = generateSecureKey()
         val hashedKey = ApiKeyHasher.hash(rawKey)
@@ -69,11 +70,11 @@ class ApiKeyService(
                 environment = environment,
                 keyHash = hashedKey,
                 mask = displayMask,
-                expiresAt = expiresAt,
+                expiresAt = dto.expiresAt,
             )
 
         val apiKey = apiKeyRepository.save(entity)
-        return CreateApiKeyResponseDto(id = apiKey.id, key = rawKey, expiresAt = expiresAt)
+        return CreateApiKeyResponseDto(id = apiKey.id, key = rawKey, expiresAt = apiKey.expiresAt)
     }
 
     private fun validateExpiryTime(
@@ -97,17 +98,20 @@ class ApiKeyService(
     fun validate(rawApiKey: String): ApiKeyAuthResult {
         val hashedKey = ApiKeyHasher.hash(rawApiKey)
 
-        return apiKeyRepository
-            .findByKeyHash(hashedKey)
-            ?.takeIf { it.isActive() }
-            ?.let { entity ->
-                ApiKeyAuthResult(
-                    entity.environment.id,
-                    entity.id,
-                    roles = listOf("ROLE_GAME_CLIENT"),
-                )
-            } ?: ApiKeyAuthResult.invalid()
+        val entity = apiKeyRepository.findByKeyHash(hashedKey)
+            ?: return ApiKeyAuthResult.Invalid
+
+        if (!entity.isActive(clock.instant())) {
+            return ApiKeyAuthResult.Expired
+        }
+
+        return ApiKeyAuthResult.Valid(
+            entity.environment.id,
+            entity.id,
+            roles = listOf("ROLE_GAME_CLIENT"),
+        )
     }
+
 
     @Transactional
     fun delete(apiKeyId: UUID) {
