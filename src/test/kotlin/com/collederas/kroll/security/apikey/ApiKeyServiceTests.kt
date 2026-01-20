@@ -17,7 +17,6 @@ import java.time.Duration
 import java.time.Instant
 import java.time.ZoneOffset
 import java.util.*
-import kotlin.math.exp
 
 class ApiKeyServiceTests {
     private val environmentRepo = mockk<EnvironmentRepository>()

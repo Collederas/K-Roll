@@ -28,7 +28,7 @@ class JwtAuthService(
             try {
                 authManager.authenticate(auth)
             } catch (e: BadCredentialsException) {
-                throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid credentials")
+                throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid credentials", e)
             }
 
         val principal = authentication.principal as AuthUserDetails

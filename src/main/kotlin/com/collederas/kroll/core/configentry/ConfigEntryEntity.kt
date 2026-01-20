@@ -70,6 +70,7 @@ class ConfigEntryEntity(
         private val STRICT_JSON_MAPPER: ObjectMapper =
             ObjectMapper()
                 .enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS)
+        const val MAX_JSON_BYTES: Int = 64 * 1024
 
         fun create(
             environment: EnvironmentEntity,
@@ -209,7 +210,7 @@ class ConfigEntryEntity(
             errors.add("JSON value must be a JSON object or array")
         }
 
-        val maxBytes = 64 * 1024
+        val maxBytes = MAX_JSON_BYTES
         if (value.toByteArray(Charsets.UTF_8).size > maxBytes) {
             errors.add("JSON value exceeds maximum size of 64KB")
         }

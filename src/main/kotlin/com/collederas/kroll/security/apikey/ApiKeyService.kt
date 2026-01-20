@@ -95,23 +95,18 @@ class ApiKeyService(
     }
 
     // TODO: this should go in its own service
-    fun validate(rawApiKey: String): ApiKeyAuthResult {
-        val hashedKey = ApiKeyHasher.hash(rawApiKey)
-
-        val entity = apiKeyRepository.findByKeyHash(hashedKey)
-            ?: return ApiKeyAuthResult.Invalid
-
-        if (!entity.isActive(clock.instant())) {
-            return ApiKeyAuthResult.Expired
-        }
-
-        return ApiKeyAuthResult.Valid(
-            entity.environment.id,
-            entity.id,
-            roles = listOf("ROLE_GAME_CLIENT"),
-        )
-    }
-
+    fun validate(rawApiKey: String): ApiKeyAuthResult =
+        apiKeyRepository.findByKeyHash(ApiKeyHasher.hash(rawApiKey))?.let { entity ->
+            if (!entity.isActive(clock.instant())) {
+                ApiKeyAuthResult.Expired
+            } else {
+                ApiKeyAuthResult.Valid(
+                    entity.environment.id,
+                    entity.id,
+                    roles = listOf("ROLE_GAME_CLIENT"),
+                )
+            }
+        } ?: ApiKeyAuthResult.Invalid
 
     @Transactional
     fun delete(apiKeyId: UUID) {

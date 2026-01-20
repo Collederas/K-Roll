@@ -42,7 +42,6 @@ class ApiKeyAuthenticationProvider(
         }
     }
 
-
     override fun supports(authentication: Class<*>) =
         ApiKeyAuthenticationToken::class.java.isAssignableFrom(authentication)
 }

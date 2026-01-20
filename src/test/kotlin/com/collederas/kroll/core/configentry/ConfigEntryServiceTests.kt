@@ -7,7 +7,6 @@ import com.collederas.kroll.core.environment.EnvironmentRepository
 import com.collederas.kroll.core.exceptions.ConfigEntryNotFoundException
 import com.collederas.kroll.core.exceptions.ConfigValidationException
 import com.collederas.kroll.core.exceptions.EnvironmentNotFoundException
-import com.collederas.kroll.core.exceptions.InvalidConfigTypeException
 import com.collederas.kroll.support.factories.ConfigEntryFactory
 import com.collederas.kroll.support.factories.EnvironmentFactory
 import com.fasterxml.jackson.databind.ObjectMapper

@@ -20,13 +20,14 @@ data class ApiKeyMetadataDto(
     val createdAt: Instant,
 )
 
-sealed interface ApiKeyAuthResult{
+sealed interface ApiKeyAuthResult {
     data class Valid(
         val environmentId: UUID,
         val apiKeyId: UUID,
         val roles: List<String>,
-        ) : ApiKeyAuthResult
+    ) : ApiKeyAuthResult
 
-data object Invalid : ApiKeyAuthResult
-data object Expired : ApiKeyAuthResult
+    data object Invalid : ApiKeyAuthResult
+
+    data object Expired : ApiKeyAuthResult
 }
