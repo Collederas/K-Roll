@@ -1,16 +1,26 @@
 spring:
-    application:
-        name: kroll
-    jpa:
-        hibernate:
-            ddl-auto: validate
-    flyway:
-        enabled: true
+  application:
+    name: kroll
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+  mvc:
+    throw-exception-if-no-handler-found: true
+  web:
+    resources:
+      add-mappings: false
+
+server:
+  error:
+    whitelabel:
+      enabled: false
 
 auth:
-    jwt:
-        expiration: 1h
-    refresh:
-        expiration: 30d
-    api-key:
-        max-lifetime: 30d
+  jwt:
+    expiration: 1h
+  refresh:
+    expiration: 30d
+  api-key:
+    max-lifetime: 30d

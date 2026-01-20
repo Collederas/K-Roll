@@ -1,6 +1,6 @@
 package com.collederas.kroll.api.common.exception
 
-import com.collederas.kroll.core.exceptions.* // Importing the "Pure" Core exceptions
+import com.collederas.kroll.core.exceptions.*
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
@@ -10,6 +10,8 @@ import org.springframework.web.HttpRequestMethodNotSupportedException
 import org.springframework.web.bind.MethodArgumentNotValidException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
+import org.springframework.web.servlet.NoHandlerFoundException
+import org.springframework.web.servlet.resource.NoResourceFoundException
 import java.net.URI
 
 @RestControllerAdvice
@@ -26,6 +28,14 @@ class GlobalExceptionHandler {
     // ==================================================================
     // FRAMEWORK / INFRASTRUCTURE EXCEPTIONS
     // ==================================================================
+
+    @ExceptionHandler(NoHandlerFoundException::class, NoResourceFoundException::class)
+    fun handleNotFound(ex: Exception): ProblemDetail =
+        createProblemDetail(
+            status = HttpStatus.NOT_FOUND,
+            errorCode = "RESOURCE_NOT_FOUND",
+            detail = ex.message ?: "The requested URL was not found on this server.",
+        )
 
     @ExceptionHandler(AuthenticationException::class)
     fun handleAuthenticationException(ex: AuthenticationException): ProblemDetail =

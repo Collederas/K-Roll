@@ -3,6 +3,7 @@ package com.collederas.kroll.api.auth
 import com.collederas.kroll.security.identity.AuthUserDetails
 import com.collederas.kroll.security.jwt.authentication.JwtAuthService
 import com.collederas.kroll.user.dto.AppUserDto
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.constraints.NotBlank
 import org.springframework.http.HttpStatus
 import org.springframework.security.core.annotation.AuthenticationPrincipal
@@ -11,6 +12,10 @@ import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/auth")
+@Tag(
+    name = "Authentication",
+    description = "User authentication and session management using JWT access and refresh tokens",
+)
 @Validated
 class JwtAuthController(
     private val authService: JwtAuthService,
