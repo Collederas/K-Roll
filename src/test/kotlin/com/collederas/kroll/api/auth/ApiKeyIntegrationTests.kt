@@ -280,7 +280,9 @@ class ApiKeyIntegrationTests {
                 status { isOk() }
             }
 
-        clock.advanceBy(Duration.ofDays(365 * 10))
+        val beyondMaxLifetime = apiKeyProperties.maxLifetime + Duration.ofDays(1)
+
+        clock.advanceBy(beyondMaxLifetime)
 
         mvc
             .post(protectedEndpoint) {
