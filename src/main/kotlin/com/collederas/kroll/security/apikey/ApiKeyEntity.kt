@@ -20,8 +20,8 @@ class ApiKeyEntity(
     val keyHash: String,
     @Column(name = "mask", nullable = false)
     val mask: String,
-    @Column(name = "expires_at", nullable = false)
-    val expiresAt: Instant,
+    @Column(name = "expires_at")
+    val expiresAt: Instant?,
 ) {
     @Column(name = "created_at", nullable = false)
     @CreatedDate
@@ -36,5 +36,5 @@ class ApiKeyEntity(
         updatedAt = Instant.now()
     }
 
-    fun isActive(now: Instant): Boolean = expiresAt.isAfter(now)
+    fun isActive(now: Instant): Boolean = expiresAt?.isAfter(now) ?: true
 }

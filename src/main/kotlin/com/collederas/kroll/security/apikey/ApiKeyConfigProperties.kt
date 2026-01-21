@@ -1,13 +1,23 @@
 package com.collederas.kroll.security.apikey
 
+import jakarta.annotation.PostConstruct
 import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.validation.annotation.Validated
 import java.time.Duration
 
 @ConfigurationProperties(prefix = "auth.api-key")
+@Validated
+@Suppress("MagicNumber")
 data class ApiKeyConfigProperties(
-    val maxLifetime: Duration = Duration.ofDays(DEFAULT_API_KEY_LIFETIME_DAYS),
+    val defaultLifetime: Duration = Duration.ofDays(30),
+    val maxLifetime: Duration = Duration.ofDays(365),
 ) {
-    companion object {
-        private const val DEFAULT_API_KEY_LIFETIME_DAYS = 365L
+    @PostConstruct
+    fun validate() {
+        if (defaultLifetime > maxLifetime) {
+            throw IllegalStateException(
+                "Invalid configuration: defaultLifetime ($defaultLifetime) cannot exceed maxLifetime ($maxLifetime)",
+            )
+        }
     }
 }

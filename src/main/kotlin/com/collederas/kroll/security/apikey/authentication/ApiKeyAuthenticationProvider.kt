@@ -8,7 +8,6 @@ import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.security.authentication.CredentialsExpiredException
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.authority.SimpleGrantedAuthority
-import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Component
 
 @Component
@@ -17,7 +16,6 @@ class ApiKeyAuthenticationProvider(
 ) : AuthenticationProvider {
     override fun authenticate(authentication: Authentication): Authentication {
         val rawKey = authentication.credentials as String
-        println(SecurityContextHolder.getContext().authentication)
 
         return when (val result = apiKeyService.validate(rawKey)) {
             is ApiKeyAuthResult.Valid -> {
