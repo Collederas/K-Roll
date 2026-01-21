@@ -1,15 +1,14 @@
+package com.collederas.kroll.core.configentry.history
+
 import com.collederas.kroll.core.configentry.ConfigEntryUpdatedEvent
-import com.collederas.kroll.core.configentry.history.ConfigEntryHistoryEntity
-import com.collederas.kroll.core.configentry.history.ConfigEntryHistoryRepository
+import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Component
-import org.springframework.transaction.event.TransactionPhase
-import org.springframework.transaction.event.TransactionalEventListener
 
 @Component
 class ConfigEntryHistoryListener(
     private val historyRepository: ConfigEntryHistoryRepository,
 ) {
-    @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
+    @EventListener
     fun onConfigUpdated(event: ConfigEntryUpdatedEvent) {
         val historyEntry =
             ConfigEntryHistoryEntity(

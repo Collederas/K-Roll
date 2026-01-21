@@ -17,6 +17,16 @@ enum class ConfigType {
     JSON,
 }
 
+sealed interface SemanticDiff {
+    object Same : SemanticDiff
+
+    object Different : SemanticDiff
+
+    data class Invalid(
+        val cause: Exception,
+    ) : SemanticDiff
+}
+
 @Entity
 @Table(
     name = "config_entries",
@@ -72,6 +82,59 @@ class ConfigEntryEntity(
                 .enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS)
         const val MAX_JSON_BYTES: Int = 64 * 1024
 
+        fun compareJson(
+            val1: String,
+            val2: String,
+        ): SemanticDiff =
+            try {
+                val node1 = STRICT_JSON_MAPPER.readTree(val1)
+                val node2 = STRICT_JSON_MAPPER.readTree(val2)
+
+                if (node1 == node2) {
+                    SemanticDiff.Same
+                } else {
+                    SemanticDiff.Different
+                }
+            } catch (e: JsonProcessingException) {
+                SemanticDiff.Invalid(e)
+            }
+
+        fun areValuesSemanticallyDifferent(
+            type: ConfigType,
+            val1: String,
+            val2: String,
+        ): SemanticDiff {
+            if (val1 == val2) return SemanticDiff.Same
+
+            return when (type) {
+                ConfigType.STRING ->
+                    SemanticDiff.Different
+
+                ConfigType.BOOLEAN ->
+                    if (val1.equals(val2, ignoreCase = true)) {
+                        SemanticDiff.Same
+                    } else {
+                        SemanticDiff.Different
+                    }
+
+                ConfigType.NUMBER ->
+                    try {
+                        val n1 = val1.toBigDecimal()
+                        val n2 = val2.toBigDecimal()
+                        if (n1.compareTo(n2) == 0) {
+                            SemanticDiff.Same
+                        } else {
+                            SemanticDiff.Different
+                        }
+                    } catch (e: NumberFormatException) {
+                        SemanticDiff.Invalid(e)
+                    }
+
+                ConfigType.JSON ->
+                    compareJson(val1, val2)
+            }
+        }
+
         fun create(
             environment: EnvironmentEntity,
             key: String,
@@ -120,6 +183,21 @@ class ConfigEntryEntity(
         changeDescription: String?,
         snapshotJson: String,
     ): ConfigEntryEntity {
+        if (
+            !wouldChange(
+                newValue,
+                newType,
+                newActiveFrom,
+                clearActiveFrom,
+                newActiveUntil,
+                clearActiveUntil,
+            )
+        ) {
+            throw ConfigValidationException(
+                listOf("Update rejected: no effective changes detected"),
+            )
+        }
+
         newValue?.let { this.configValue = it }
         newType?.let { this.configType = it }
 
@@ -193,26 +271,77 @@ class ConfigEntryEntity(
         value: String,
         errors: MutableList<String>,
     ) {
+        var isValid = true
+
         if (value.isBlank()) {
             errors.add("JSON value cannot be blank")
-            return
+            isValid = false
         }
 
-        val node =
-            try {
-                STRICT_JSON_MAPPER.readTree(value)
-            } catch (_: JsonProcessingException) {
-                errors.add("Value is not valid JSON")
-                return
-            }
-
-        if (!node.isObject && !node.isArray) {
-            errors.add("JSON value must be a JSON object or array")
-        }
-
-        val maxBytes = MAX_JSON_BYTES
-        if (value.toByteArray(Charsets.UTF_8).size > maxBytes) {
+        if (value.toByteArray(Charsets.UTF_8).size > MAX_JSON_BYTES) {
             errors.add("JSON value exceeds maximum size of 64KB")
+            isValid = false
+        }
+
+        if (isValid) {
+            val node =
+                try {
+                    STRICT_JSON_MAPPER.readTree(value)
+                } catch (_: JsonProcessingException) {
+                    errors.add("Value is not valid JSON")
+                    return
+                }
+
+            if (!node.isObject && !node.isArray) {
+                errors.add("JSON value must be a JSON object or array")
+            }
+        }
+    }
+
+    fun wouldChange(
+        newValue: String?,
+        newType: ConfigType?,
+        newActiveFrom: Instant?,
+        clearActiveFrom: Boolean,
+        newActiveUntil: Instant?,
+        clearActiveUntil: Boolean,
+    ): Boolean {
+        data class Metadata(
+            val type: ConfigType,
+            val activeFrom: Instant?,
+            val activeUntil: Instant?,
+        )
+
+        val targetMetadata =
+            Metadata(
+                type = newType ?: configType,
+                activeFrom = if (clearActiveFrom) null else (newActiveFrom ?: activeFrom),
+                activeUntil = if (clearActiveUntil) null else (newActiveUntil ?: activeUntil),
+            )
+
+        val currentMetadata = Metadata(configType, activeFrom, activeUntil)
+        if (targetMetadata != currentMetadata) {
+            return true
+        }
+
+        val targetValue = newValue ?: configValue
+
+        return when (
+            val diff =
+                areValuesSemanticallyDifferent(
+                    targetMetadata.type,
+                    configValue,
+                    targetValue,
+                )
+        ) {
+            SemanticDiff.Same -> false
+            SemanticDiff.Different -> true
+            is SemanticDiff.Invalid ->
+                throw ConfigValidationException(
+                    listOf(
+                        "Invalid ${targetMetadata.type} value: ${diff.cause.message}",
+                    ),
+                )
         }
     }
 }

@@ -1,9 +1,10 @@
 package com.collederas.kroll.core.configentry
 
-import ConfigEntryHistoryListener
 import com.collederas.kroll.core.configentry.dto.CreateConfigEntryDto
 import com.collederas.kroll.core.configentry.dto.UpdateConfigEntryDto
+import com.collederas.kroll.core.configentry.history.ConfigEntryHistoryListener
 import com.collederas.kroll.core.configentry.history.ConfigEntryHistoryRepository
+import com.collederas.kroll.core.exceptions.ConfigValidationException
 import com.collederas.kroll.support.factories.PersistedConfigEntryFactory
 import com.collederas.kroll.support.factories.PersistedEnvironmentFactory
 import com.collederas.kroll.support.factories.UserFactory
@@ -11,6 +12,7 @@ import com.collederas.kroll.user.AppUserRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Import
@@ -92,5 +94,30 @@ class ConfigEntryHistoryIntegrationTests {
         val historyEntry = history.first()
         assertEquals(historyEntry.environmentId, env.id)
         assertEquals(historyEntry.changeDescription, updateMsg)
+    }
+
+    @Test
+    fun `updating config entry with no effective changes throws exception and does not persist history`() {
+        val user = UserFactory.create()
+        appUserRepository.save(user)
+        val env = persistedEnvironmentFactory.create(user)
+        val entry =
+            envFactory.create(
+                environment = env,
+                value = "true",
+                createdBy = user.id,
+            )
+
+        val dto =
+            UpdateConfigEntryDto(
+                value = "true",
+                changeDescription = "Some log message",
+            )
+
+        assertThrows<ConfigValidationException> {
+            configEntryService.update(user.id, env.id, entry.configKey, dto)
+        }
+
+        assertThat(historyRepo.findAll()).isEmpty()
     }
 }

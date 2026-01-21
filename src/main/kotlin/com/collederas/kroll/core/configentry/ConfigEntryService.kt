@@ -10,6 +10,8 @@ import com.collederas.kroll.core.exceptions.ConfigEntryNotFoundException
 import com.collederas.kroll.core.exceptions.ConfigValidationException
 import com.collederas.kroll.core.exceptions.EnvironmentNotFoundException
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -23,7 +25,12 @@ class ConfigEntryService(
     private val configEntryRepository: ConfigEntryRepository,
     private val environmentRepository: EnvironmentRepository,
     private val clock: Clock = Clock.systemUTC(),
-    private val objectMapper: ObjectMapper = ObjectMapper(),
+    // JavaTimeModule allows converting a ConfigEntrySnapshot
+    // (which contains Instant fields like activeUntil) into a JSON string
+    private val objectMapper: ObjectMapper =
+        ObjectMapper()
+            .registerModule(JavaTimeModule())
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS),
 ) {
     @Transactional(readOnly = true)
     fun list(
@@ -46,6 +53,7 @@ class ConfigEntryService(
         val now = Instant.now(clock)
         val entities = configEntryRepository.findActiveConfigs(envId, now)
 
+        // TODO: Dto?
         return entities.associate { entity ->
             entity.configKey to parseValue(entity.configValue, entity.configType)
         }

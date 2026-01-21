@@ -197,4 +197,112 @@ class ConfigEntryServiceTests {
 
         verify { configEntryRepo.delete(entity) }
     }
+
+    @Test
+    fun `update rejects no-op updates when values are semantically identical (JSON)`() {
+        val initialJson = """{"a": 1, "b": 2}"""
+        val entity =
+            ConfigEntryFactory.create(
+                key = "json-config",
+                value = initialJson,
+                type = ConfigType.JSON,
+            )
+
+        every { configEntryRepo.findByEnvironmentIdAndConfigKey(envId, "json-config") } returns entity
+        every { accessGuard.requireOwner(any(), any()) } just Runs
+
+        // Same JSON, different order
+        val reorderedJson = """{ "b": 2, "a": 1 }"""
+        val dto =
+            UpdateConfigEntryDto(
+                value = reorderedJson,
+                type = ConfigType.JSON,
+                changeDescription = "Trying to update with semantically identical JSON",
+            )
+
+        assertThrows<ConfigValidationException> {
+            configEntryService.update(UUID.randomUUID(), envId, "json-config", dto)
+        }
+
+        verify(exactly = 0) { configEntryRepo.save(any()) }
+    }
+
+    @Test
+    fun `update rejects no-op updates when values are numerically identical`() {
+        val entity =
+            ConfigEntryFactory.create(
+                key = "num-config",
+                value = "10",
+                type = ConfigType.NUMBER,
+            )
+
+        every { configEntryRepo.findByEnvironmentIdAndConfigKey(envId, "num-config") } returns entity
+        every { accessGuard.requireOwner(any(), any()) } just Runs
+
+        val dto =
+            UpdateConfigEntryDto(
+                value = "10.00",
+                type = ConfigType.NUMBER,
+            )
+
+        // Should be rejected
+        assertThrows<ConfigValidationException> {
+            configEntryService.update(UUID.randomUUID(), envId, "num-config", dto)
+        }
+
+        verify(exactly = 0) { configEntryRepo.save(any()) }
+    }
+
+    @Test
+    fun `update allows change when metadata changes despite identical values`() {
+        val entity =
+            ConfigEntryFactory.create(
+                key = "meta-test",
+                value = "true",
+                type = ConfigType.BOOLEAN,
+                activeUntil = null,
+            )
+
+        every { configEntryRepo.findByEnvironmentIdAndConfigKey(envId, "meta-test") } returns entity
+        // Mock save to return the modified entity
+        every { configEntryRepo.save(any()) } answers { firstArg() }
+        every { accessGuard.requireOwner(any(), any()) } just Runs
+
+        val newDate = Instant.now().plusSeconds(3600)
+        val dto =
+            UpdateConfigEntryDto(
+                value = "true",
+                activeUntil = newDate,
+            )
+
+        val result = configEntryService.update(UUID.randomUUID(), envId, "meta-test", dto)
+
+        assertEquals(newDate, result.activeUntil)
+        verify(exactly = 1) { configEntryRepo.save(any()) }
+    }
+
+    @Test
+    fun `update allows change when JSON is semantically different`() {
+        val entity =
+            ConfigEntryFactory.create(
+                key = "json-diff",
+                value = """{"a": 1}""",
+                type = ConfigType.JSON,
+            )
+
+        every { configEntryRepo.findByEnvironmentIdAndConfigKey(envId, "json-diff") } returns entity
+        every { configEntryRepo.save(any()) } answers { firstArg() }
+        every { accessGuard.requireOwner(any(), any()) } just Runs
+
+        val dto =
+            UpdateConfigEntryDto(
+                value = """{"a": 2}""",
+                type = ConfigType.JSON,
+            )
+
+        val result = configEntryService.update(UUID.randomUUID(), envId, "json-diff", dto)
+
+        assertEquals("""{"a": 2}""", result.value)
+        verify(exactly = 1) { configEntryRepo.save(any()) }
+    }
 }

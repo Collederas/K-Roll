@@ -57,6 +57,7 @@ dependencies {
     implementation("org.flywaydb:flyway-core")
     implementation("org.flywaydb:flyway-database-postgresql")
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.15")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.2")
     implementation("io.swagger.core.v3:swagger-annotations:2.2.20")
 
     implementation("org.jetbrains.kotlin:kotlin-reflect")
