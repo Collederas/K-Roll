@@ -309,8 +309,8 @@ class ApiKeyIntegrationTests {
 
         val rawKey = JsonPath.read<String>(createResult.response.contentAsString, "$.key")
 
-        val keys = apiKeyRepository.findAll()
-        val createdKey = keys.first()
+        val keyId = JsonPath.read<String>(createResult.response.contentAsString, "$.id")
+        val createdKey = apiKeyRepository.findById(UUID.fromString(keyId)).get()
 
         val expectedExpiry = clock.instant().plus(apiKeyProperties.defaultLifetime)
         Assertions
