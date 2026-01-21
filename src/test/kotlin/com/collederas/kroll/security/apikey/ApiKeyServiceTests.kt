@@ -126,4 +126,63 @@ class ApiKeyServiceTests {
 
         assertNotEquals(r1.key, r2.key)
     }
+
+    @Test
+    fun `create applies default lifetime when dto is empty`() {
+        val envId = UUID.randomUUID()
+        val environment = EnvironmentFactory.create()
+        every { environmentRepo.findByIdOrNull(envId) } returns environment
+        val keySlot = slot<ApiKeyEntity>()
+        every { apiRepo.save(capture(keySlot)) } answers { keySlot.captured }
+
+        val dto = CreateApiKeyRequest()
+
+        val response = apiKeyService.create(envId, dto)
+
+        val expectedExpiry = fixedNow.plus(defaultConfig.defaultLifetime)
+
+        assertEquals(expectedExpiry, keySlot.captured.expiresAt)
+
+        assertEquals(expectedExpiry, response.expiresAt)
+        assertFalse(response.neverExpires)
+    }
+
+    @Test
+    fun `create persists permanent key when neverExpires is true`() {
+        val envId = UUID.randomUUID()
+        val environment = EnvironmentFactory.create()
+        every { environmentRepo.findByIdOrNull(envId) } returns environment
+        val keySlot = slot<ApiKeyEntity>()
+        every { apiRepo.save(capture(keySlot)) } answers { keySlot.captured }
+
+        val dto = CreateApiKeyRequest(neverExpires = true)
+
+        val response = apiKeyService.create(envId, dto)
+
+        // Entity should have NULL expiry
+        assertNull(keySlot.captured.expiresAt)
+
+        assertNull(response.expiresAt)
+        assertTrue(response.neverExpires)
+    }
+
+    @Test
+    fun `neverExpires flag takes precedence over provided date`() {
+        val envId = UUID.randomUUID()
+        val environment = EnvironmentFactory.create()
+        every { environmentRepo.findByIdOrNull(envId) } returns environment
+        every { apiRepo.save(any()) } answers { firstArg() }
+
+        val dto =
+            CreateApiKeyRequest(
+                expiresAt = fixedNow.plus(Duration.ofDays(10)),
+                neverExpires = true,
+            )
+
+        val response = apiKeyService.create(envId, dto)
+
+        // Assert neverExpires flag won
+        assertNull(response.expiresAt)
+        assertTrue(response.neverExpires)
+    }
 }

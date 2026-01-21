@@ -55,7 +55,8 @@ class ApiKeyService(
             environmentRepository.findByIdOrNull(envId)
                 ?: throw EnvironmentNotFoundException("Environment with ID $envId not found")
 
-        validateExpiryTime(dto.expiresAt, clock.instant())
+        val now = clock.instant()
+        val finalExpiresAt: Instant? = resolveExpiryDate(dto, now)
 
         val rawKey = generateSecureKey()
         val hashedKey = ApiKeyHasher.hash(rawKey)
@@ -70,12 +71,50 @@ class ApiKeyService(
                 environment = environment,
                 keyHash = hashedKey,
                 mask = displayMask,
-                expiresAt = dto.expiresAt,
+                expiresAt = finalExpiresAt,
             )
 
         val apiKey = apiKeyRepository.save(entity)
-        return CreateApiKeyResponseDto(id = apiKey.id, key = rawKey, expiresAt = apiKey.expiresAt)
+        return CreateApiKeyResponseDto(
+            id = apiKey.id,
+            key = rawKey,
+            expiresAt = apiKey.expiresAt,
+            neverExpires = apiKey.expiresAt == null,
+        )
     }
+
+    @Transactional
+    fun delete(apiKeyId: UUID) {
+        apiKeyRepository.deleteById(apiKeyId)
+    }
+
+    private fun ApiKeyEntity.toDto() =
+        ApiKeyMetadataDto(
+            id = id,
+            truncated = this.mask,
+            environmentId = environment.id,
+            createdAt = createdAt,
+            expiresAt = expiresAt,
+            neverExpires = expiresAt == null,
+        )
+
+    private fun resolveExpiryDate(
+        dto: CreateApiKeyRequest,
+        now: Instant,
+    ): Instant? =
+        when {
+            // Explicitly chosen by user to never expire
+            dto.neverExpires -> null
+
+            // User requests specific expiry date
+            dto.expiresAt != null -> {
+                validateExpiryTime(dto.expiresAt, now)
+                dto.expiresAt
+            }
+
+            // User doesn't send expiration, fallback to conservative default
+            else -> now.plus(properties.defaultLifetime)
+        }
 
     private fun validateExpiryTime(
         expiresAt: Instant,
@@ -83,14 +122,14 @@ class ApiKeyService(
     ) {
         val maxAllowedExpiry = now.plus(properties.maxLifetime)
 
-        when {
-            !expiresAt.isAfter(now) ->
-                throw InvalidApiKeyExpiryException("expiresAt must be in the future")
+        if (!expiresAt.isAfter(now)) {
+            throw InvalidApiKeyExpiryException("Expiration date must be in the future")
+        }
 
-            expiresAt.isAfter(maxAllowedExpiry) ->
-                throw InvalidApiKeyExpiryException(
-                    "expiresAt must be within ${properties.maxLifetime}",
-                )
+        if (expiresAt.isAfter(maxAllowedExpiry)) {
+            throw InvalidApiKeyExpiryException(
+                "Expiration date cannot exceed the maximum allowed lifetime of ${properties.maxLifetime}",
+            )
         }
     }
 
@@ -107,17 +146,4 @@ class ApiKeyService(
                 )
             }
         } ?: ApiKeyAuthResult.Invalid
-
-    @Transactional
-    fun delete(apiKeyId: UUID) {
-        apiKeyRepository.deleteById(apiKeyId)
-    }
-
-    private fun ApiKeyEntity.toDto() =
-        ApiKeyMetadataDto(
-            id = id,
-            truncated = this.mask,
-            environmentId = environment.id,
-            createdAt = createdAt,
-        )
 }

@@ -1,7 +1,9 @@
 package com.collederas.kroll.api.auth
 
+import com.collederas.kroll.security.apikey.ApiKeyConfigProperties
 import com.collederas.kroll.security.apikey.ApiKeyRepository
 import com.collederas.kroll.security.apikey.ApiKeyService
+import com.collederas.kroll.security.apikey.dto.ApiKeyAuthResult
 import com.collederas.kroll.security.apikey.dto.CreateApiKeyRequest
 import com.collederas.kroll.support.MutableTestClock
 import com.collederas.kroll.support.TestClockConfig
@@ -16,12 +18,14 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
 import org.springframework.security.test.context.support.WithMockUser
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.delete
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import java.time.Duration
 
 @SpringBootTest
@@ -38,6 +42,9 @@ class ApiKeyIntegrationTests {
 
     @Autowired
     lateinit var apiKeyService: ApiKeyService
+
+    @Autowired
+    private lateinit var apiKeyProperties: ApiKeyConfigProperties
 
     @Autowired
     lateinit var mvc: MockMvc
@@ -225,5 +232,95 @@ class ApiKeyIntegrationTests {
         mvc
             .delete("/api/environments/${env.id}/api-keys/$keyId")
             .andExpect { status { isNoContent() } }
+    }
+
+    @Test
+    @WithMockUser(roles = ["ADMIN"])
+    fun `can create api key with no expiration`() {
+        val env = envFactory.create()
+
+        val result =
+            mvc
+                .post("/api/environments/${env.id}/api-keys") {
+                    contentType = MediaType.APPLICATION_JSON
+                    content =
+                        """
+                        {
+                          "neverExpires": true
+                        }
+                        """.trimIndent()
+                }.andExpect {
+                    status { isCreated() }
+                    jsonPath("$.id") { exists() }
+                    jsonPath("$.key") { isNotEmpty() }
+                    jsonPath("$.expiresAt") { doesNotExist() }
+                    jsonPath("$.neverExpires") { value(true) }
+                }.andReturn()
+
+        val rawKey =
+            JsonPath.read<String>(
+                result.response.contentAsString,
+                "$.key",
+            )
+
+        val authResult = apiKeyService.validate(rawKey)
+        Assertions.assertThat { authResult is ApiKeyAuthResult.Valid }
+    }
+
+    @Test
+    fun `never expiring api key works indefinitely`() {
+        val env = envFactory.create()
+        val dto = CreateApiKeyRequest(neverExpires = true)
+        val created = apiKeyService.create(env.id, dto)
+
+        val keys = apiKeyRepository.findAll()
+        val createdKey = keys.first()
+
+        mvc
+            .post(protectedEndpoint) {
+                header("X-Api-Key", created.key)
+            }.andExpect {
+                status { isOk() }
+            }
+
+        clock.advanceBy(Duration.ofDays(365 * 10))
+
+        mvc
+            .post(protectedEndpoint) {
+                header("X-Api-Key", created.key)
+            }.andExpect {
+                status { isOk() }
+            }
+    }
+
+    @Test
+    fun `default lifetime is applied when payload is empty`() {
+        val env = envFactory.create()
+
+        val createResult =
+            mvc
+                .post("/api/environments/${env.id}/api-keys") {
+                    with(user("admin").roles("ADMIN"))
+                    contentType = MediaType.APPLICATION_JSON
+                    content = "{}"
+                }.andExpect {
+                    status { isCreated() }
+                    jsonPath("$.neverExpires").value(false)
+                }.andReturn()
+
+        val rawKey = JsonPath.read<String>(createResult.response.contentAsString, "$.key")
+
+        val keys = apiKeyRepository.findAll()
+        val createdKey = keys.first()
+
+        val expectedExpiry = clock.instant().plus(apiKeyProperties.defaultLifetime)
+        Assertions
+            .assertThat(createdKey.expiresAt)
+            .isCloseTo(expectedExpiry, Assertions.within(Duration.ofMinutes(1)))
+
+        // The key must work
+        mvc
+            .post(protectedEndpoint) { header("X-Api-Key", rawKey) }
+            .andExpect { status { isOk() } }
     }
 }

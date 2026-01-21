@@ -23,4 +23,5 @@ auth:
   refresh:
     expiration: 30d
   api-key:
-    max-lifetime: 30d
+    max-lifetime: 365d
+    default-lifetime: 30d
