@@ -27,6 +27,7 @@ import org.springframework.test.web.servlet.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import java.time.Duration
+import java.util.UUID
 
 @SpringBootTest
 @AutoConfigureMockMvc
