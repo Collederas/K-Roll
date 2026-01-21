@@ -273,9 +273,6 @@ class ApiKeyIntegrationTests {
         val dto = CreateApiKeyRequest(neverExpires = true)
         val created = apiKeyService.create(env.id, dto)
 
-        val keys = apiKeyRepository.findAll()
-        val createdKey = keys.first()
-
         mvc
             .post(protectedEndpoint) {
                 header("X-Api-Key", created.key)
