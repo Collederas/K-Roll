@@ -96,6 +96,7 @@ class ApiKeyService(
             createdAt = createdAt,
             expiresAt = expiresAt,
             neverExpires = expiresAt == null,
+            isActive = isActive(Instant.now()),
         )
 
     private fun resolveExpiryDate(

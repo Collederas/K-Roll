@@ -25,7 +25,7 @@ class ProjectService(
 
     @Transactional(readOnly = true)
     fun list(ownerId: UUID): List<ProjectDto> =
-        repo.findAllByOwnerId(ownerId).map { ProjectDto(it.id, it.name, it.createdAt) }
+        repo.findAllByOwnerId(ownerId).map { ProjectDto(it.id, it.name, it.createdAt, it.owner.username) }
 
     @Transactional(readOnly = true)
     fun get(
@@ -33,7 +33,7 @@ class ProjectService(
         projectId: UUID,
     ): ProjectDto {
         val project = resolveOwnedProject(projectId, ownerId)
-        return ProjectDto(project.id, project.name, project.createdAt)
+        return ProjectDto(project.id, project.name, project.createdAt, project.owner.username)
     }
 
     @Transactional
@@ -52,7 +52,7 @@ class ProjectService(
             )
         repo.save(project)
 
-        return ProjectDto(project.id, project.name, project.createdAt)
+        return ProjectDto(project.id, project.name, project.createdAt, project.owner.username)
     }
 
     @Transactional

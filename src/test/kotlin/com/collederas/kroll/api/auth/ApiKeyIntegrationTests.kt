@@ -24,10 +24,9 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.delete
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.post
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import java.time.Duration
-import java.util.UUID
+import java.util.*
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -97,6 +96,66 @@ class ApiKeyIntegrationTests {
         val createdKey = keys.first()
         Assertions.assertThat(createdKey.environment.id).isEqualTo(env.id)
         Assertions.assertThat(createdKey.expiresAt).isEqualTo(expiresAt)
+    }
+
+    @Test
+    @WithMockUser(roles = ["ADMIN"])
+    fun `list returns correct metadata for active expiring api key`() {
+        val env = envFactory.create()
+        val now = clock.instant()
+        val expiresAt = now.plus(Duration.ofHours(1))
+
+        val created =
+            apiKeyService.create(
+                env.id,
+                CreateApiKeyRequest(expiresAt = expiresAt),
+            )
+
+        val listResult =
+            mvc
+                .get("/api/environments/${env.id}/api-keys")
+                .andExpect {
+                    status { isOk() }
+                    jsonPath("$.length()").value(1)
+
+                    jsonPath("$[0].id").value(created.id.toString())
+                    jsonPath("$[0].environmentId").value(env.id.toString())
+
+                    jsonPath("$[0].createdAt").exists()
+                    jsonPath("$[0].expiresAt").value(expiresAt.toString())
+
+                    jsonPath("$[0].neverExpires").value(false)
+                    jsonPath("$[0].isActive").value(true)
+                }.andReturn()
+
+        val respKey =
+            JsonPath.read<String>(
+                listResult.response.contentAsString,
+                "$[0].truncated",
+            )
+        Assertions.assertThat(respKey).startsWith("rk_")
+    }
+
+    @Test
+    @WithMockUser(roles = ["ADMIN"])
+    fun `list marks expired api key as inactive`() {
+        val env = envFactory.create()
+        val expiresAt = clock.instant().plusSeconds(5)
+
+        apiKeyService.create(
+            env.id,
+            CreateApiKeyRequest(expiresAt = expiresAt),
+        )
+
+        clock.advanceBy(Duration.ofSeconds(6))
+
+        mvc
+            .get("/api/environments/${env.id}/api-keys")
+            .andExpect {
+                status { isOk() }
+                jsonPath("$[0].expiresAt").value(expiresAt.toString())
+                jsonPath("$[0].isActive").value(false)
+            }
     }
 
     @Test
@@ -194,9 +253,9 @@ class ApiKeyIntegrationTests {
         mvc
             .get("/api/environments/${env.id}/api-keys")
             .andExpect {
-                MockMvcResultMatchers.jsonPath("$[*].truncated").exists()
-                MockMvcResultMatchers.jsonPath("$[*].key").doesNotExist()
-                MockMvcResultMatchers.jsonPath("$[*].keyHash").doesNotExist()
+                jsonPath("$[*].truncated").exists()
+                jsonPath("$[*].key").doesNotExist()
+                jsonPath("$[*].keyHash").doesNotExist()
             }
 
         Assertions.assertThat(rawKey).startsWith("rk_")

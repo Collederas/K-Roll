@@ -22,6 +22,7 @@ data class ApiKeyMetadataDto(
     val createdAt: Instant,
     val expiresAt: Instant?,
     val neverExpires: Boolean,
+    val isActive: Boolean, // not expired
 )
 
 sealed interface ApiKeyAuthResult {
