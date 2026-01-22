@@ -1,6 +1,8 @@
 spring:
   application:
     name: kroll
+  profiles:
+    active: ${KROLL_PROFILE:prod}
   jpa:
     hibernate:
       ddl-auto: validate
@@ -11,6 +13,10 @@ spring:
   web:
     resources:
       add-mappings: false
+  spring:
+    autoconfigure:
+      exclude:
+        - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
 
 server:
   error:
@@ -19,9 +25,11 @@ server:
 
 auth:
   jwt:
-    expiration: 1h
+    # secrets are *required* to be Base64 encoded
+    secret: ${KROLL_JWT_SECRET:${KROLL_JWT_SECRET_FILE:}}
+    expiration: ${KROLL_JWT_EXPIRATION:1h}
   refresh:
-    expiration: 30d
+    expiration: ${KROLL_REFRESH_EXPIRATION:30d}
   api-key:
-    max-lifetime: 365d
-    default-lifetime: 30d
+    max-lifetime: ${KROLL_API_KEY_MAX_LIFETIME:365d}
+    default-lifetime: ${KROLL_API_KEY_DEFAULT_LIFETIME:30d}

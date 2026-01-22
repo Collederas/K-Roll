@@ -1,13 +1,18 @@
 spring:
-    datasource:
-        url: jdbc:postgresql://localhost:5432/krolldb
-        username: postgres
-        password: postgres
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: ${KROLL_DB_URL:jdbc:postgresql://localhost:5432/krolldb}
+    username: ${KROLL_DB_USER:postgres}
+    password: ${KROLL_DB_PASSWORD:postgres}
 
 auth:
-    jwt:
-        secret: "4mMjQlzeBWMsrkjbchIyRNEQXKgUTQbCHwFkeEr8S34="
+  jwt:
+    secret: ${KROLL_JWT_SECRET:ZxQ6k1qJ7WmPz5Qz4y1R0+YJzKpZyPp0JxH0q8Q9v2E=}
 
 logging:
-    level:
-        com.collederas.kroll: DEBUG
+  level:
+    com.collederas.kroll: DEBUG
+
+springdoc:
+  api-docs:
+    enabled: true

@@ -1,4 +1,4 @@
-package com.collederas.kroll.bootstrap
+package com.collederas.kroll.bootstrap.data
 
 import com.collederas.kroll.user.AppUser
 import com.collederas.kroll.user.AppUserRepository

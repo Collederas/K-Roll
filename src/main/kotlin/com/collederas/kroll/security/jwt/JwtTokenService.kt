@@ -2,8 +2,6 @@ package com.collederas.kroll.security.jwt
 
 import io.jsonwebtoken.JwtException
 import io.jsonwebtoken.Jwts
-import io.jsonwebtoken.io.Decoders
-import io.jsonwebtoken.security.Keys
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.ConfigurationProperties
@@ -22,14 +20,10 @@ data class JwtProperties
 
 @Service
 class JwtTokenService(
+    private val signingKeyProvider: JwtSigningKeyProvider,
     private val properties: JwtProperties,
 ) {
     private val logger: Logger = LoggerFactory.getLogger(javaClass)
-
-    private val jwtSigningKey =
-        Keys.hmacShaKeyFor(
-            Decoders.BASE64.decode(properties.secret),
-        )
 
     /**
      * Generate a new JWT Token with username as optional claim.
@@ -43,7 +37,7 @@ class JwtTokenService(
     ): String {
         val now = Date()
         val expiryDate = Date(now.time + properties.expiration.toMillis())
-        val signingKey = jwtSigningKey
+        val signingKey = signingKeyProvider.signingKey
 
         val token =
             Jwts
@@ -61,15 +55,15 @@ class JwtTokenService(
      * Parse a JWT token and validate its signature.
      * @return UUID the user UUID
      */
-    @Suppress("SwallowedException")
     fun validateAndGetUserId(token: String): UUID? {
         return try {
             if (token.isBlank()) return null
+            val signingKey = signingKeyProvider.signingKey
 
             val claims =
                 Jwts
                     .parser()
-                    .verifyWith(jwtSigningKey)
+                    .verifyWith(signingKey)
                     .build()
                     .parseSignedClaims(token)
                     .payload
@@ -80,6 +74,7 @@ class JwtTokenService(
             logger.debug("Invalid JWT: ${e.message}")
             null
         } catch (e: IllegalArgumentException) {
+            logger.warn("Illegal JWT: ${e.message}")
             null
         }
     }

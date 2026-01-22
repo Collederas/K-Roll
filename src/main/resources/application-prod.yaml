@@ -1,15 +1,14 @@
 spring:
   datasource:
-    url: ${DB_URL}
-    username: ${DB_USER}
-    password: ${DB_PASS}
+    driver-class-name: org.postgresql.Driver
+    url: ${KROLL_DB_URL:}
+    username: ${KROLL_DB_USER:}
+    password: ${KROLL_DB_PASSWORD:${KROLL_DB_PASSWORD_FILE:}}
+
+springdoc:
   api-docs:
     enabled: false
 
-auth:
-  jwt:
-    secret: ${JWT_SECRET}
-
 logging:
   level:
-    com.collederas.kroll: ${LOG_LEVEL:INFO}
+    com.collederas.kroll: ${KROLL_LOG_LEVEL:INFO}
