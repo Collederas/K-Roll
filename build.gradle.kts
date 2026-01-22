@@ -13,7 +13,7 @@ plugins {
 }
 
 group = "com.collederas"
-version = "0.0.1-SNAPSHOT"
+version = "0.1.0"
 description = "KRoll is a remote configuration and feature-flag service for games."
 
 repositories {
