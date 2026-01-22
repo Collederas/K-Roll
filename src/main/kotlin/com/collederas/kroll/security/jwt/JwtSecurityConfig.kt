@@ -19,7 +19,7 @@ class JwtSecurityConfig(
     private val userDetailsService: AuthUserDetailsService,
 ) {
     @Bean
-    fun jwtAuthFilter(): JwtAuthFilter = JwtAuthFilter(jwtService, userDetailsService)
+    fun jwtAuthFilter(): JwtAuthFilter = JwtAuthFilter(jwtService, userDetailsService, authEntryPoint)
 
     @Bean
     @Order(2)

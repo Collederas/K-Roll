@@ -17,7 +17,8 @@ class TestJwtSecurityConfig(
     private val userDetailsService: AuthUserDetailsService,
 ) {
     @Bean
-    fun jwtAuthFilter(): JwtAuthFilter = JwtAuthFilter(jwtService, userDetailsService)
+    fun jwtAuthFilter(authEntryPoint: AuthEntryPoint): JwtAuthFilter =
+        JwtAuthFilter(jwtService, userDetailsService, authEntryPoint)
 
     @Bean
     @Order(Ordered.HIGHEST_PRECEDENCE)

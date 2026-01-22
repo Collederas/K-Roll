@@ -1,5 +1,6 @@
 package com.collederas.kroll.security.jwt
 
+import com.collederas.kroll.security.AuthEntryPoint
 import com.collederas.kroll.security.TestJwtSecurityConfig
 import com.collederas.kroll.security.apikey.authentication.ApiKeyAuthenticationFilter
 import com.collederas.kroll.security.identity.AuthUserDetails
@@ -42,6 +43,9 @@ class JwtAuthFilterTests {
 
     @MockkBean
     lateinit var userDetailsService: AuthUserDetailsService
+
+    @MockkBean
+    lateinit var authEntryPoint: AuthEntryPoint
 
     private val testEndpoint = "/test/auth/jwt/whoami"
 

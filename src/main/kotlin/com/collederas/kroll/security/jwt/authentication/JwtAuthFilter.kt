@@ -8,6 +8,8 @@ import jakarta.servlet.http.HttpServletResponse
 import org.springframework.security.authentication.AnonymousAuthenticationToken
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.security.core.userdetails.UsernameNotFoundException
+import org.springframework.security.web.AuthenticationEntryPoint
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource
 import org.springframework.web.filter.OncePerRequestFilter
 
@@ -18,38 +20,57 @@ import org.springframework.web.filter.OncePerRequestFilter
 class JwtAuthFilter(
     private val jwtService: JwtTokenService,
     private val userDetailsService: AuthUserDetailsService,
+    private val authenticationEntryPoint: AuthenticationEntryPoint,
 ) : OncePerRequestFilter() {
     override fun doFilterInternal(
         request: HttpServletRequest,
         response: HttpServletResponse,
         filterChain: FilterChain,
     ) {
-        val existing = SecurityContextHolder.getContext().authentication
-        val shouldAuthenticateWithJwt =
-            existing == null ||
-                !existing.isAuthenticated ||
-                existing is AnonymousAuthenticationToken
-
-        if (shouldAuthenticateWithJwt) {
-            extractBearerToken(request)?.let { token ->
-                jwtService.validateAndGetUserId(token)?.let { userId ->
-                    val userDetails = userDetailsService.loadUserById(userId)
-
-                    val authToken =
-                        UsernamePasswordAuthenticationToken(
-                            userDetails,
-                            null,
-                            userDetails.authorities,
-                        ).apply {
-                            details = WebAuthenticationDetailsSource().buildDetails(request)
-                        }
-
-                    SecurityContextHolder.getContext().authentication = authToken
-                }
-            }
+        if (shouldAuthenticateWithJwt()) {
+            attemptJwtAuthentication(request, response)
         }
 
         filterChain.doFilter(request, response)
+    }
+
+    private fun shouldAuthenticateWithJwt(): Boolean {
+        val existing = SecurityContextHolder.getContext().authentication
+        return existing == null ||
+            !existing.isAuthenticated ||
+            existing is AnonymousAuthenticationToken
+    }
+
+    private fun attemptJwtAuthentication(
+        request: HttpServletRequest,
+        response: HttpServletResponse,
+    ) {
+        val token = extractBearerToken(request) ?: return
+        val userId = jwtService.validateAndGetUserId(token) ?: return
+
+        try {
+            val userDetails = userDetailsService.loadUserById(userId)
+            setAuthentication(request, userDetails)
+        } catch (ex: UsernameNotFoundException) {
+            SecurityContextHolder.clearContext()
+            authenticationEntryPoint.commence(request, response, ex)
+        }
+    }
+
+    private fun setAuthentication(
+        request: HttpServletRequest,
+        userDetails: org.springframework.security.core.userdetails.UserDetails,
+    ) {
+        val authToken =
+            UsernamePasswordAuthenticationToken(
+                userDetails,
+                null,
+                userDetails.authorities,
+            ).apply {
+                details = WebAuthenticationDetailsSource().buildDetails(request)
+            }
+
+        SecurityContextHolder.getContext().authentication = authToken
     }
 
     private fun extractBearerToken(request: HttpServletRequest): String? {
