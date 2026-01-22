@@ -52,6 +52,7 @@ CREATE TABLE api_keys
 
     CONSTRAINT fk_api_env
         FOREIGN KEY (environment_id) REFERENCES environments (id)
+        ON DELETE CASCADE
 );
 
 -- ==== CONFIG ENTRIES ====
