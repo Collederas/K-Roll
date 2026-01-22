@@ -48,6 +48,10 @@ class EnvironmentAlreadyExistsException(
     message: String = "Environment already exists",
 ) : ConflictException("ENVIRONMENT_ALREADY_EXISTS", message)
 
+class EnvironmentHasActiveApiKeysException(
+    message: String = "Environment cannot be deleted while it has active API keys",
+) : ConflictException("ENVIRONMENT_HAS_ACTIVE_API_KEYS", message)
+
 // ==================== BAD REQUEST (400) CATEGORY ====================
 
 // Renamed from 'ValidationException' to 'BadRequestException' so the API handler

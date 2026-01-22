@@ -42,4 +42,12 @@ class EnvironmentController(
         @Valid @RequestBody dto: CreateEnvironmentDto,
         @AuthenticationPrincipal authUser: AuthUserDetails,
     ): EnvironmentResponseDto = environmentService.create(authUser.getId(), dto)
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Delete an environment", description = "Deletes the environment with the given ID")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    fun delete(
+        @PathVariable id: UUID,
+        @AuthenticationPrincipal authUser: AuthUserDetails,
+    ) = environmentService.delete(id, authUser.getId())
 }

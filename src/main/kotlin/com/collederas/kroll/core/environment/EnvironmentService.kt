@@ -3,16 +3,22 @@ package com.collederas.kroll.core.environment
 import com.collederas.kroll.core.environment.dto.CreateEnvironmentDto
 import com.collederas.kroll.core.environment.dto.EnvironmentResponseDto
 import com.collederas.kroll.core.exceptions.EnvironmentAlreadyExistsException
+import com.collederas.kroll.core.exceptions.EnvironmentHasActiveApiKeysException
 import com.collederas.kroll.core.exceptions.EnvironmentNotFoundException
 import com.collederas.kroll.core.project.ProjectService
+import com.collederas.kroll.security.apikey.ApiKeyRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.time.Clock
+import java.time.Instant
 import java.util.*
 
 @Service
 class EnvironmentService(
     private val projectService: ProjectService,
     private val environmentRepository: EnvironmentRepository,
+    private val apiKeyRepository: ApiKeyRepository,
+    private val clock: Clock = Clock.systemUTC(),
 ) {
     @Transactional(readOnly = true)
     fun list(
@@ -79,5 +85,25 @@ class EnvironmentService(
         val savedEnv = environmentRepository.save(environment)
 
         return EnvironmentResponseDto(savedEnv.id, savedEnv.name, savedEnv.project.id)
+    }
+
+    @Transactional
+    fun delete(
+        id: UUID,
+        userId: UUID,
+    ) {
+        val environment =
+            environmentRepository
+                .findById(id)
+                .orElseThrow { EnvironmentNotFoundException("Environment not found") }
+
+        projectService.resolveOwnedProject(environment.project.id, userId)
+        val now = Instant.now(clock)
+
+        if (apiKeyRepository.existsActiveKeyForEnvironment(id, now)) {
+            throw EnvironmentHasActiveApiKeysException()
+        }
+
+        environmentRepository.delete(environment)
     }
 }
