@@ -8,15 +8,13 @@ import java.util.*
 
 @ActiveProfiles("test")
 class JwtServiceTests {
-    private val secret = "bzjKq1tb2/7FmHzg51eH8ZPqfm4twB4suaT2H8CYm8A="
-
-    private fun newService(exp: Duration = Duration.ofHours(1)): JwtTokenService {
-        val props =
-            JwtProperties(
-                secret = secret,
-                expiration = exp,
-            )
-        return JwtTokenService(props)
+    private fun newService(
+        secretValue: String = "bzjKq1tb2/7FmHzg51eH8ZPqfm4twB4suaT2H8CYm8A=",
+        exp: Duration = Duration.ofHours(1),
+    ): JwtTokenService {
+        val signingKeyProvider = JwtSigningKeyProvider(secretValue)
+        val props = JwtProperties(secret = secretValue, expiration = exp)
+        return JwtTokenService(signingKeyProvider, props)
     }
 
     @Test
@@ -44,13 +42,10 @@ class JwtServiceTests {
     fun `invalid signature must fail validation`() {
         val userId: UUID = UUID.randomUUID()
         val krollJwtService = newService()
-        val invalidProps =
-            JwtProperties(
-                secret = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
-                expiration = Duration.ofHours(1),
-            )
 
-        val maliciousService = JwtTokenService(invalidProps)
+        val maliciousSecret = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="
+        val maliciousService = newService(secretValue = maliciousSecret)
+
         val maliciousToken = maliciousService.generateToken(userId, "testUser")
         val result = krollJwtService.validateAndGetUserId(maliciousToken)
 

@@ -1,17 +1,17 @@
 spring:
-    datasource:
-        url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1
-        username: sa
-        password:
-        driver-class-name: org.h2.Driver
-    flyway:
-        enabled: false
-    jpa:
-      hibernate:
-        ddl-auto: create-drop
-      show-sql: false
+  datasource:
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  flyway:
+    enabled: false
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
 
 auth:
-    jwt:
-        secret: "bzjKq1tb2/7FmHzg51eH8ZPqfm4twB4suaT2H8CYm8A="
-        expiration: 1h
+  jwt:
+    secret: "bzjKq1tb2/7FmHzg51eH8ZPqfm4twB4suaT2H8CYm8A="
+    expiration: 1h
