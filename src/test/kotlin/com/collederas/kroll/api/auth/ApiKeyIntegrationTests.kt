@@ -62,7 +62,7 @@ class ApiKeyIntegrationTests {
 
         val createResult =
             mvc
-                .post("/api/environments/${env.id}/api-keys") {
+                .post("/environments/${env.id}/api-keys") {
                     contentType = MediaType.APPLICATION_JSON
                     content =
                         """
@@ -113,7 +113,7 @@ class ApiKeyIntegrationTests {
 
         val listResult =
             mvc
-                .get("/api/environments/${env.id}/api-keys")
+                .get("/environments/${env.id}/api-keys")
                 .andExpect {
                     status { isOk() }
                     jsonPath("$.length()").value(1)
@@ -150,7 +150,7 @@ class ApiKeyIntegrationTests {
         clock.advanceBy(Duration.ofSeconds(6))
 
         mvc
-            .get("/api/environments/${env.id}/api-keys")
+            .get("/environments/${env.id}/api-keys")
             .andExpect {
                 status { isOk() }
                 jsonPath("$[0].expiresAt").value(expiresAt.toString())
@@ -189,7 +189,7 @@ class ApiKeyIntegrationTests {
 
         val createResult =
             mvc
-                .post("/api/environments/${env.id}/api-keys") {
+                .post("/environments/${env.id}/api-keys") {
                     contentType = MediaType.APPLICATION_JSON
                     content =
                         """
@@ -234,7 +234,7 @@ class ApiKeyIntegrationTests {
 
         val createResult =
             mvc
-                .post("/api/environments/${env.id}/api-keys") {
+                .post("/environments/${env.id}/api-keys") {
                     contentType = MediaType.APPLICATION_JSON
                     content =
                         """
@@ -251,7 +251,7 @@ class ApiKeyIntegrationTests {
             )
 
         mvc
-            .get("/api/environments/${env.id}/api-keys")
+            .get("/environments/${env.id}/api-keys")
             .andExpect {
                 jsonPath("$[*].truncated").exists()
                 jsonPath("$[*].key").doesNotExist()
@@ -269,7 +269,7 @@ class ApiKeyIntegrationTests {
 
         val createResult =
             mvc
-                .post("/api/environments/${env.id}/api-keys") {
+                .post("/environments/${env.id}/api-keys") {
                     contentType = MediaType.APPLICATION_JSON
                     content =
                         """
@@ -286,11 +286,11 @@ class ApiKeyIntegrationTests {
             )
 
         mvc
-            .delete("/api/environments/${env.id}/api-keys/$keyId")
+            .delete("/environments/${env.id}/api-keys/$keyId")
             .andExpect { status { isNoContent() } }
 
         mvc
-            .delete("/api/environments/${env.id}/api-keys/$keyId")
+            .delete("/environments/${env.id}/api-keys/$keyId")
             .andExpect { status { isNoContent() } }
     }
 
@@ -301,7 +301,7 @@ class ApiKeyIntegrationTests {
 
         val result =
             mvc
-                .post("/api/environments/${env.id}/api-keys") {
+                .post("/environments/${env.id}/api-keys") {
                     contentType = MediaType.APPLICATION_JSON
                     content =
                         """
@@ -358,7 +358,7 @@ class ApiKeyIntegrationTests {
 
         val createResult =
             mvc
-                .post("/api/environments/${env.id}/api-keys") {
+                .post("/environments/${env.id}/api-keys") {
                     with(user("admin").roles("ADMIN"))
                     contentType = MediaType.APPLICATION_JSON
                     content = "{}"

@@ -59,7 +59,7 @@ class AdminSecurityIntegrationTests {
         every { jwtService.validateAndGetUserId("BAD") } returns null
 
         mvc
-            .get("/api/projects") {
+            .get("/projects") {
                 header("Authorization", "Bearer BAD")
             }.andExpect {
                 status { isUnauthorized() }
@@ -71,7 +71,7 @@ class AdminSecurityIntegrationTests {
         every { jwtService.validateAndGetUserId("BAD") } returns null
 
         mvc
-            .get("/api/projects") {
+            .get("/projects") {
                 header("Authorization", "Bearer BAD")
             }.andExpect {
                 status { isUnauthorized() }
@@ -88,7 +88,7 @@ class AdminSecurityIntegrationTests {
         every { projectService.list(adminUser.getId()) } returns emptyList()
 
         mvc
-            .get("/api/projects") {
+            .get("/projects") {
                 header("Authorization", "Bearer jwt.admin")
             }.andExpect {
                 status { isOk() }

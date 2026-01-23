@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*
 import java.util.*
 
 @RestController
-@RequestMapping("/api/environments")
+@RequestMapping("/environments")
 @Tag(name = "Environment Management", description = "Endpoints for managing environments")
 class EnvironmentController(
     private val environmentService: EnvironmentService,

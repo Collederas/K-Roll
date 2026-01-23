@@ -1,0 +1,18 @@
+include:
+  - compose.yaml
+
+services:
+  kroll:
+    build: .
+    image: kroll:local
+    environment:
+      KROLL_PROFILE: dev
+      KROLL_DB_URL: jdbc:postgresql://postgres:5432/krolldb
+      KROLL_DB_USER: postgres
+      KROLL_DB_PASSWORD: postgres
+      KROLL_JWT_SECRET: ZxQ6k1qJ7WmPz5Qz4y1R0+YJzKpZyPp0JxH0q8Q9v2E=
+    networks:
+      - kroll-net
+    depends_on:
+      postgres:
+        condition: service_healthy

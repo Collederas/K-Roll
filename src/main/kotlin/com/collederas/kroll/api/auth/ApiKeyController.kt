@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*
 import java.util.*
 
 @RestController
-@RequestMapping("/api/environments/{envId}/api-keys")
+@RequestMapping("/environments/{envId}/api-keys")
 @Tag(name = "API Key Management", description = "Endpoints for managing API keys")
 class ApiKeyController(
     private val apiKeyService: ApiKeyService,

@@ -22,6 +22,8 @@ server:
   error:
     whitelabel:
       enabled: false
+  servlet:
+    context-path: ""
 
 auth:
   jwt:
@@ -33,3 +35,6 @@ auth:
   api-key:
     max-lifetime: ${KROLL_API_KEY_MAX_LIFETIME:365d}
     default-lifetime: ${KROLL_API_KEY_DEFAULT_LIFETIME:30d}
+
+cors:
+  origins: ${KROLL_CORS_ORIGINS:http://localhost:8080}

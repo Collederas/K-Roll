@@ -32,17 +32,24 @@ class JwtSecurityConfig(
             }.authorizeHttpRequests {
                 it.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 it
-                    .requestMatchers("/api/**")
-                    .hasRole("ADMIN")
                     .requestMatchers(
                         "/auth/login",
                         "/auth/refresh",
+                        "/meta",
                         "/error",
                         "/swagger-ui/**",
                         "/v3/api-docs/**",
                     ).permitAll()
+
                 it.requestMatchers("/auth/logout").authenticated()
-                it.anyRequest().permitAll()
+
+                it
+                    .requestMatchers(
+                        "/projects/**",
+                        "/environments/**",
+                    ).hasRole("ADMIN")
+
+                it.anyRequest().authenticated()
             }.exceptionHandling {
                 it.authenticationEntryPoint(authEntryPoint)
             }.addFilterBefore(
