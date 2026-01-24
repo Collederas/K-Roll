@@ -1,11 +1,11 @@
 services:
   kroll:
-    image: kroll:local
+    image: ghcr.io/collederas/k-roll:v0.1.0
     networks:
       - kroll-net
 
   kroll-ui:
-    image: kroll-ui:local
+    image: ghcr.io/collederas/k-roll-ui:v0.1.0
     networks:
       - kroll-net
 
