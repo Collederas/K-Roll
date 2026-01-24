@@ -1,0 +1,60 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    services:
+      # TODO: remove dependency. postgres shouldn't ideally be needed just to make a snapshot
+      postgres:
+        image: postgres:16
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: krolldb
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      # take a openapi spec snapshot (the contract) from internal url
+      # and stored as Artifact.
+      # to be used by clients (KRollUI) to allow compatibility checks
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: 21
+          distribution: temurin
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build Application
+        run: ./gradlew build --no-daemon
+        env:
+          KROLL_DB_URL: jdbc:postgresql://localhost:5432/krolldb
+          KROLL_DB_USER: postgres
+          KROLL_DB_PASSWORD: postgres
+
+
+      - name: Build Contract
+        run: ./gradlew buildContract --no-daemon
+        env:
+          KROLL_DB_URL: jdbc:postgresql://localhost:5432/krolldb
+          KROLL_DB_USER: postgres
+          KROLL_DB_PASSWORD: postgres
+
+      - name: Publish Contract
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/contract/*
