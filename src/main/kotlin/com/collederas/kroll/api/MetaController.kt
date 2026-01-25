@@ -6,9 +6,6 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-// only needed to support strict contract between KRoll and clients (like KrollUI)
-// dev should not need this
-@Profile("prod")
 class MetaController(
     private val buildProperties: BuildProperties,
 ) {
