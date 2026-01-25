@@ -10,7 +10,7 @@ Kroll is designed for game development workflows, where patching is slow, live i
 
 ## Current status
 
-Kroll is early-stage and currently supports:
+Kroll is early-stage and currently supports a very MVP set of features:
 
 - CRUD APIs for feature flags and configuration entries
 - Projects and environments as first-class concepts
@@ -35,8 +35,8 @@ The following command will launch a reverse proxy with a demo setup.
 ```bash
 make ui
 ```
-You can now reach the app at localhost:8080.
-In dev mode a test user is seeded with following credentials:
+You can now reach KrollUI at localhost:8080.
+A test user is seeded (whenever KROLL_PROFILE=dev) with following credentials:
 
 ```
 username: test

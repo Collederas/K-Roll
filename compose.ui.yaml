@@ -3,8 +3,9 @@ include:
 
 services:
   kroll:
-    image: kroll:local
+    image: ghcr.io/collederas/kroll:v0.1.0-ui-demo
     environment:
+      KROLL_PROFILE: dev
       KROLL_DB_URL: jdbc:postgresql://postgres:5432/krolldb
       KROLL_DB_USER: postgres
       KROLL_DB_PASSWORD: postgres
@@ -13,7 +14,7 @@ services:
       - kroll-net
 
   kroll-ui:
-    image: kroll-ui:local
+    image: ghcr.io/collederas/k-roll-ui:0.1.0-ui-demo
     networks:
       - kroll-net
     environment:
