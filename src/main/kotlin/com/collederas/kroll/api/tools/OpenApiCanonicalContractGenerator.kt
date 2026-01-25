@@ -46,17 +46,18 @@ object OpenApiCanonicalContractGenerator {
             path.resolveSibling("openapi.canonical.json"),
             canonical,
             StandardOpenOption.CREATE,
-            StandardOpenOption.TRUNCATE_EXISTING
+            StandardOpenOption.TRUNCATE_EXISTING,
         )
 
         val hash =
-            MessageDigest.getInstance("SHA-256")
+            MessageDigest
+                .getInstance("SHA-256")
                 .digest(canonical.toByteArray())
                 .joinToString("") { "%02x".format(it) }
 
         Files.writeString(
             path.resolveSibling("openapi.sha256"),
-            hash
+            hash,
         )
     }
 }
