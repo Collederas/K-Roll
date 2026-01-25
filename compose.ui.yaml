@@ -3,7 +3,7 @@ include:
 
 services:
   kroll:
-    image: ghcr.io/collederas/kroll:v0.1.0-ui-demo
+    image: ghcr.io/collederas/kroll:0.1.0-ui-demo
     environment:
       KROLL_PROFILE: dev
       KROLL_DB_URL: jdbc:postgresql://postgres:5432/krolldb
