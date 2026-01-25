@@ -37,4 +37,4 @@ auth:
     default-lifetime: ${KROLL_API_KEY_DEFAULT_LIFETIME:30d}
 
 cors:
-  origins: ${KROLL_CORS_ORIGINS:http://localhost:8080}
+  origins: ${KROLL_CORS_ORIGINS:http://localhost:8080,http://localhost:5173}

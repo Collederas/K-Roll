@@ -1,5 +1,3 @@
-import java.security.MessageDigest
-
 group = "com.collederas"
 version = "0.1.0"
 description = "KRoll is a remote configuration and feature-flag service for games."
@@ -34,6 +32,7 @@ dependencies {
     implementation("com.github.ben-manes.caffeine:caffeine")
     implementation("org.flywaydb:flyway-core")
     implementation("org.flywaydb:flyway-database-postgresql")
+    implementation("io.github.erdtman:java-json-canonicalization:1.1")
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.15")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.2")
     implementation("io.swagger.core.v3:swagger-annotations:2.2.20")
@@ -139,45 +138,12 @@ tasks.jacocoTestCoverageVerification {
     }
 }
 
-// Ensure openapi JSON is reliable
-tasks.register<JavaExec>("normalizeOpenApi") {
+// Ensure openapi JSON contract is normalized and RFC-8785 compatible
+tasks.register<JavaExec>("generateCanonicalContract") {
     dependsOn("generateOpenApiDocs")
-
     classpath = sourceSets["main"].runtimeClasspath
-    mainClass.set("com.collederas.kroll.api.tools.OpenApiNormalizer")
-
-    args(
-        layout.buildDirectory
-            .file("contract/openapi.json")
-            .get()
-            .asFile
-            .absolutePath
-    )
-}
-
-tasks.register("hashContract") {
-    group = "contract"
-    description = "Generates SHA-256 hash for OpenAPI contract"
-
-    dependsOn("normalizeOpenApi")
-
-    doLast {
-        val contractFile = layout.buildDirectory
-            .file("contract/openapi.json")
-            .get()
-            .asFile
-
-        val digest = MessageDigest.getInstance("SHA-256")
-        val hash = digest.digest(contractFile.readBytes())
-            .joinToString("") { "%02x".format(it) }
-
-        val hashFile = layout.buildDirectory
-            .file("contract/openapi.sha256")
-            .get()
-            .asFile
-
-        hashFile.writeText(hash)
-    }
+    mainClass.set("com.collederas.kroll.api.tools.OpenApiCanonicalContractGenerator")
+    args(layout.buildDirectory.file("contract/openapi.json").get().asFile.absolutePath)
 }
 
 tasks.register("buildContract") {
@@ -185,7 +151,7 @@ tasks.register("buildContract") {
     description = "Generates OpenAPI contract and embeds its hash"
 
     dependsOn(
-        "hashContract",
+        "generateCanonicalContract",
         "bootBuildInfo"
     )
 }
