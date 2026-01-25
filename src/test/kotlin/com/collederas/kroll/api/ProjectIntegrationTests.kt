@@ -38,7 +38,7 @@ class ProjectIntegrationTests {
     @Autowired
     lateinit var userRepository: AppUserRepository
 
-    private val endpoint = "/api/projects"
+    private val endpoint = "/projects"
 
     @Test
     fun `list should return only user projects`() {

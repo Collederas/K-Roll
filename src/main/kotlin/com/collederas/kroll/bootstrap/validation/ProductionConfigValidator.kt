@@ -1,8 +1,5 @@
 package com.collederas.kroll.bootstrap.validation
 
-import org.hibernate.internal.CoreLogging.logger
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.env.EnvironmentPostProcessor
 import org.springframework.core.env.ConfigurableEnvironment
@@ -12,16 +9,15 @@ class ProductionConfigValidator : EnvironmentPostProcessor {
         environment: ConfigurableEnvironment,
         application: SpringApplication,
     ) {
-        val logger: Logger = LoggerFactory.getLogger(javaClass)
-        logger.info(">>> KROLL EnvironmentPostProcessor LOADED <<<")
+        println(">>> KROLL EnvironmentPostProcessor LOADED <<<")
 
-        val profile = environment.getProperty("KROLL_PROFILE") ?: "prod"
-        if (profile != "prod") return
+        val activeProfiles = environment.activeProfiles
+        if ("prod" !in activeProfiles) return
 
         val missing = mutableListOf<String>()
 
         fun requireEnv(name: String) {
-            if (environment.getProperty(name).isNullOrBlank()) {
+            if (environment.getProperty(name).isNullOrEmpty()) {
                 missing += name
             }
         }
@@ -57,6 +53,8 @@ class ProductionConfigValidator : EnvironmentPostProcessor {
                     appendLine("If you intended to run locally, set:")
                     appendLine("  KROLL_PROFILE=dev")
                 }
+
+            println(environment.getProperty("contract.hash"))
 
             throw IllegalStateException(message)
         }

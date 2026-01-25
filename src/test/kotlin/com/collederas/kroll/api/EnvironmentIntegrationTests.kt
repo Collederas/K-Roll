@@ -56,7 +56,7 @@ class EnvironmentIntegrationTests {
         val nonExistentEnvId = UUID.randomUUID()
 
         mvc
-            .get("/api/environments/{envId}/configs", nonExistentEnvId) {
+            .get("/environments/{envId}/configs", nonExistentEnvId) {
                 with(SecurityMockMvcRequestPostProcessors.user(authUser))
             }.andExpect {
                 status { isNotFound() }
@@ -78,7 +78,7 @@ class EnvironmentIntegrationTests {
             )
 
         mvc
-            .post("/api/environments") {
+            .post("/environments") {
                 with(SecurityMockMvcRequestPostProcessors.user(authUser))
                 contentType = MediaType.APPLICATION_JSON
                 content = objectMapper.writeValueAsString(dto)
@@ -105,7 +105,7 @@ class EnvironmentIntegrationTests {
         )
 
         mvc
-            .delete("/api/environments/{envId}", environment.id) {
+            .delete("/environments/{envId}", environment.id) {
                 with(SecurityMockMvcRequestPostProcessors.user(authUser))
             }.andExpect {
                 status { isConflict() }
@@ -123,14 +123,14 @@ class EnvironmentIntegrationTests {
         val environment = persistedEnvironmentFactory.create(user = user)
 
         mvc
-            .delete("/api/environments/{envId}", environment.id) {
+            .delete("/environments/{envId}", environment.id) {
                 with(SecurityMockMvcRequestPostProcessors.user(authUser))
             }.andExpect {
                 status { isNoContent() }
             }
 
         mvc
-            .get("/api/environments/{envId}", environment.id) {
+            .get("/environments/{envId}", environment.id) {
                 with(SecurityMockMvcRequestPostProcessors.user(authUser))
             }.andExpect {
                 status { isNotFound() }

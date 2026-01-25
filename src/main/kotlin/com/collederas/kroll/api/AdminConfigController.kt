@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*
 import java.util.*
 
 @RestController
-@RequestMapping("/api/environments/{envId}/configs")
+@RequestMapping("/environments/{envId}/configs")
 @Tag(name = "Config Entry Management", description = "Endpoints for managing config entries")
 class AdminConfigController(
     private val configEntryService: ConfigEntryService,

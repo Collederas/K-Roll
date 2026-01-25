@@ -25,7 +25,10 @@ class JwtSigningKeyProvider(
                 }
 
             if (keyBytes.size < MIN_KEY_SIZE_BYTES) {
-                throw IllegalStateException("JWT Secret must be at least 256 bits ($MIN_KEY_SIZE_BYTES bytes) long.")
+                throw IllegalStateException(
+                    "JWT Secret must be at least 256 bits " +
+                        "($MIN_KEY_SIZE_BYTES bytes) long.",
+                )
             }
 
             Keys.hmacShaKeyFor(keyBytes)

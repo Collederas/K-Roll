@@ -53,13 +53,13 @@ class ConfigEntryIntegrationTests {
     @Autowired
     private lateinit var clock: MutableTestClock
 
-    private val testedEndpoint = "/api/environments/{envId}/configs"
+    private val testedEndpoint = "/environments/{envId}/configs"
 
     @ParameterizedTest(name = "{0} to {1} should be Forbidden")
     @CsvSource(
-        "GET,       /api/environments/{envId}/configs",
-        "PUT,       /api/environments/{envId}/configs/{configKey}",
-        "DELETE,    /api/environments/{envId}/configs/{configKey}",
+        "GET,       /environments/{envId}/configs",
+        "PUT,       /environments/{envId}/configs/{configKey}",
+        "DELETE,    /environments/{envId}/configs/{configKey}",
     )
     fun `admins cannot access unowned config entries`(
         method: String,
