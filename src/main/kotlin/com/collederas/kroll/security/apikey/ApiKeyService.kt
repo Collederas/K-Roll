@@ -43,7 +43,7 @@ class ApiKeyService(
         if (!environmentRepository.existsById(envId)) {
             throw EnvironmentNotFoundException("Environment with ID $envId not found")
         }
-        return apiKeyRepository.findAllByEnvironmentId(envId).map { it.toDto() }
+        return apiKeyRepository.findAllDtosByEnvironmentId(envId, clock.instant())
     }
 
     @Transactional
