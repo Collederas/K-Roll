@@ -2,6 +2,7 @@ package com.collederas.kroll.core.configentry
 
 import com.collederas.kroll.core.configentry.dto.ConfigEntryResponseDto
 import com.collederas.kroll.core.configentry.dto.CreateConfigEntryDto
+import com.collederas.kroll.core.configentry.dto.EffectiveConfigDto
 import com.collederas.kroll.core.configentry.dto.UpdateConfigEntryDto
 import com.collederas.kroll.core.configentry.history.ConfigEntrySnapshot
 import com.collederas.kroll.core.environment.EnvironmentAccessGuard
@@ -46,17 +47,17 @@ class ConfigEntryService(
     }
 
     @Transactional(readOnly = true)
-    fun fetchEffectiveConfig(envId: UUID): Map<String, Any> {
+    fun fetchEffectiveConfig(envId: UUID): EffectiveConfigDto {
         if (!environmentRepository.existsById(envId)) {
             throw EnvironmentNotFoundException("Environment with ID $envId not found")
         }
         val now = Instant.now(clock)
         val entities = configEntryRepository.findActiveConfigs(envId, now)
 
-        // TODO: Dto?
-        return entities.associate { entity ->
+        val configurations = entities.associate { entity ->
             entity.configKey to parseValue(entity.configValue, entity.configType)
         }
+        return EffectiveConfigDto(configurations)
     }
 
     @Transactional

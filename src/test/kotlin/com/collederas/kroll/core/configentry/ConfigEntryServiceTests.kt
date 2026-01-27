@@ -96,7 +96,7 @@ class ConfigEntryServiceTests {
 
         val result = service.fetchEffectiveConfig(entity.environment.id)
 
-        assertEquals(true, result["flag"])
+        assertEquals(true, result.configurations["flag"])
     }
 
     @Test

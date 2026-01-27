@@ -1,6 +1,7 @@
 package com.collederas.kroll.api
 
 import com.collederas.kroll.core.configentry.ConfigEntryService
+import com.collederas.kroll.core.configentry.dto.EffectiveConfigDto
 import com.collederas.kroll.security.apikey.identity.GameClientPrincipal
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -17,7 +18,7 @@ class ClientConfigController(
 ) {
     @PostMapping("/fetch")
     @Operation(summary = "Fetch configuration", description = "Returns effective config for the environment")
-    fun fetchConfig(auth: Authentication): Map<String, Any> {
+    fun fetchConfig(auth: Authentication): EffectiveConfigDto {
         val principal = auth.principal as GameClientPrincipal
         return clientConfigService.fetchEffectiveConfig(principal.environmentId)
     }

@@ -30,3 +30,7 @@ data class ConfigEntryResponseDto(
     val activeUntil: Instant?,
     val environmentId: UUID,
 )
+
+data class EffectiveConfigDto(
+    val configurations: Map<String, Any>,
+)
