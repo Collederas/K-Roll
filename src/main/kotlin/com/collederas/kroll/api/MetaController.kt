@@ -12,13 +12,12 @@ import org.springframework.web.bind.annotation.RestController
 @PropertySource("classpath:contract.properties", ignoreResourceNotFound = true)
 class MetaController(
     private val buildProperties: BuildProperties,
-    @param:Value("\${kroll.contract.hash:dev-local}") private val contractHash: String
+    @param:Value("\${kroll.contract.hash:dev-local}") private val contractHash: String,
 ) {
     @GetMapping("/meta")
-    fun meta(): Map<String, String> {
-        return mapOf(
+    fun meta(): Map<String, String> =
+        mapOf(
             "version" to buildProperties.version,
-            "contractHash" to contractHash
+            "contractHash" to contractHash,
         )
-    }
 }
