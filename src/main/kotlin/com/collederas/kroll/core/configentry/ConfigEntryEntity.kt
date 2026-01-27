@@ -1,7 +1,7 @@
 package com.collederas.kroll.core.configentry
 
 import com.collederas.kroll.core.environment.EnvironmentEntity
-import com.collederas.kroll.core.exceptions.ConfigValidationException
+import com.collederas.kroll.exceptions.ConfigValidationException
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper

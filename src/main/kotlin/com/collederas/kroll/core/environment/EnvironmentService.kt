@@ -2,10 +2,10 @@ package com.collederas.kroll.core.environment
 
 import com.collederas.kroll.core.environment.dto.CreateEnvironmentDto
 import com.collederas.kroll.core.environment.dto.EnvironmentResponseDto
-import com.collederas.kroll.core.exceptions.EnvironmentAlreadyExistsException
-import com.collederas.kroll.core.exceptions.EnvironmentHasActiveApiKeysException
-import com.collederas.kroll.core.exceptions.EnvironmentNotFoundException
 import com.collederas.kroll.core.project.ProjectService
+import com.collederas.kroll.exceptions.EnvironmentAlreadyExistsException
+import com.collederas.kroll.exceptions.EnvironmentHasActiveApiKeysException
+import com.collederas.kroll.exceptions.EnvironmentNotFoundException
 import com.collederas.kroll.security.apikey.ApiKeyRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional

@@ -1,5 +1,6 @@
 package com.collederas.kroll.api.auth
 
+import com.collederas.kroll.exceptions.InvalidCredentialsException
 import com.collederas.kroll.security.SecurityConfig
 import com.collederas.kroll.security.jwt.JwtSecurityConfig
 import com.collederas.kroll.security.jwt.authentication.JwtAuthService
@@ -16,7 +17,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.context.annotation.Import
 import org.springframework.http.MediaType
-import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
@@ -69,12 +69,13 @@ class JwtAuthControllerTests {
 
     @Test
     fun `login with invalid credentials returns 401`() {
-        every { authService.login(any(), any()) } throws BadCredentialsException("Bad creds")
+        every { authService.login(any(), any()) } throws
+            InvalidCredentialsException()
 
         mvc
             .post("/auth/login") {
                 contentType = MediaType.APPLICATION_JSON
                 content = """{"identifier":"u", "password":"p"}"""
-            }.andExpect { status { isUnauthorized() } }
+            }.andExpect { status { isBadRequest() } }
     }
 }

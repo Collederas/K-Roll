@@ -1,4 +1,4 @@
-package com.collederas.kroll.core.exceptions
+package com.collederas.kroll.exceptions
 
 /**
  * Base sealed class for all Domain exceptions.
@@ -54,16 +54,14 @@ class EnvironmentHasActiveApiKeysException(
 
 // ==================== BAD REQUEST (400) CATEGORY ====================
 
-// Renamed from 'ValidationException' to 'BadRequestException' so the API handler
-// can catch this generic type for 400 errors.
 sealed class BadRequestException(
     errorCode: String,
     message: String,
 ) : KrollException(errorCode, message)
 
-class InvalidConfigTypeException(
-    message: String = "Invalid configuration type",
-) : BadRequestException("INVALID_CONFIG_TYPE", message)
+class InvalidCredentialsException(
+    message: String = "Invalid credentials",
+) : BadRequestException("INVALID_CREDENTIALS", message)
 
 class InvalidApiKeyExpiryException(
     message: String = "Invalid API key expiry",

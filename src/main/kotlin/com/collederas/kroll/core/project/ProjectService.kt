@@ -1,9 +1,9 @@
 package com.collederas.kroll.core.project
 
-import com.collederas.kroll.core.exceptions.ProjectAlreadyExistsException
-import com.collederas.kroll.core.exceptions.ProjectNotFoundException
 import com.collederas.kroll.core.project.dto.CreateProjectDto
 import com.collederas.kroll.core.project.dto.ProjectDto
+import com.collederas.kroll.exceptions.ProjectAlreadyExistsException
+import com.collederas.kroll.exceptions.ProjectNotFoundException
 import com.collederas.kroll.user.AppUser
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional

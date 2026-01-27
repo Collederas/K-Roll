@@ -1,18 +1,18 @@
 package com.collederas.kroll.security.jwt.authentication
 
+import com.collederas.kroll.exceptions.InvalidCredentialsException
 import com.collederas.kroll.security.identity.AuthUserDetails
 import com.collederas.kroll.security.jwt.JwtTokenService
 import com.collederas.kroll.security.jwt.RefreshTokenService
 import com.collederas.kroll.user.AppUser
-import org.springframework.http.HttpStatus
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import org.springframework.web.server.ResponseStatusException
 
 @Service
+@Suppress("SwallowedException")
 class JwtAuthService(
     private val authManager: AuthenticationManager,
     private val jwtTokenService: JwtTokenService,
@@ -28,7 +28,9 @@ class JwtAuthService(
             try {
                 authManager.authenticate(auth)
             } catch (e: BadCredentialsException) {
-                throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid credentials", e)
+                // mapped to 400 to avoid frontend auth request loops (401->login->401->login...)
+                // a better solution is welcome
+                throw InvalidCredentialsException(e.message ?: "Invalid credentials")
             }
 
         val principal = authentication.principal as AuthUserDetails

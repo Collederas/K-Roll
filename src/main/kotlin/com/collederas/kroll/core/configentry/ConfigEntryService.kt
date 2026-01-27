@@ -6,9 +6,9 @@ import com.collederas.kroll.core.configentry.dto.UpdateConfigEntryDto
 import com.collederas.kroll.core.configentry.history.ConfigEntrySnapshot
 import com.collederas.kroll.core.environment.EnvironmentAccessGuard
 import com.collederas.kroll.core.environment.EnvironmentRepository
-import com.collederas.kroll.core.exceptions.ConfigEntryNotFoundException
-import com.collederas.kroll.core.exceptions.ConfigValidationException
-import com.collederas.kroll.core.exceptions.EnvironmentNotFoundException
+import com.collederas.kroll.exceptions.ConfigEntryNotFoundException
+import com.collederas.kroll.exceptions.ConfigValidationException
+import com.collederas.kroll.exceptions.EnvironmentNotFoundException
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule

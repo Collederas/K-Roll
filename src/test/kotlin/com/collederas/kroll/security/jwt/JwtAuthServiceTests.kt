@@ -1,5 +1,6 @@
 package com.collederas.kroll.security.jwt
 
+import com.collederas.kroll.exceptions.InvalidCredentialsException
 import com.collederas.kroll.security.identity.AuthUserDetails
 import com.collederas.kroll.security.jwt.authentication.JwtAuthService
 import com.collederas.kroll.support.factories.AuthUserFactory
@@ -12,13 +13,11 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
-import org.springframework.http.HttpStatus
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.userdetails.UsernameNotFoundException
-import org.springframework.web.server.ResponseStatusException
 
 class JwtAuthServiceTests {
     private val authManager: AuthenticationManager = mockk()
@@ -89,17 +88,15 @@ class JwtAuthServiceTests {
     }
 
     @Test
-    fun `bad credentials throw bad request`() {
-        every { authManager.authenticate(any()) } throws
-            BadCredentialsException(
-                "bad",
-            )
+    fun `bad credentials throw InvalidCredentialsException`() {
+        every { authManager.authenticate(any()) } throws BadCredentialsException("bad")
 
-        val exception =
-            assertThrows(ResponseStatusException::class.java) {
+        val ex =
+            assertThrows(InvalidCredentialsException::class.java) {
                 authService.login("user@example.com", "wrong")
             }
-        assertEquals(HttpStatus.BAD_REQUEST, exception.statusCode)
+
+        assertEquals("INVALID_CREDENTIALS", ex.errorCode)
     }
 
     @Test

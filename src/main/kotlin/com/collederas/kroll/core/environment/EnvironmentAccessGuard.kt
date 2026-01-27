@@ -1,7 +1,7 @@
 package com.collederas.kroll.core.environment
 
-import com.collederas.kroll.core.exceptions.EnvironmentNotFoundException
-import com.collederas.kroll.core.exceptions.ForbiddenException
+import com.collederas.kroll.exceptions.EnvironmentNotFoundException
+import com.collederas.kroll.exceptions.ForbiddenException
 import org.springframework.stereotype.Component
 import java.util.*
 

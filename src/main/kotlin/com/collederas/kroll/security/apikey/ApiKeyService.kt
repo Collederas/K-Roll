@@ -1,8 +1,8 @@
 package com.collederas.kroll.security.apikey
 
 import com.collederas.kroll.core.environment.EnvironmentRepository
-import com.collederas.kroll.core.exceptions.EnvironmentNotFoundException
-import com.collederas.kroll.core.exceptions.InvalidApiKeyExpiryException
+import com.collederas.kroll.exceptions.EnvironmentNotFoundException
+import com.collederas.kroll.exceptions.InvalidApiKeyExpiryException
 import com.collederas.kroll.security.apikey.dto.ApiKeyAuthResult
 import com.collederas.kroll.security.apikey.dto.ApiKeyMetadataDto
 import com.collederas.kroll.security.apikey.dto.CreateApiKeyRequest

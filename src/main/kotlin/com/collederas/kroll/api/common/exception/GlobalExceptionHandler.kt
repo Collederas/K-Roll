@@ -1,6 +1,10 @@
 package com.collederas.kroll.api.common.exception
 
-import com.collederas.kroll.core.exceptions.*
+import com.collederas.kroll.exceptions.BadRequestException
+import com.collederas.kroll.exceptions.ConflictException
+import com.collederas.kroll.exceptions.ForbiddenException
+import com.collederas.kroll.exceptions.KrollException
+import com.collederas.kroll.exceptions.NotFoundException
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
@@ -83,19 +87,13 @@ class GlobalExceptionHandler {
         )
 
     @ExceptionHandler(Exception::class)
-    fun handleUnexpectedException(ex: Exception): ProblemDetail {
-        if (ex.javaClass.name.startsWith("org.springframework.web.servlet")) {
-            throw ex
-        }
-
-        logger.error("Unexpected error occurred", ex)
-
-        return createProblemDetail(
+    @Suppress("UNUSED_PARAMETER")
+    fun handleUnexpectedException(ex: Exception): ProblemDetail =
+        createProblemDetail(
             status = HttpStatus.INTERNAL_SERVER_ERROR,
             errorCode = "INTERNAL_ERROR",
             detail = "An unexpected error occurred. Please try again later.",
         )
-    }
 
     // ==================================================================
     // HELPERS
