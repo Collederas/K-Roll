@@ -1,0 +1,23 @@
+# Used to spin up an instance of Spring that can generate the openapi contract
+# at build time.
+spring:
+  datasource:
+    url: jdbc:h2:mem:builddb;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop # Just create schema so context loads
+  flyway:
+    enabled: false
+
+auth:
+  jwt:
+    # A dummy secret to avoid adding exclusion rules in Spring Security Configs
+    secret: ${KROLL_JWT_SECRET:ZxQ6k1qJ7WmPz5Qz4y1R0+YJzKpZyPp0JxH0q8Q9v2E=}
+
+kroll:
+  contract:
+    hash: "dev-pending-generation" # Overridden by the file inside the JAR

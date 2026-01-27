@@ -1,3 +1,6 @@
+import java.util.Properties
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 group = "com.collederas"
 version = "0.1.0"
 description = "KRoll is a remote configuration and feature-flag service for games."
@@ -39,12 +42,14 @@ dependencies {
 
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     runtimeOnly("org.postgresql:postgresql")
+    // RuntimeOnly ensures H2 is available for 'bootRun' and 'generateOpenApiDocs',
+    // but also for tests (which inherit runtime scope).
+    runtimeOnly("com.h2database:h2")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("io.mockk:mockk:1.14.6")
     testImplementation("com.ninja-squad:springmockk:4.0.2")
     testImplementation("org.springframework.security:spring-security-test")
-    testImplementation("com.h2database:h2")
 }
 
 repositories {
@@ -63,24 +68,8 @@ kotlin {
     }
 }
 
-val externalContractHash =
-    providers.gradleProperty("contractHash")
-        .orElse(
-            providers.fileContents(
-                layout.buildDirectory.file("contract/openapi.sha256")
-            ).asText.map { it.trim() }
-        )
-
 springBoot {
-    buildInfo {
-        properties {
-            additional.set(
-                externalContractHash.map {
-                    mapOf("contract.hash" to it)
-                }
-            )
-        }
-    }
+    buildInfo()
     mainClass.set("com.collederas.kroll.KrollApplicationKt")
 }
 
@@ -91,7 +80,8 @@ openApi {
 
     waitTimeInSeconds.set(60)
     customBootRun {
-        args.set(listOf("--spring.profiles.active=dev"))
+        // Use the lightweight profile that needs no Docker
+        args.set(listOf("--spring.profiles.active=contractgen"))
     }
 }
 
@@ -132,32 +122,59 @@ tasks.jacocoTestCoverageVerification {
             limit {
                 counter = "INSTRUCTION"
                 value = "COVEREDRATIO"
-                minimum = "0.30".toBigDecimal()  // TODO: after MVP, raise
+                minimum = "0.30".toBigDecimal()
             }
         }
     }
 }
 
-// Ensure openapi JSON contract is normalized and RFC-8785 compatible
+// Generate Canonical Contract and Hash
 tasks.register<JavaExec>("generateCanonicalContract") {
     dependsOn("generateOpenApiDocs")
     classpath = sourceSets["main"].runtimeClasspath
     mainClass.set("com.collederas.kroll.api.tools.OpenApiCanonicalContractGenerator")
     args(layout.buildDirectory.file("contract/openapi.json").get().asFile.absolutePath)
+    outputs.file(layout.buildDirectory.file("contract/openapi.sha256"))
+    outputs.file(layout.buildDirectory.file("contract/openapi.json"))
 }
 
+// Generate a Properties File containing the Hash
+val generateContractProps = tasks.register("generateContractProperties") {
+    group = "contract"
+    description = "Creates a contract.properties file from the generated hash"
+
+    dependsOn("generateCanonicalContract")
+
+    val hashFile = layout.buildDirectory.file("contract/openapi.sha256")
+    val propsFile = layout.buildDirectory.file("generated/contract/contract.properties")
+
+    inputs.file(hashFile)
+    outputs.file(propsFile)
+
+    doLast {
+        val hash = hashFile.get().asFile.readText().trim()
+        val props = Properties()
+        props.setProperty("kroll.contract.hash", hash)
+
+        propsFile.get().asFile.parentFile.mkdirs()
+        propsFile.get().asFile.outputStream().use { props.store(it, "Generated Contract Hash") }
+    }
+}
+
+// Inject the generated properties file into the JAR's classpath
+tasks.named<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar") {
+    // This injects the file into 'BOOT-INF/classes/contract.properties'
+    // where Spring can easily load it via @Value("${kroll.contract.hash}")
+    from(generateContractProps) {
+        into("BOOT-INF/classes")
+    }
+}
+
+// Convenience task for debugging contract building
 tasks.register("buildContract") {
     group = "contract"
-    description = "Generates OpenAPI contract and embeds its hash"
-
-    dependsOn(
-        "generateCanonicalContract",
-        "bootBuildInfo"
-    )
-}
-
-tasks.named<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar") {
-    dependsOn("buildContract", "bootBuildInfo")
+    description = "Generates OpenAPI contract and properties"
+    dependsOn(generateContractProps)
 }
 
 tasks.check {
@@ -168,4 +185,8 @@ tasks.withType<Test> {
     useJUnitPlatform()
     systemProperty("spring.profiles.active", "test")
     finalizedBy(tasks.jacocoTestReport)
+}
+val compileKotlin: KotlinCompile by tasks
+compileKotlin.compilerOptions {
+    freeCompilerArgs.set(listOf("-Xannotation-default-target=param-property"))
 }
