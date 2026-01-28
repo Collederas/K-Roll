@@ -14,4 +14,9 @@ interface EnvironmentRepository : JpaRepository<EnvironmentEntity, UUID> {
         projectId: UUID,
         name: String,
     ): Boolean
+
+    fun existsByIdAndProjectOwnerId(
+        id: UUID,
+        ownerId: UUID,
+    ): Boolean
 }
