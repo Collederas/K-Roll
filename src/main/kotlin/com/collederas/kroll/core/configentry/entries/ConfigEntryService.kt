@@ -1,10 +1,13 @@
-package com.collederas.kroll.core.configentry
+package com.collederas.kroll.core.configentry.entries
 
+import com.collederas.kroll.core.configentry.ConfigEntryResponseDto
+import com.collederas.kroll.core.configentry.CreateConfigEntryDto
+import com.collederas.kroll.core.configentry.UpdateConfigEntryDto
 import com.collederas.kroll.core.configentry.diff.ConfigDiffCalculator
 import com.collederas.kroll.core.configentry.diff.SemanticDiff
 import com.collederas.kroll.core.configentry.audit.ConfigEntrySnapshot
 import com.collederas.kroll.core.configentry.validation.ConfigEntryValidator
-import com.collederas.kroll.core.environment.EnvironmentAccessGuard
+import com.collederas.kroll.core.environment.EnvironmentAuthorizationService
 import com.collederas.kroll.core.environment.EnvironmentRepository
 import com.collederas.kroll.exceptions.ConfigEntryNotFoundException
 import com.collederas.kroll.exceptions.ConfigValidationException
@@ -13,6 +16,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import org.springframework.data.repository.findByIdOrNull
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.Clock
@@ -21,7 +25,7 @@ import java.util.*
 
 @Service
 class ConfigEntryService(
-    private val envAccessGuard: EnvironmentAccessGuard,
+    private val envAccessGuard: EnvironmentAuthorizationService,
     private val configValueValidator: ConfigEntryValidator,
     private val configDiffCalculator: ConfigDiffCalculator,
     private val configEntryRepository: ConfigEntryRepository,
@@ -35,40 +39,24 @@ class ConfigEntryService(
             .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS),
 ) {
     @Transactional(readOnly = true)
+    @PreAuthorize("@envAuth.isOwner(#envId, authentication.principal.userId)")
     fun list(
         userId: UUID,
         envId: UUID,
     ): List<ConfigEntryResponseDto> {
-        envAccessGuard.requireOwner(envId, userId)
-
         if (!environmentRepository.existsById(envId)) {
             throw EnvironmentNotFoundException("Environment with ID $envId not found")
         }
         return configEntryRepository.findAllByEnvironmentId(envId).map { it.toResponseDto() }
     }
 
-    @Transactional(readOnly = true)
-    fun fetchEffectiveConfig(envId: UUID): Map<String, Any> {
-        if (!environmentRepository.existsById(envId)) {
-            throw EnvironmentNotFoundException("Environment with ID $envId not found")
-        }
-        val now = Instant.now(clock)
-        val entities = configEntryRepository.findActiveConfigs(envId, now)
-
-        // TODO: Dto?
-        return entities.associate { entity ->
-            entity.configKey to parseValue(entity.configValue, entity.configType)
-        }
-    }
-
     @Transactional
+    @PreAuthorize("@envAuth.isOwner(#envId, authentication.principal.userId)")
     fun create(
         userId: UUID,
         envId: UUID,
         dto: CreateConfigEntryDto,
     ): ConfigEntryResponseDto {
-        envAccessGuard.requireOwner(envId, userId)
-
         val environment =
             environmentRepository.findByIdOrNull(envId)
                 ?: throw EnvironmentNotFoundException("Environment with ID $envId not found")
@@ -108,21 +96,19 @@ class ConfigEntryService(
             changedBy = userId,
             changeDescription = "Initial Creation"
         )
-
         entity.recordCreateSnapshot(userId, snapshotJson)
 
         return configEntryRepository.save(entity).toResponseDto()
     }
 
     @Transactional
+    @PreAuthorize("@envAuth.isOwner(#envId, authentication.principal.userId)")
     fun update(
         userId: UUID,
         envId: UUID,
         key: String,
         dto: UpdateConfigEntryDto,
     ): ConfigEntryResponseDto {
-        envAccessGuard.requireOwner(envId, userId)
-
         val entity =
             configEntryRepository.findByEnvironmentIdAndConfigKey(envId, key)
                 ?: throw ConfigEntryNotFoundException("Config '$key' not found in env $envId")
@@ -181,13 +167,12 @@ class ConfigEntryService(
     }
 
     @Transactional
+    @PreAuthorize("@envAuth.isOwner(#envId, authentication.principal.userId)")
     fun delete(
         userId: UUID,
         envId: UUID,
         key: String,
     ) {
-        envAccessGuard.requireOwner(envId, userId)
-
         val entity =
             configEntryRepository.findByEnvironmentIdAndConfigKey(envId, key)
                 ?: throw ConfigEntryNotFoundException(

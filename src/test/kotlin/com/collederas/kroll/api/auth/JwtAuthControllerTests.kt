@@ -1,6 +1,6 @@
 package com.collederas.kroll.api.auth
 
-import com.collederas.kroll.api.control.AdminAuthController
+import com.collederas.kroll.api.control.auth.AdminAuthController
 import com.collederas.kroll.exceptions.InvalidCredentialsException
 import com.collederas.kroll.security.SecurityConfig
 import com.collederas.kroll.security.jwt.JwtSecurityConfig

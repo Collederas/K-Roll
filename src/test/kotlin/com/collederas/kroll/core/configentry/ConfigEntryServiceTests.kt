@@ -1,6 +1,9 @@
 package com.collederas.kroll.core.configentry
 
-import com.collederas.kroll.core.environment.EnvironmentAccessGuard
+import com.collederas.kroll.core.configentry.entries.ConfigEntryRepository
+import com.collederas.kroll.core.configentry.entries.ConfigEntryService
+import com.collederas.kroll.core.configentry.entries.ConfigType
+import com.collederas.kroll.core.environment.EnvironmentAuthorizationService
 import com.collederas.kroll.core.environment.EnvironmentRepository
 import com.collederas.kroll.exceptions.ConfigEntryNotFoundException
 import com.collederas.kroll.exceptions.ConfigValidationException
@@ -21,7 +24,7 @@ import java.util.*
 class ConfigEntryServiceTests {
     private val environmentRepo = mockk<EnvironmentRepository>()
     private val configEntryRepo = mockk<ConfigEntryRepository>(relaxed = true)
-    private val accessGuard = mockk<EnvironmentAccessGuard>()
+    private val accessGuard = mockk<EnvironmentAuthorizationService>()
     private val envId = UUID.randomUUID()
 
     private val configEntryService =

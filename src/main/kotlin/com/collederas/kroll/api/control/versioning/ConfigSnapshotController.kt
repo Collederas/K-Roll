@@ -8,18 +8,18 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import java.util.*
 
-
-@RestController
-@RequestMapping("/environments/{envId}/versions")
-class ConfigSnapshotController(
-    private val snapshotService: ConfigSnapshotService,
-) {
-
-    @GetMapping("/{versionId}")
-    fun getSnapshot(
-        @PathVariable envId: UUID,
-        @PathVariable versionId: String,
-    ): ConfigSnapshotResponseDto =
-        snapshotService.getSnapshot(envId, versionId)
-}
+//
+//@RestController
+//@RequestMapping("/environments/{envId}/versions")
+//class ConfigSnapshotController(
+//    private val snapshotService: ConfigSnapshotService,
+//) {
+//
+//    @GetMapping("/{versionId}")
+//    fun getSnapshot(
+//        @PathVariable envId: UUID,
+//        @PathVariable versionId: String,
+//    ): ConfigSnapshotResponseDto =
+//        snapshotService.getSnapshot(envId, versionId)
+//}
 

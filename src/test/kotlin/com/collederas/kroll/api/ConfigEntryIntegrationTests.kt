@@ -1,7 +1,7 @@
 package com.collederas.kroll.api
 
-import com.collederas.kroll.core.configentry.ConfigEntryService
-import com.collederas.kroll.core.configentry.ConfigType
+import com.collederas.kroll.core.configentry.entries.ConfigEntryService
+import com.collederas.kroll.core.configentry.entries.ConfigType
 import com.collederas.kroll.core.configentry.CreateConfigEntryDto
 import com.collederas.kroll.core.configentry.UpdateConfigEntryDto
 import com.collederas.kroll.security.identity.AuthUserDetails

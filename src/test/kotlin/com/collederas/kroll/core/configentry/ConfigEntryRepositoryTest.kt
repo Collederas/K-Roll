@@ -1,5 +1,6 @@
 package com.collederas.kroll.core.configentry
 
+import com.collederas.kroll.core.configentry.entries.ConfigEntryRepository
 import com.collederas.kroll.support.factories.ConfigEntryFactory
 import com.collederas.kroll.support.factories.EnvironmentFactory
 import com.collederas.kroll.support.factories.ProjectFactory

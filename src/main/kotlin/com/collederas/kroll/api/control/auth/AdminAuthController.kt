@@ -1,10 +1,9 @@
-package com.collederas.kroll.api.control
+package com.collederas.kroll.api.control.auth
 
 import com.collederas.kroll.security.identity.AuthUserDetails
 import com.collederas.kroll.security.jwt.authentication.JwtAuthService
 import com.collederas.kroll.user.dto.AppUserDto
 import io.swagger.v3.oas.annotations.tags.Tag
-import jakarta.validation.constraints.NotBlank
 import org.springframework.http.HttpStatus
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.validation.annotation.Validated
@@ -58,18 +57,4 @@ class AdminAuthController(
             username = user.username,
             email = user.getEmail(),
         )
-
-    data class LoginRequest(
-        @field:NotBlank val identifier: String,
-        @field:NotBlank val password: String,
-    )
-
-    data class LoginResponse(
-        val access: String,
-        val refresh: String,
-    )
-
-    data class RefreshTokenRequest(
-        val refresh: String,
-    )
 }

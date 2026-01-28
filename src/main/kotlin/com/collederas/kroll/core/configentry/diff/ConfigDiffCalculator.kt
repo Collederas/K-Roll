@@ -1,17 +1,21 @@
 package com.collederas.kroll.core.configentry.diff
 
-import com.collederas.kroll.core.configentry.ConfigType
+import com.collederas.kroll.core.configentry.ConfigDiff
+import com.collederas.kroll.core.configentry.entries.ConfigType
 import com.collederas.kroll.core.configentry.audit.ConfigEntrySnapshot
+import com.collederas.kroll.core.configentry.versioning.snapshot.ConfigSnapshotEntity
+import com.collederas.kroll.core.configentry.versioning.snapshot.ConfigSnapshotRepository
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Component
+import java.util.UUID
 
 @Component
 class ConfigDiffCalculator(
-    @Qualifier("strictJsonMapper") private val strictJsonMapper: ObjectMapper
+    @Qualifier("strictJsonMapper") private val strictJsonMapper: ObjectMapper,
 ) {
-    fun diffSnapshots(
+    fun diffEntrySnapshots(
         old: List<ConfigEntrySnapshot>,
         new: List<ConfigEntrySnapshot>,
     ): List<EntryDiff> {
@@ -32,7 +36,7 @@ class ConfigDiffCalculator(
                     EntryDiff.Removed(key, o)
 
                 o != null && n != null -> {
-                    val semantic = calcDiff(o, n)
+                    val semantic = calcEntrySnapshotDiff(o, n)
                     if (semantic is SemanticDiff.Same) null
                     else EntryDiff.Changed(key, o, n, semantic)
                 }
@@ -42,7 +46,7 @@ class ConfigDiffCalculator(
         }.sortedBy { it.key }
     }
 
-    private fun calcDiff(
+    private fun calcEntrySnapshotDiff(
         old: ConfigEntrySnapshot,
         new: ConfigEntrySnapshot,
     ): SemanticDiff {

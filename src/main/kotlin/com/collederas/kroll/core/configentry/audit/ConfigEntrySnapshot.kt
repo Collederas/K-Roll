@@ -1,6 +1,6 @@
 package com.collederas.kroll.core.configentry.audit
 
-import com.collederas.kroll.core.configentry.ConfigType
+import com.collederas.kroll.core.configentry.entries.ConfigType
 import java.time.Instant
 import java.util.UUID
 

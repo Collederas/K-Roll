@@ -1,8 +1,8 @@
-package com.collederas.kroll.core.configentry.versioning
+package com.collederas.kroll.core.configentry
 
-import com.collederas.kroll.core.configentry.ConfigEntryEntity
-import com.collederas.kroll.core.configentry.ConfigEntryRepository
-import com.collederas.kroll.core.configentry.ConfigType
+import com.collederas.kroll.core.configentry.entries.ConfigEntryEntity
+import com.collederas.kroll.core.configentry.entries.ConfigEntryRepository
+import com.collederas.kroll.core.configentry.entries.ConfigType
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.stereotype.Component
 import java.time.Clock
@@ -23,7 +23,7 @@ data class ResolvedValue(
 class ConfigResolver(
     private val configEntryRepo: ConfigEntryRepository,
     private val objectMapper: ObjectMapper,
-    private val clock: Clock,
+    private val clock: Clock = Clock.systemUTC(),
 ) {
     fun resolveForEnvironment(envId: UUID): ResolvedConfig {
         val now = Instant.now(clock)
@@ -44,11 +44,6 @@ class ConfigResolver(
 
         return ResolvedConfig(resolved)
     }
-
-    private fun chooseEffectiveEntry(
-        entries: List<ConfigEntryEntity>
-    ): ConfigEntryEntity =
-        entries.maxBy { it.createdAt }
 
     private fun parseValue(entry: ConfigEntryEntity): Any =
         when (entry.configType) {

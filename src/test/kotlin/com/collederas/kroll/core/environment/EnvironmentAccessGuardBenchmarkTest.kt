@@ -36,7 +36,7 @@ class EnvironmentAccessGuardBenchmarkTest {
     lateinit var appUserRepository: AppUserRepository
 
     @Autowired
-    lateinit var environmentAccessGuard: EnvironmentAccessGuard
+    lateinit var environmentAccessGuard: EnvironmentAuthorizationService
 
     @Autowired
     lateinit var entityManager: EntityManager

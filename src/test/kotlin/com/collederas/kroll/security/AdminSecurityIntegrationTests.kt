@@ -1,7 +1,7 @@
 package com.collederas.kroll.security
 
 import com.collederas.kroll.api.control.ProjectController
-import com.collederas.kroll.api.control.AdminAuthController
+import com.collederas.kroll.api.control.auth.AdminAuthController
 import com.collederas.kroll.core.project.ProjectService
 import com.collederas.kroll.security.identity.AuthUserDetails
 import com.collederas.kroll.security.identity.AuthUserDetailsService

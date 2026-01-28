@@ -1,4 +1,4 @@
-package com.collederas.kroll.core.configentry
+package com.collederas.kroll.core.configentry.entries
 
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query

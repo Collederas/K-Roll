@@ -1,14 +1,14 @@
 package com.collederas.kroll.core.configentry.validation
 
-import com.collederas.kroll.core.configentry.ConfigType
+import com.collederas.kroll.core.configentry.entries.ConfigType
+import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.ObjectMapper
-import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Component
 
 @Component
 class ConfigEntryValidator(
-    @Qualifier("strictJsonMapper") private val strictJsonMapper: ObjectMapper
+    private val objectMapper: ObjectMapper
 ) {
     companion object {
         private const val MAX_JSON_BYTES: Int = 64 * 1024
@@ -60,10 +60,11 @@ class ConfigEntryValidator(
             isValid = false
         }
 
+        val mapper = objectMapper.enable(JsonParser.Feature.ALLOW_SINGLE_QUOTES)
         if (isValid) {
             val node =
                 try {
-                    strictJsonMapper.readTree(value)
+                    mapper.readTree(value)
                 } catch (_: JsonProcessingException) {
                     errors.add("Value is not valid JSON")
                     return

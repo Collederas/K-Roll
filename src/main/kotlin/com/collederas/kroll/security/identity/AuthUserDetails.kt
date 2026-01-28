@@ -9,6 +9,8 @@ import java.util.*
 class AuthUserDetails(
     private val user: AppUser,
 ) : UserDetails {
+    val userId: UUID get() = user.id
+
     fun getId(): UUID = user.id
 
     fun getEmail(): String = user.email

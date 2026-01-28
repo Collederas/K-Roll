@@ -1,5 +1,6 @@
 package com.collederas.kroll.core.configentry
 
+import com.collederas.kroll.core.configentry.entries.ConfigType
 import java.time.Instant
 import java.util.*
 
@@ -32,6 +33,7 @@ data class ConfigEntryResponseDto(
 
 data class ConfigVersionDto(
     val id: String,
+    val version: String,
     val environmentId: UUID,
     val createdAt: Instant,
     val createdBy: UUID?,
@@ -40,35 +42,23 @@ data class ConfigVersionDto(
     val notes: String?,
 )
 
+data class VersionDetailsDto(
+    val version: String,
+    val createdAt: Instant,
+    val createdBy: UUID?,
+    val contractHash: String,
+    val notes: String?,
+    val snapshotJson: String,
+)
+
+data class ConfigDiff(
+    val added: Set<String>,
+    val removed: Set<String>,
+    val typeChanged: Set<String>,
+)
+
 data class ConfigSnapshotResponseDto(
     val versionId: String,
     val environmentId: UUID,
     val entries: List<ConfigEntryResponseDto>,
 )
-
-sealed interface ConfigEntryDiffDto {
-    val key: String
-
-    data class Added(
-        override val key: String,
-        val new: ConfigEntryResponseDto,
-    ) : ConfigEntryDiffDto
-
-    data class Removed(
-        override val key: String,
-        val old: ConfigEntryResponseDto,
-    ) : ConfigEntryDiffDto
-
-    data class Changed(
-        override val key: String,
-        val old: ConfigEntryResponseDto,
-        val new: ConfigEntryResponseDto,
-        val semantic: SemanticDiffDto,
-    ) : ConfigEntryDiffDto
-}
-
-sealed interface SemanticDiffDto {
-    object Same : SemanticDiffDto
-    object Different : SemanticDiffDto
-    data class Invalid(val cause: String) : SemanticDiffDto
-}

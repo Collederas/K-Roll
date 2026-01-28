@@ -37,7 +37,7 @@ dependencies {
     implementation("org.flywaydb:flyway-database-postgresql")
     implementation("io.github.erdtman:java-json-canonicalization:1.1")
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.15")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.2")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
     implementation("io.swagger.core.v3:swagger-annotations:2.2.20")
 
     implementation("org.jetbrains.kotlin:kotlin-reflect")

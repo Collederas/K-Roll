@@ -1,6 +1,6 @@
 package com.collederas.kroll.api.control
 
-import com.collederas.kroll.core.configentry.ConfigEntryService
+import com.collederas.kroll.core.configentry.entries.ConfigEntryService
 import com.collederas.kroll.core.configentry.ConfigEntryResponseDto
 import com.collederas.kroll.core.configentry.CreateConfigEntryDto
 import com.collederas.kroll.core.configentry.UpdateConfigEntryDto

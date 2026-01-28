@@ -1,7 +1,7 @@
 package com.collederas.kroll.security.apikey
 
-import java.security.MessageDigest
-import java.util.*
+import com.collederas.kroll.crypto.Sha256
+
 
 object ApiKeyHasher {
     /**
@@ -10,8 +10,6 @@ object ApiKeyHasher {
      * we might need to validate this on every single API call.
      */
     fun hash(rawKey: String): String {
-        val digest = MessageDigest.getInstance("SHA-256")
-        val hash = digest.digest(rawKey.toByteArray(Charsets.UTF_8))
-        return Base64.getEncoder().encodeToString(hash)
+        return Sha256.hashBase64(rawKey.toByteArray(Charsets.UTF_8))
     }
 }

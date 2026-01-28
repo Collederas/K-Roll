@@ -1,4 +1,4 @@
-package com.collederas.kroll.core.configentry
+package com.collederas.kroll.core.configentry.entries
 
 import com.collederas.kroll.core.configentry.audit.ConfigEntryUpdatedEvent
 import com.collederas.kroll.core.environment.EnvironmentEntity
