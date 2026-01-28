@@ -1,9 +1,9 @@
-package com.collederas.kroll.api
+package com.collederas.kroll.api.control
 
 import com.collederas.kroll.core.configentry.ConfigEntryService
-import com.collederas.kroll.core.configentry.dto.ConfigEntryResponseDto
-import com.collederas.kroll.core.configentry.dto.CreateConfigEntryDto
-import com.collederas.kroll.core.configentry.dto.UpdateConfigEntryDto
+import com.collederas.kroll.core.configentry.ConfigEntryResponseDto
+import com.collederas.kroll.core.configentry.CreateConfigEntryDto
+import com.collederas.kroll.core.configentry.UpdateConfigEntryDto
 import com.collederas.kroll.security.identity.AuthUserDetails
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag

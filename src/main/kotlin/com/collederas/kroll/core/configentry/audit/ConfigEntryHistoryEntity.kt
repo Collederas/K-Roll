@@ -1,4 +1,4 @@
-package com.collederas.kroll.core.configentry.history
+package com.collederas.kroll.core.configentry.audit
 
 import jakarta.persistence.Column
 import jakarta.persistence.Entity

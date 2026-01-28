@@ -1,4 +1,4 @@
-package com.collederas.kroll.api
+package com.collederas.kroll.api.clients
 
 import com.collederas.kroll.core.configentry.ConfigEntryService
 import com.collederas.kroll.security.apikey.identity.GameClientPrincipal

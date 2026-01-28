@@ -1,6 +1,6 @@
 package com.collederas.kroll.security
 
-import com.collederas.kroll.core.configentry.history.ConfigEntryHistoryListener
+import com.collederas.kroll.core.configentry.audit.ConfigEntryHistoryListener
 import com.collederas.kroll.security.apikey.ApiKeyEntity
 import com.collederas.kroll.security.apikey.ApiKeyHasher
 import com.collederas.kroll.security.apikey.ApiKeyRepository

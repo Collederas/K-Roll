@@ -1,6 +1,5 @@
-package com.collederas.kroll.core.configentry.history
+package com.collederas.kroll.core.configentry.audit
 
-import com.collederas.kroll.core.configentry.ConfigEntryUpdatedEvent
 import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Component
 

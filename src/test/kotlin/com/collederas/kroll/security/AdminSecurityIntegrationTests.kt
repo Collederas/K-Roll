@@ -1,7 +1,7 @@
 package com.collederas.kroll.security
 
-import com.collederas.kroll.api.ProjectController
-import com.collederas.kroll.api.auth.JwtAuthController
+import com.collederas.kroll.api.control.ProjectController
+import com.collederas.kroll.api.control.AdminAuthController
 import com.collederas.kroll.core.project.ProjectService
 import com.collederas.kroll.security.identity.AuthUserDetails
 import com.collederas.kroll.security.identity.AuthUserDetailsService
@@ -33,7 +33,7 @@ import java.util.*
     TestSecurityMocks::class,
     JwtAuthFilter::class,
 )
-@WebMvcTest(JwtAuthController::class, ProjectController::class)
+@WebMvcTest(AdminAuthController::class, ProjectController::class)
 @ActiveProfiles("test")
 class AdminSecurityIntegrationTests {
     @Autowired

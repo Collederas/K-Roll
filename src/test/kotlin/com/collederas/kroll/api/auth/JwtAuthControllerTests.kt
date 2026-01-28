@@ -1,5 +1,6 @@
 package com.collederas.kroll.api.auth
 
+import com.collederas.kroll.api.control.AdminAuthController
 import com.collederas.kroll.exceptions.InvalidCredentialsException
 import com.collederas.kroll.security.SecurityConfig
 import com.collederas.kroll.security.jwt.JwtSecurityConfig
@@ -22,7 +23,7 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.post
 
-@WebMvcTest(JwtAuthController::class)
+@WebMvcTest(AdminAuthController::class)
 @Import(SecurityConfig::class, JwtSecurityConfig::class, TestSecurityMocks::class)
 @ActiveProfiles("test")
 class JwtAuthControllerTests {

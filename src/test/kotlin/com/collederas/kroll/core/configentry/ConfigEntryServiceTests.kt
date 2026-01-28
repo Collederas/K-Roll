@@ -1,7 +1,5 @@
 package com.collederas.kroll.core.configentry
 
-import com.collederas.kroll.core.configentry.dto.CreateConfigEntryDto
-import com.collederas.kroll.core.configentry.dto.UpdateConfigEntryDto
 import com.collederas.kroll.core.environment.EnvironmentAccessGuard
 import com.collederas.kroll.core.environment.EnvironmentRepository
 import com.collederas.kroll.exceptions.ConfigEntryNotFoundException

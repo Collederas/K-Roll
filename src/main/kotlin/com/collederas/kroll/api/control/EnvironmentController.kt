@@ -1,4 +1,4 @@
-package com.collederas.kroll.api
+package com.collederas.kroll.api.control
 
 import com.collederas.kroll.core.environment.EnvironmentService
 import com.collederas.kroll.core.environment.dto.CreateEnvironmentDto

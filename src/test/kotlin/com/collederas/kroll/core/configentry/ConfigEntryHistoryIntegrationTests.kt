@@ -1,9 +1,7 @@
 package com.collederas.kroll.core.configentry
 
-import com.collederas.kroll.core.configentry.dto.CreateConfigEntryDto
-import com.collederas.kroll.core.configentry.dto.UpdateConfigEntryDto
-import com.collederas.kroll.core.configentry.history.ConfigEntryHistoryListener
-import com.collederas.kroll.core.configentry.history.ConfigEntryHistoryRepository
+import com.collederas.kroll.core.configentry.audit.ConfigEntryHistoryListener
+import com.collederas.kroll.core.configentry.audit.ConfigEntryHistoryRepository
 import com.collederas.kroll.exceptions.ConfigValidationException
 import com.collederas.kroll.support.factories.PersistedConfigEntryFactory
 import com.collederas.kroll.support.factories.PersistedEnvironmentFactory

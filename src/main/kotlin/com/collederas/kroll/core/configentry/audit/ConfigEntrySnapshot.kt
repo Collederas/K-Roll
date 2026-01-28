@@ -1,8 +1,8 @@
-package com.collederas.kroll.core.configentry.history
+package com.collederas.kroll.core.configentry.audit
 
 import com.collederas.kroll.core.configentry.ConfigType
 import java.time.Instant
-import java.util.*
+import java.util.UUID
 
 data class ConfigEntrySnapshot(
     val key: String,
