@@ -1,44 +1,82 @@
 package com.collederas.kroll.core.configentry.diff
 
-import com.collederas.kroll.core.configentry.ConfigDiff
 import com.collederas.kroll.core.configentry.entries.ConfigType
-import com.collederas.kroll.core.configentry.audit.ConfigEntrySnapshot
 import com.collederas.kroll.core.configentry.versioning.snapshot.ConfigSnapshotEntity
-import com.collederas.kroll.core.configentry.versioning.snapshot.ConfigSnapshotRepository
-import com.fasterxml.jackson.core.JsonProcessingException
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Component
-import java.util.UUID
+
 
 @Component
 class ConfigDiffCalculator(
-    @Qualifier("strictJsonMapper") private val strictJsonMapper: ObjectMapper,
+    @Qualifier("strictJsonMapper")
+    private val objectMapper: ObjectMapper,
 ) {
-    fun diffEntrySnapshots(
-        old: List<ConfigEntrySnapshot>,
-        new: List<ConfigEntrySnapshot>,
-    ): List<EntryDiff> {
-        val oldByKey = old.associateBy { it.key }
-        val newByKey = new.associateBy { it.key }
+    private data class SnapshotPayload(
+        val values: Map<String, SnapshotValue>
+    )
 
-        val allKeys = oldByKey.keys + newByKey.keys
+    private data class SnapshotValue(
+        val type: ConfigType,
+        val value: Any
+    )
+
+    fun diffSnapshots(
+        from: ConfigSnapshotEntity,
+        to: ConfigSnapshotEntity,
+    ): List<DiffResult> {
+        val fromPayload: SnapshotPayload =
+            objectMapper.readValue(from.snapshotJson)
+
+        val toPayload: SnapshotPayload =
+            objectMapper.readValue(to.snapshotJson)
+
+        return diffEntries(fromPayload.values, toPayload.values)
+    }
+
+    private fun diffEntries(
+        old: Map<String, SnapshotValue>,
+        new: Map<String, SnapshotValue>,
+    ): List<DiffResult> {
+        val allKeys = old.keys union new.keys
 
         return allKeys.mapNotNull { key ->
-            val o = oldByKey[key]
-            val n = newByKey[key]
+            val o = old[key]
+            val n = new[key]
 
             when {
                 o == null && n != null ->
-                    EntryDiff.Added(key, n)
+                    DiffResult.Added(
+                        key,
+                        DiffEntry(key, n.type, n.value),
+                    )
 
                 o != null && n == null ->
-                    EntryDiff.Removed(key, o)
+                    DiffResult.Removed(
+                        key,
+                        DiffEntry(key, o.type, o.value),
+                    )
 
                 o != null && n != null -> {
-                    val semantic = calcEntrySnapshotDiff(o, n)
-                    if (semantic is SemanticDiff.Same) null
-                    else EntryDiff.Changed(key, o, n, semantic)
+                    if (o.type != n.type) {
+                        DiffResult.Changed(
+                            key,
+                            DiffEntry(key, o.type, o.value),
+                            DiffEntry(key, n.type, n.value),
+                            SemanticDiff.TypeChanged,
+                        )
+                    } else {
+                        val semantic = semanticCompare(o.value, n.value, o.type)
+                        if (semantic is SemanticDiff.Same) null
+                        else DiffResult.Changed(
+                            key,
+                            DiffEntry(key, o.type, o.value),
+                            DiffEntry(key, n.type, n.value),
+                            semantic,
+                        )
+                    }
                 }
 
                 else -> null
@@ -46,48 +84,37 @@ class ConfigDiffCalculator(
         }.sortedBy { it.key }
     }
 
-    private fun calcEntrySnapshotDiff(
-        old: ConfigEntrySnapshot,
-        new: ConfigEntrySnapshot,
-    ): SemanticDiff {
-        if (old.type != new.type) return SemanticDiff.Different
 
-        return try {
-            when (old.type) {
-                ConfigType.BOOLEAN ->
-                    if (old.value.toBooleanStrict() == new.value.toBooleanStrict())
-                        SemanticDiff.Same else SemanticDiff.Different
 
-                ConfigType.NUMBER ->
-                    if (old.value.toBigDecimal() == new.value.toBigDecimal())
-                        SemanticDiff.Same else SemanticDiff.Different
-
-                ConfigType.STRING ->
-                    if (old.value == new.value)
-                        SemanticDiff.Same else SemanticDiff.Different
-
-                ConfigType.JSON ->
-                    jsonSemanticDiff(old.value, new.value)
-            }
-        } catch (e: Exception) {
-            SemanticDiff.Invalid(e)
-        }
-    }
-
-    fun jsonSemanticDiff(
-        val1: String,
-        val2: String,
+    fun semanticCompare(
+        oldValue: Any,
+        newValue: Any,
+        type: ConfigType,
     ): SemanticDiff =
         try {
-            val node1 = strictJsonMapper.readTree(val1)
-            val node2 = strictJsonMapper.readTree(val2)
+            when (type) {
+                ConfigType.BOOLEAN ->
+                    if (oldValue as Boolean == newValue as Boolean)
+                        SemanticDiff.Same else SemanticDiff.ValueChanged
 
-            if (node1 == node2) {
-                SemanticDiff.Same
-            } else {
-                SemanticDiff.Different
+                ConfigType.NUMBER ->
+                    if ((oldValue as Number).toDouble() ==
+                        (newValue as Number).toDouble()
+                    )
+                        SemanticDiff.Same else SemanticDiff.ValueChanged
+
+                ConfigType.STRING ->
+                    if (oldValue == newValue)
+                        SemanticDiff.Same else SemanticDiff.ValueChanged
+
+                ConfigType.JSON -> {
+                    val n1 = objectMapper.valueToTree<JsonNode>(oldValue)
+                    val n2 = objectMapper.valueToTree<JsonNode>(newValue)
+                    if (n1 == n2)
+                        SemanticDiff.Same else SemanticDiff.ValueChanged
+                }
             }
-        } catch (e: JsonProcessingException) {
+        } catch (e: Exception) {
             SemanticDiff.Invalid(e)
         }
 }

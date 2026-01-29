@@ -1,14 +1,17 @@
 package com.collederas.kroll.core.configentry.versioning
 
-import com.collederas.kroll.core.configentry.ConfigDiff
+import com.collederas.kroll.core.configentry.ChangedKeyDto
+import com.collederas.kroll.core.configentry.ConfigDiffDto
 import com.collederas.kroll.core.configentry.ConfigResolver
 import com.collederas.kroll.core.configentry.ConfigVersionDto
+import com.collederas.kroll.core.configentry.ResolveMode
 import com.collederas.kroll.core.configentry.VersionDetailsDto
+import com.collederas.kroll.core.configentry.diff.ConfigDiffCalculator
+import com.collederas.kroll.core.configentry.diff.DiffResult
 import com.collederas.kroll.core.configentry.versioning.snapshot.ConfigSnapshotEntity
 import com.collederas.kroll.core.configentry.versioning.snapshot.ConfigSnapshotRepository
 import com.collederas.kroll.crypto.Sha256
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -22,6 +25,7 @@ class ConfigVersionService(
     private val versionRepository: ConfigVersionRepository,
     private val activeVersionRepository: ActiveVersionRepository,
     private val snapshotRepository: ConfigSnapshotRepository,
+    private val configDiffCalculator: ConfigDiffCalculator,
     private val objectMapper: ObjectMapper
 ) {
 
@@ -49,6 +53,7 @@ class ConfigVersionService(
                 environmentId = version.environmentId,
                 createdAt = version.createdAt,
                 createdBy = version.createdBy,
+                createdByName = "",
                 isActive = version.id == activeVersionId,
                 contractHash = version.contractHash,
                 changeLog = version.changeLog,
@@ -65,11 +70,11 @@ class ConfigVersionService(
         envId: UUID,
         notes: String? = null
     ) {
-        val resolvedConfig = configResolver.resolveForEnvironment(envId)
+        val resolvedConfig = configResolver.resolveForEnvironment(envId, ResolveMode.DRAFT)
 
 //        valalidator.validate(resolvedConfig)
 
-        val latest = versionRepository.findLatestVersionByEnvironmentId(envId)
+        val latest = versionRepository.findLatestByEnvironmentId(envId)
 
         val nextVersion = (latest?.versionSequence ?: 0L) + 1
         val nextVersionLabel = "v$nextVersion"
@@ -100,7 +105,7 @@ class ConfigVersionService(
         snapshotRepository.save(
             ConfigSnapshotEntity(
                 versionId = version.id,
-                snapshotJson = objectMapper.writeValueAsString(resolvedConfig),
+                snapshotJson = snapshotJson,
             )
         )
     }
@@ -201,7 +206,7 @@ class ConfigVersionService(
         envId: UUID,
         fromVersionId: UUID,
         toVersionId: UUID,
-    ): ConfigDiff {
+    ): ConfigDiffDto {
         val fromVersion =
             versionRepository.findById(fromVersionId)
                 .orElseThrow { IllegalArgumentException("From-version not found") }
@@ -221,33 +226,48 @@ class ConfigVersionService(
             snapshotRepository.findById(toVersionId)
                 .orElseThrow { IllegalStateException("To-version snapshot missing") }
 
-        // TODO: cached diff fast-path
+        // DIFF!
+        val diffs =
+            configDiffCalculator.diffSnapshots(fromSnapshot, toSnapshot)
 
-        val fromMap: Map<String, Any> =
-            objectMapper.readValue(fromSnapshot.snapshotJson)
+        val added = mutableSetOf<String>()
+        val removed = mutableSetOf<String>()
+        val typeChanged = mutableListOf<ChangedKeyDto>()
+        val valueChanged = mutableListOf<ChangedKeyDto>()
 
-        val toMap: Map<String, Any> =
-            objectMapper.readValue(toSnapshot.snapshotJson)
+        diffs.forEach { diff ->
+            when (diff) {
+                is DiffResult.Added ->
+                    added += diff.key
 
-        val fromKeys = fromMap.keys
-        val toKeys = toMap.keys
+                is DiffResult.Removed ->
+                    removed += diff.key
 
-        val added = toKeys - fromKeys
-        val removed = fromKeys - toKeys
+                is DiffResult.Changed -> {
+                    val dto =
+                        ChangedKeyDto(
+                            key = diff.key,
+                            oldType = diff.old.type.name,
+                            newType = diff.new.type.name,
+                            oldValue = diff.old.value,
+                            newValue = diff.new.value,
+                        )
 
-        val typeChanged =
-            fromKeys.intersect(toKeys)
-                .filter { key ->
-                    fromMap[key]?.javaClass != toMap[key]?.javaClass
+                    if (diff.old.type != diff.new.type)
+                        typeChanged += dto
+                    else
+                        valueChanged += dto
                 }
-                .toSet()
+            }
+        }
 
-        return ConfigDiff(
-            fromVersionId = fromVersionId,
-            toVersionId = toVersionId,
+        return ConfigDiffDto(
+            fromVersion = fromVersion.versionLabel,
+            toVersion = toVersion.versionLabel,
             added = added,
             removed = removed,
             typeChanged = typeChanged,
+            valueChanged = valueChanged,
         )
     }
 }

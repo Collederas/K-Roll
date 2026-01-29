@@ -1,6 +1,5 @@
 package com.collederas.kroll.core.configentry.versioning.snapshot
 
-import com.collederas.kroll.core.configentry.ConfigSnapshotResponseDto
 import org.springframework.stereotype.Service
 import java.util.UUID
 

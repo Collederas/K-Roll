@@ -41,6 +41,7 @@ data class ConfigVersionDto(
     val environmentId: UUID,
     val createdAt: Instant,
     val createdBy: UUID?,
+    val createdByName: String?,
 
     val isActive: Boolean,
     val publishedAt: Instant?,
@@ -70,20 +71,22 @@ data class VersionDetailsDto(
     val diffPayload: String?,
 )
 
+data class ChangedKeyDto(
+    val key: String,
+    val oldType: String,
+    val newType: String,
+    val oldValue: Any?,
+    val newValue: Any?,
+)
 
-data class ConfigDiff(
-    val fromVersionId: UUID,
-    val toVersionId: UUID,
+
+data class ConfigDiffDto(
+    val fromVersion: String,
+    val toVersion: String,
     val added: Set<String>,
     val removed: Set<String>,
-    val typeChanged: Set<String>,
+    val typeChanged: List<ChangedKeyDto>,
+    val valueChanged: List<ChangedKeyDto>,
 )
 
-
-data class ConfigSnapshotResponseDto(
-    val versionId: UUID,
-    val versionSequence: Long,
-    val versionLabel: String,
-    val entries: List<ConfigEntryResponseDto>,
-)
 

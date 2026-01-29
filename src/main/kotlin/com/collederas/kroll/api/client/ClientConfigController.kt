@@ -1,6 +1,7 @@
 package com.collederas.kroll.api.client
 
 import com.collederas.kroll.core.configentry.ConfigResolver
+import com.collederas.kroll.core.configentry.ResolveMode
 import com.collederas.kroll.core.configentry.ResolvedConfig
 import com.collederas.kroll.security.apikey.identity.GameClientPrincipal
 import io.swagger.v3.oas.annotations.Operation
@@ -22,6 +23,6 @@ class ClientConfigController(
     @Operation(summary = "Fetch configuration", description = "Returns effective config for the environment")
     fun fetchConfig(auth: Authentication): ResolvedConfig {
         val principal = auth.principal as GameClientPrincipal
-        return resolver.resolveForEnvironment(principal.environmentId)
+        return resolver.resolveForEnvironment(principal.environmentId, ResolveMode.PUBLISHED)
     }
 }

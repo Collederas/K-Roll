@@ -8,4 +8,6 @@ import java.util.UUID
 
 @Repository
 interface ConfigSnapshotRepository :
-    JpaRepository<ConfigSnapshotEntity, UUID>
+    JpaRepository<ConfigSnapshotEntity, UUID> {
+        fun findByVersionId(versionId: UUID): ConfigSnapshotEntity?
+}

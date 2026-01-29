@@ -20,17 +20,4 @@ interface ConfigEntryRepository : JpaRepository<ConfigEntryEntity, UUID> {
         environmentId: UUID,
         configKey: String,
     ): ConfigEntryEntity?
-
-    @Query(
-        """
-    SELECT c FROM ConfigEntryEntity c
-    WHERE c.environment.id = :envId
-    AND (c.activeFrom IS NULL OR c.activeFrom <= :now)
-    AND (c.activeUntil IS NULL OR c.activeUntil >= :now)
-    """,
-    )
-    fun findActiveConfigs(
-        @Param("envId") envId: UUID,
-        @Param("now") now: Instant,
-    ): List<ConfigEntryEntity>
 }

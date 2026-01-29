@@ -1,35 +1,39 @@
 package com.collederas.kroll.core.configentry.diff
 
-import com.collederas.kroll.core.configentry.audit.ConfigEntrySnapshot
+import com.collederas.kroll.core.configentry.entries.ConfigType
 
 sealed interface SemanticDiff {
-    object Same : SemanticDiff
-
-    object Different : SemanticDiff
-
-    data class Invalid(
-        val cause: Exception,
-    ) : SemanticDiff
+    object Same : SemanticDiff          // internal-only
+    object ValueChanged : SemanticDiff
+    object TypeChanged : SemanticDiff
+    data class Invalid(val cause: Exception) : SemanticDiff
 }
 
 
-sealed interface EntryDiff {
-    val key: String
+sealed class DiffResult {
+    abstract val key: String
 
     data class Added(
         override val key: String,
-        val new: ConfigEntrySnapshot,
-    ) : EntryDiff
+        val entry: DiffEntry,
+    ) : DiffResult()
 
     data class Removed(
         override val key: String,
-        val old: ConfigEntrySnapshot,
-    ) : EntryDiff
+        val entry: DiffEntry,
+    ) : DiffResult()
 
     data class Changed(
         override val key: String,
-        val old: ConfigEntrySnapshot,
-        val new: ConfigEntrySnapshot,
+        val old: DiffEntry,
+        val new: DiffEntry,
         val semantic: SemanticDiff,
-    ) : EntryDiff
+    ) : DiffResult()
 }
+
+data class DiffEntry(
+    val key: String,
+    val type: ConfigType,
+    val value: Any, // primitives or structured JSON
+)
+

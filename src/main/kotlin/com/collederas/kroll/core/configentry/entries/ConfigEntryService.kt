@@ -3,9 +3,9 @@ package com.collederas.kroll.core.configentry.entries
 import com.collederas.kroll.core.configentry.ConfigEntryResponseDto
 import com.collederas.kroll.core.configentry.CreateConfigEntryDto
 import com.collederas.kroll.core.configentry.UpdateConfigEntryDto
+import com.collederas.kroll.core.configentry.audit.ConfigEntrySnapshot
 import com.collederas.kroll.core.configentry.diff.ConfigDiffCalculator
 import com.collederas.kroll.core.configentry.diff.SemanticDiff
-import com.collederas.kroll.core.configentry.audit.ConfigEntrySnapshot
 import com.collederas.kroll.core.configentry.validation.ConfigEntryValidator
 import com.collederas.kroll.core.environment.EnvironmentAuthorizationService
 import com.collederas.kroll.core.environment.EnvironmentRepository
@@ -113,7 +113,11 @@ class ConfigEntryService(
             configEntryRepository.findByEnvironmentIdAndConfigKey(envId, key)
                 ?: throw ConfigEntryNotFoundException("Config '$key' not found in env $envId")
 
-        if (!wouldEntityChange(entity, dto)) throw ConfigValidationException(listOf("Update rejected: new entry is identical to current."))
+        if (!wouldEntityChange(
+                entity,
+                dto
+            )
+        ) throw ConfigValidationException(listOf("Update rejected: new entry is identical to current."))
 
         val targetValue = dto.value ?: entity.configValue
         val targetType = dto.type ?: entity.configType
@@ -222,7 +226,7 @@ class ConfigEntryService(
         }
     }
 
-    private fun wouldEntityChange(
+    fun wouldEntityChange(
         entity: ConfigEntryEntity,
         dto: UpdateConfigEntryDto
     ): Boolean {
@@ -235,31 +239,45 @@ class ConfigEntryService(
             val activeUntil: Instant?,
         )
 
-        val targetMetadata =
-            Metadata(
-                type = targetType,
-                activeFrom = if (dto.clearActiveFrom) null else dto.activeFrom ?: entity.activeFrom,
-                activeUntil = if (dto.clearActiveUntil) null else (dto.activeUntil ?: entity.activeUntil),
-            )
+        val targetMetadata = Metadata(
+            type = targetType,
+            activeFrom = if (dto.clearActiveFrom) null else dto.activeFrom ?: entity.activeFrom,
+            activeUntil = if (dto.clearActiveUntil) null else dto.activeUntil ?: entity.activeUntil,
+        )
 
-        val currentMetadata = Metadata(entity.configType, entity.activeFrom, entity.activeUntil)
+        val currentMetadata = Metadata(
+            entity.configType,
+            entity.activeFrom,
+            entity.activeUntil,
+        )
+
         if (targetMetadata != currentMetadata) {
             return true
         }
 
-        // only json requires semantic diff, the rest are string equality checks
-        if (targetType == ConfigType.JSON) {
-            val diff = configDiffCalculator.jsonSemanticDiff(entity.configValue, targetValue)
-            return when (diff) {
-                SemanticDiff.Same -> false
-                SemanticDiff.Different -> true
-                is SemanticDiff.Invalid -> throw ConfigValidationException(listOf("New value is invalid"))
+        return when (targetType) {
+            ConfigType.JSON -> {
+                when (
+                    configDiffCalculator.semanticCompare(
+                        entity.configValue,
+                        targetValue,
+                        targetType,
+                    )
+                ) {
+                    SemanticDiff.Same -> false
+                    SemanticDiff.TypeChanged -> true
+                    SemanticDiff.ValueChanged -> true
+                    is SemanticDiff.Invalid ->
+                        throw ConfigValidationException(
+                            listOf("New value is invalid")
+                        )
+                }
             }
-        }
 
-        // log? throw? why are we here?
-        return false
+            else -> entity.configValue != targetValue
+        }
     }
+
 
     private fun createSnapshot(
         key: String,

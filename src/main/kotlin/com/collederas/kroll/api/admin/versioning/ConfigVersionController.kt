@@ -1,6 +1,6 @@
 package com.collederas.kroll.api.admin.versioning
 
-import com.collederas.kroll.core.configentry.ConfigDiff
+import com.collederas.kroll.core.configentry.ConfigDiffDto
 import com.collederas.kroll.core.configentry.ConfigVersionDto
 import com.collederas.kroll.core.configentry.VersionDetailsDto
 import com.collederas.kroll.core.configentry.versioning.ConfigVersionService
@@ -21,8 +21,22 @@ class ConfigVersionController(
     fun listVersions(
         @PathVariable envId: UUID,
         @AuthenticationPrincipal authUser: AuthUserDetails,
-    ): List<ConfigVersionDto> =
-        versionService.listAllVersions(envId)
+    ): List<ConfigVersionDto> {
+
+        val versions = versionService.listAllVersions(envId)
+
+        val creatorIds: Set<UUID> =
+            versions.mapNotNull { it.createdBy }.toSet()
+
+        val namesById: Map<UUID, String> =
+            userDirectory.resolveDisplayNames(creatorIds)
+
+        return versions.map { dto ->
+            dto.copy(
+                createdByName = dto.createdBy?.let(namesById::get)
+            )
+        }
+    }
 
     @PostMapping
     fun publish(
@@ -36,15 +50,15 @@ class ConfigVersionController(
             notes = body.notes,
         )
 
-    @GetMapping("/{version}")
+    @GetMapping("/{versionId}")
     fun getVersion(
         @PathVariable envId: UUID,
-        @PathVariable version: String,
+        @PathVariable versionId: UUID,
     ): VersionDetailsDto {
 
         val dto = versionService.getVersionDetails(
             envId,
-            versionService.resolveVersionId(envId, version),
+            versionId,
         )
         val enriched =
             dto.createdBy?.let { userId ->
@@ -56,49 +70,40 @@ class ConfigVersionController(
         return enriched
     }
 
-    @PostMapping("/{version}/promote")
+    @PostMapping("/{versionId}/promote")
     fun promote(
         @PathVariable envId: UUID,
-        @PathVariable version: String,
+        @PathVariable versionId: UUID,
         @AuthenticationPrincipal user: AuthUserDetails,
     ) =
         versionService.promoteVersion(
             envId = envId,
-            versionId = versionService.resolveVersionId(envId, version),
+            versionId = versionId,
             promotedBy = user.getId(),
         )
 
 
-    @PostMapping("/{version}/rollback")
+    @PostMapping("/{versionId}/rollback")
     fun rollback(
         @PathVariable envId: UUID,
-        @PathVariable version: String,
+        @PathVariable versionId: UUID,
         @AuthenticationPrincipal user: AuthUserDetails,
     ) =
         versionService.rollbackToVersion(
             envId = envId,
-            versionId = versionService.resolveVersionId(envId, version),
+            versionId = versionId,
             userId = user.getId(),
         )
 
     @GetMapping("/diff")
     fun diff(
         @PathVariable envId: UUID,
-        @RequestParam from: String,
-        @RequestParam to: String,
-    ): ConfigDiff =
+        @RequestParam from: UUID,
+        @RequestParam to: UUID,
+    ): ConfigDiffDto =
         versionService.diffVersions(
             envId,
-            fromVersionId = versionService.resolveVersionId(envId, from),
-            toVersionId = versionService.resolveVersionId(envId, to),
+            fromVersionId = from,
+            toVersionId = to,
         )
-
-    private fun resolveVersionId(
-        envId: UUID,
-        versionLabel: String,
-    ): UUID =
-        versionService
-            .resolveVersionId(envId, versionLabel)
-
-
 }

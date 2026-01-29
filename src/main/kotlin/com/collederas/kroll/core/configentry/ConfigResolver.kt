@@ -3,6 +3,10 @@ package com.collederas.kroll.core.configentry
 import com.collederas.kroll.core.configentry.entries.ConfigEntryEntity
 import com.collederas.kroll.core.configentry.entries.ConfigEntryRepository
 import com.collederas.kroll.core.configentry.entries.ConfigType
+import com.collederas.kroll.core.configentry.versioning.ActiveVersionEntity
+import com.collederas.kroll.core.configentry.versioning.ActiveVersionRepository
+import com.collederas.kroll.core.configentry.versioning.ConfigVersionRepository
+import com.collederas.kroll.core.configentry.versioning.snapshot.ConfigSnapshotRepository
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.stereotype.Component
 import java.time.Clock
@@ -18,27 +22,60 @@ data class ResolvedValue(
     val value: Any
 )
 
+enum class ResolveMode {
+    PUBLISHED,
+    DRAFT,
+}
 
 @Component
 class ConfigResolver(
-    private val configEntryRepo: ConfigEntryRepository,
+    private val activeVersionRepository: ActiveVersionRepository,
+    private val snapshotRepository: ConfigSnapshotRepository,
+    private val entryRepository: ConfigEntryRepository,
     private val objectMapper: ObjectMapper,
     private val clock: Clock = Clock.systemUTC(),
 ) {
-    fun resolveForEnvironment(envId: UUID): ResolvedConfig {
-        val now = Instant.now(clock)
+    fun resolveForEnvironment(
+        envId: UUID,
+        mode: ResolveMode,
+    ): ResolvedConfig =
+        when (mode) {
+            ResolveMode.PUBLISHED -> resolvePublished(envId)
+            ResolveMode.DRAFT -> resolveDraft(envId)
+        }
 
-        val activeEntries = configEntryRepo.findActiveConfigs(envId, now)
+    fun resolvePublished(envId: UUID): ResolvedConfig {
+        val active =
+            activeVersionRepository.findById(envId)
+                .orElseThrow { error("No active version for env $envId") }
+
+        val versionId =
+            active.activeVersionId
+                ?: error("No published version for env $envId")
+
+        val snapshot =
+            snapshotRepository.findByVersionId(versionId)
+                ?: error("No snapshot for version $versionId")
+
+        return objectMapper.readValue(
+            snapshot.snapshotJson,
+            ResolvedConfig::class.java
+        )
+    }
+
+    fun resolveDraft(envId: UUID): ResolvedConfig {
+        val now = clock.instant()
 
         val resolved =
-            activeEntries
+            entryRepository
+                .findAllByEnvironmentId(envId)
+                .asSequence()
+                .filter { it.activeFrom == null || !it.activeFrom!!.isAfter(now) }
+                .filter { it.activeUntil == null || it.activeUntil!!.isAfter(now) }
                 .groupBy { it.configKey }
                 .mapValues { (_, entries) ->
                     val e = entries.maxBy { it.createdAt }
-                    ResolvedValue(
-                        type = e.configType,
-                        value = parseValue(e),
-                    )
+                    ResolvedValue(e.configType, parseValue(e))
                 }
                 .toSortedMap()
 
