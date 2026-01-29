@@ -32,33 +32,58 @@ data class ConfigEntryResponseDto(
 )
 
 data class ConfigVersionDto(
-    val id: String,
-    val version: String,
+    val id: UUID,
+
+    val versionSequence: Long,
+
+    val versionLabel: String,
+
     val environmentId: UUID,
     val createdAt: Instant,
     val createdBy: UUID?,
+
     val isActive: Boolean,
+    val publishedAt: Instant?,
+
     val contractHash: String,
-    val notes: String?,
+    val parentHash: String?,
+
+    val changeLog: String?,
 )
+
 
 data class VersionDetailsDto(
-    val version: String,
+    val id: UUID,
+    val versionSequence: Long,
+    val versionLabel: String,
+
     val createdAt: Instant,
     val createdBy: UUID?,
+    val createdByName: String?,
+
     val contractHash: String,
-    val notes: String?,
+    val parentHash: String?,
+
+    val changeLog: String?,
+
     val snapshotJson: String,
+    val diffPayload: String?,
 )
 
+
 data class ConfigDiff(
+    val fromVersionId: UUID,
+    val toVersionId: UUID,
     val added: Set<String>,
     val removed: Set<String>,
     val typeChanged: Set<String>,
 )
 
+
 data class ConfigSnapshotResponseDto(
-    val versionId: String,
-    val environmentId: UUID,
+    val versionId: UUID,
+    val versionSequence: Long,
+    val versionLabel: String,
     val entries: List<ConfigEntryResponseDto>,
 )
+

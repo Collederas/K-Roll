@@ -12,12 +12,24 @@ class ActiveVersionEntity(
     @Column(name = "environment_id", nullable = false)
     val environmentId: UUID,
 
-    @Column(name = "version", nullable = false)
-    var version: String,
+    // pointer to published version
+    @Column(name = "active_version_id")
+    var activeVersionId: UUID? = null,
 
-    @Column(name = "updated_at", nullable = false)
-    var updatedAt: Instant = Instant.now(),
+    // draft workspace
+    @Column(name = "draft_json")
+    var draftJson: String? = null,
 
-    @Column(name = "updated_by", nullable = false)
-    var updatedBy: UUID,
+    @Column(name = "draft_updated_at")
+    var draftUpdatedAt: Instant? = null,
+
+    @Column(name = "draft_updated_by")
+    var draftUpdatedBy: UUID? = null,
+
+    // publish metadata
+    @Column(name = "published_at")
+    var publishedAt: Instant? = null,
+
+    @Column(name = "published_by")
+    var publishedBy: UUID? = null,
 )

@@ -1,4 +1,4 @@
-package com.collederas.kroll.api.control.versioning
+package com.collederas.kroll.api.admin.versioning
 
 data class PublishVersionRequest(
     val userId: String,

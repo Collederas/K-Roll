@@ -7,11 +7,11 @@ import java.util.UUID
 @Service
 class ConfigSnapshotService {
 
-    fun getSnapshot(envId: UUID, versionId: String): ConfigSnapshotResponseDto {
-        return ConfigSnapshotResponseDto(
-            versionId = versionId,
-            environmentId = envId,
-            entries = emptyList(),
-        )
-    }
+//    fun getSnapshot(envId: UUID, versionId: String): ConfigSnapshotResponseDto {
+//        return ConfigSnapshotResponseDto(
+//            versionId = versionId,
+//            environmentId = envId,
+//            entries = emptyList(),
+//        )
+//    }
 }

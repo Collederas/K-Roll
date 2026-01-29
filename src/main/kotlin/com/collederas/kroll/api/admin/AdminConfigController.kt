@@ -1,4 +1,4 @@
-package com.collederas.kroll.api.control
+package com.collederas.kroll.api.admin
 
 import com.collederas.kroll.core.configentry.entries.ConfigEntryService
 import com.collederas.kroll.core.configentry.ConfigEntryResponseDto

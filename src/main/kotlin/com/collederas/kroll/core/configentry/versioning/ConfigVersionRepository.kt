@@ -9,17 +9,15 @@ interface ConfigVersionRepository : JpaRepository<ConfigVersionEntity, UUID> {
 
     fun findAllByEnvironmentId(environmentId: UUID): List<ConfigVersionEntity>
 
-    fun findByEnvironmentId(environmentId: UUID): List<ConfigVersionEntity>
+    fun findByEnvironmentIdAndVersionLabel(environmentId: UUID, versionLabel: String): List<ConfigVersionEntity>
 
-    fun existsByEnvironmentIdAndVersion(
-        environmentId: UUID,
-        version: String,
-    ): Boolean
+    fun findAllByEnvironmentIdOrderByVersionSequenceDesc(
+        environmentId: UUID
+    ): List<ConfigVersionEntity>
 
-    fun findByEnvironmentIdAndVersion(
-        environmentId: UUID,
-        version: String,
-    ) : ConfigVersionEntity?
+    fun findTopByEnvironmentIdOrderByVersionSequenceDesc(
+        environmentId: UUID
+    ): ConfigVersionEntity?
 
     fun findLatestVersionByEnvironmentId(environmentId: UUID): ConfigVersionEntity?
 }

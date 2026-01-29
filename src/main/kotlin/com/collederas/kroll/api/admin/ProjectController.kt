@@ -1,4 +1,4 @@
-package com.collederas.kroll.api.control
+package com.collederas.kroll.api.admin
 
 import com.collederas.kroll.core.project.ProjectService
 import com.collederas.kroll.core.project.dto.CreateProjectDto

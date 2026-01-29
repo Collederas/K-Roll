@@ -1,4 +1,4 @@
-package com.collederas.kroll.api.control.auth
+package com.collederas.kroll.api.admin.auth
 
 import jakarta.validation.constraints.NotBlank
 

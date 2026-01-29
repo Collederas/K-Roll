@@ -1,4 +1,4 @@
-package com.collederas.kroll.api.control.auth
+package com.collederas.kroll.api.admin.auth
 
 import com.collederas.kroll.security.identity.AuthUserDetails
 import com.collederas.kroll.security.jwt.authentication.JwtAuthService

@@ -25,42 +25,35 @@ class ConfigVersionService(
     private val objectMapper: ObjectMapper
 ) {
 
-    @PreAuthorize("@envAuth.isOwner(#envId, authentication.principal.userId)")
-    fun listAllVersions(envId: UUID): List<ConfigVersionDto> {
-        val versions = versionRepository.findAllByEnvironmentId(envId)
-        val activeVersion =
-            activeVersionRepository.findByEnvironmentId(envId)?.version
-
-        return versions.map {
-            ConfigVersionDto(
-                id = it.id.toString(),
-                version = it.version,
-                environmentId = it.environmentId,
-                createdAt = it.createdAt,
-                createdBy = it.createdBy,
-                isActive = it.version == activeVersion,
-                contractHash = it.contractHash,
-                notes = it.notes,
-            )
-        }
+    fun resolveVersionId(envId: UUID, version: String): UUID {
+        val version = versionRepository.findByEnvironmentIdAndVersionLabel(envId, version)
+        val versionId = version.firstOrNull()?.id ?: throw IllegalArgumentException("Version not found")
+        return versionId
     }
 
-    @PreAuthorize("@envAuth.isOwner(#envId, authentication.principal.userId)")
-    fun listActiveVersions(envId: UUID): List<ConfigVersionDto> {
-        val versions = versionRepository.findByEnvironmentId(envId)
-        val activeVersion =
-            activeVersionRepository.findByEnvironmentId(envId)?.version
 
-        return versions.map {
+    @PreAuthorize("@envAuth.isOwner(#envId, authentication.principal.userId)")
+    fun listAllVersions(envId: UUID): List<ConfigVersionDto> {
+        val versions = versionRepository.findAllByEnvironmentIdOrderByVersionSequenceDesc(envId)
+        val active =
+            activeVersionRepository.findByEnvironmentId(envId)
+
+        val activeVersionId = active?.activeVersionId
+
+
+        return versions.map { version ->
             ConfigVersionDto(
-                id = it.id.toString(),
-                version = it.version,
-                environmentId = it.environmentId,
-                createdAt = it.createdAt,
-                createdBy = it.createdBy,
-                isActive = it.version == activeVersion,
-                contractHash = it.contractHash,
-                notes = it.notes,
+                id = version.id,
+                versionLabel = version.versionLabel,
+                versionSequence = version.versionSequence,
+                environmentId = version.environmentId,
+                createdAt = version.createdAt,
+                createdBy = version.createdBy,
+                isActive = version.id == activeVersionId,
+                contractHash = version.contractHash,
+                changeLog = version.changeLog,
+                publishedAt = active?.publishedAt.takeIf { version.id == activeVersionId },
+                parentHash = version.parentHash,
             )
         }
     }
@@ -76,7 +69,11 @@ class ConfigVersionService(
 
 //        valalidator.validate(resolvedConfig)
 
-        val nextVersion = getNextVersionString(envId)
+        val latest = versionRepository.findLatestVersionByEnvironmentId(envId)
+
+        val nextVersion = (latest?.versionSequence ?: 0L) + 1
+        val nextVersionLabel = "v$nextVersion"
+        val parentHash = latest?.contractHash
 
         val contract =
             resolvedConfig.values
@@ -87,19 +84,22 @@ class ConfigVersionService(
 
         val version = ConfigVersionEntity(
             environmentId = envId,
-            version = nextVersion,
+            versionSequence = nextVersion,
+            versionLabel = nextVersionLabel,
             contractHash = contractHash,
+            parentHash = parentHash,
             createdBy = userId,
-            notes = notes,
+            changeLog = notes,
         )
 
         versionRepository.save(version)
 
+        val snapshotJson =
+            objectMapper.writeValueAsString(resolvedConfig)
+
         snapshotRepository.save(
             ConfigSnapshotEntity(
-                environmentId = envId,
-                version = nextVersion,
-                contractHash = contractHash,
+                versionId = version.id,
                 snapshotJson = objectMapper.writeValueAsString(resolvedConfig),
             )
         )
@@ -109,42 +109,47 @@ class ConfigVersionService(
     @PreAuthorize("@envAuth.isOwner(#envId, authentication.principal.userId)")
     fun promoteVersion(
         envId: UUID,
-        version: String,
+        versionId: UUID,
         promotedBy: UUID,
     ) {
-        require(
-            versionRepository.existsByEnvironmentIdAndVersion(envId, version)
-        ) { "Version does not exist" }
+        val version =
+            versionRepository.findById(versionId)
+                .orElseThrow { IllegalArgumentException("Version does not exist") }
 
-        require(
-            snapshotRepository.existsByEnvironmentIdAndVersion(envId, version)
-        ) { "Snapshot does not exist for version" }
+        require(version.environmentId == envId) {
+            "Version does not belong to environment"
+        }
 
-        val existing =
+        require(snapshotRepository.existsById(versionId)) {
+            "Snapshot does not exist for version"
+        }
+
+        val now = Instant.now()
+
+        val active =
             activeVersionRepository.findByEnvironmentId(envId)
 
-        if (existing == null) {
+        if (active == null) {
             activeVersionRepository.save(
                 ActiveVersionEntity(
                     environmentId = envId,
-                    version = version,
-                    updatedBy = promotedBy,
-                    updatedAt = Instant.now(),
+                    activeVersionId = versionId,
+                    publishedAt = now,
+                    publishedBy = promotedBy,
                 )
             )
         } else {
-            existing.version = version
-            existing.updatedAt = Instant.now()
-            existing.updatedBy = promotedBy
+            active.activeVersionId = versionId
+            active.publishedAt = now
+            active.publishedBy = promotedBy
         }
-
         // TODO: emit audit event
     }
 
     @Transactional
     @PreAuthorize("@envAuth.isOwner(#envId, authentication.principal.userId)")
-    fun rollbackToVersion(envId: UUID, version: String, userId: UUID) {
-        promoteVersion(envId, version, userId)
+    fun rollbackToVersion(envId: UUID, versionId: UUID, userId: UUID) {
+        promoteVersion(envId, versionId, userId)
     }
 
     @PreAuthorize("@envAuth.isOwner(#envId, authentication.principal.userId)")
@@ -153,48 +158,70 @@ class ConfigVersionService(
             activeVersionRepository.findByEnvironmentId(envId)
                 ?: return null
 
-        return versionRepository.findByEnvironmentIdAndVersion(
-            envId,
-            active.version
-        )
+        val versionId = active.activeVersionId
+            ?: return null  // DB has constraint on this, should never happen
+
+        return versionRepository.findById(versionId).orElse(null)
     }
 
     @PreAuthorize("@envAuth.isOwner(#envId, authentication.principal.userId)")
     fun getVersionDetails(
         envId: UUID,
-        version: String,
+        versionId: UUID,
     ): VersionDetailsDto {
-        val versionEntity =
-            versionRepository.findByEnvironmentIdAndVersion(envId, version)
-                ?: error("Version not found")
+        val version =
+            versionRepository.findById(versionId)
+                .orElseThrow { IllegalArgumentException("Version not found") }
+
+        require(version.environmentId == envId) {
+            "Version does not belong to environment"
+        }
 
         val snapshot =
-            snapshotRepository.findByEnvironmentIdAndVersion(envId, version)
-                ?: error("Snapshot missing for version")
+            snapshotRepository.findById(versionId)
+                .orElseThrow { IllegalStateException("Snapshot missing for version") }
 
         return VersionDetailsDto(
-            version = versionEntity.version,
-            createdAt = versionEntity.createdAt,
-            createdBy = versionEntity.createdBy,
-            contractHash = versionEntity.contractHash,
-            notes = versionEntity.notes,
+            id = version.id,
+            versionSequence = version.versionSequence,
+            versionLabel = version.versionLabel,
+            createdAt = version.createdAt,
+            createdBy = version.createdBy,
+            createdByName = "",
+            contractHash = version.contractHash,
+            parentHash = version.parentHash,
+            changeLog = version.changeLog,
             snapshotJson = snapshot.snapshotJson,
+            diffPayload = snapshot.diffPayload,
         )
     }
 
     @PreAuthorize("@envAuth.isOwner(#envId, authentication.principal.userId)")
     fun diffVersions(
         envId: UUID,
-        fromVersion: String,
-        toVersion: String,
+        fromVersionId: UUID,
+        toVersionId: UUID,
     ): ConfigDiff {
+        val fromVersion =
+            versionRepository.findById(fromVersionId)
+                .orElseThrow { IllegalArgumentException("From-version not found") }
+
+        val toVersion =
+            versionRepository.findById(toVersionId)
+                .orElseThrow { IllegalArgumentException("To-version not found") }
+
+        require(fromVersion.environmentId == envId)
+        require(toVersion.environmentId == envId)
+
         val fromSnapshot =
-            snapshotRepository.findByEnvironmentIdAndVersion(envId, fromVersion)
-                ?: error("From-version snapshot missing")
+            snapshotRepository.findById(fromVersionId)
+                .orElseThrow { IllegalStateException("From-version snapshot missing") }
 
         val toSnapshot =
-            snapshotRepository.findByEnvironmentIdAndVersion(envId, toVersion)
-                ?: error("To-version snapshot missing")
+            snapshotRepository.findById(toVersionId)
+                .orElseThrow { IllegalStateException("To-version snapshot missing") }
+
+        // TODO: cached diff fast-path
 
         val fromMap: Map<String, Any> =
             objectMapper.readValue(fromSnapshot.snapshotJson)
@@ -216,16 +243,11 @@ class ConfigVersionService(
                 .toSet()
 
         return ConfigDiff(
+            fromVersionId = fromVersionId,
+            toVersionId = toVersionId,
             added = added,
             removed = removed,
             typeChanged = typeChanged,
         )
     }
-
-    fun getNextVersionString(environmentId: UUID): String {
-        val latest = versionRepository.findLatestVersionByEnvironmentId(environmentId)?.version ?: "v0"
-        val numeric = latest.removePrefix("v").toInt()
-        return "v${numeric + 1}"
-    }
-
 }

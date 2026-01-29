@@ -1,10 +1,11 @@
-package com.collederas.kroll.api.control.versioning
+package com.collederas.kroll.api.admin.versioning
 
 import com.collederas.kroll.core.configentry.ConfigDiff
 import com.collederas.kroll.core.configentry.ConfigVersionDto
 import com.collederas.kroll.core.configentry.VersionDetailsDto
 import com.collederas.kroll.core.configentry.versioning.ConfigVersionService
 import com.collederas.kroll.security.identity.AuthUserDetails
+import com.collederas.kroll.user.UserDirectory
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.web.bind.annotation.*
 import java.util.*
@@ -13,6 +14,7 @@ import java.util.*
 @RequestMapping("/environments/{envId}/versions")
 class ConfigVersionController(
     private val versionService: ConfigVersionService,
+    private val userDirectory: UserDirectory,
 ) {
 
     @GetMapping
@@ -38,8 +40,21 @@ class ConfigVersionController(
     fun getVersion(
         @PathVariable envId: UUID,
         @PathVariable version: String,
-    ): VersionDetailsDto =
-        versionService.getVersionDetails(envId, version)
+    ): VersionDetailsDto {
+
+        val dto = versionService.getVersionDetails(
+            envId,
+            versionService.resolveVersionId(envId, version),
+        )
+        val enriched =
+            dto.createdBy?.let { userId ->
+                dto.copy(
+                    createdByName = userDirectory.resolveDisplayName(userId)
+                )
+            } ?: dto
+
+        return enriched
+    }
 
     @PostMapping("/{version}/promote")
     fun promote(
@@ -49,9 +64,10 @@ class ConfigVersionController(
     ) =
         versionService.promoteVersion(
             envId = envId,
-            version = version,
+            versionId = versionService.resolveVersionId(envId, version),
             promotedBy = user.getId(),
         )
+
 
     @PostMapping("/{version}/rollback")
     fun rollback(
@@ -61,7 +77,7 @@ class ConfigVersionController(
     ) =
         versionService.rollbackToVersion(
             envId = envId,
-            version = version,
+            versionId = versionService.resolveVersionId(envId, version),
             userId = user.getId(),
         )
 
@@ -71,6 +87,18 @@ class ConfigVersionController(
         @RequestParam from: String,
         @RequestParam to: String,
     ): ConfigDiff =
-        versionService.diffVersions(envId, from, to)
+        versionService.diffVersions(
+            envId,
+            fromVersionId = versionService.resolveVersionId(envId, from),
+            toVersionId = versionService.resolveVersionId(envId, to),
+        )
+
+    private fun resolveVersionId(
+        envId: UUID,
+        versionLabel: String,
+    ): UUID =
+        versionService
+            .resolveVersionId(envId, versionLabel)
+
 
 }

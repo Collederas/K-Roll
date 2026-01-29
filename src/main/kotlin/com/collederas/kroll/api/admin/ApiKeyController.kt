@@ -1,4 +1,4 @@
-package com.collederas.kroll.api.control
+package com.collederas.kroll.api.admin
 
 import com.collederas.kroll.security.apikey.ApiKeyService
 import com.collederas.kroll.security.apikey.dto.ApiKeyMetadataDto

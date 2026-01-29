@@ -8,27 +8,4 @@ import java.util.UUID
 
 @Repository
 interface ConfigSnapshotRepository :
-    JpaRepository<ConfigSnapshotEntity, UUID> {
-
-    fun findByEnvironmentIdAndVersion(
-        environmentId: UUID,
-        version: String,
-    ): ConfigSnapshotEntity?
-
-    fun existsByEnvironmentIdAndVersion(
-        environmentId: UUID,
-        version: String,
-    ): Boolean
-
-    @Query(
-        """
-        SELECT s
-        FROM ConfigSnapshotEntity s
-        WHERE s.environmentId = :environmentId
-        ORDER by s.createdAt desc
-        """
-    )
-    fun findLatestSnapshot(
-        @Param("environmentId") environmentId: UUID,
-    ): List<ConfigSnapshotEntity>
-}
+    JpaRepository<ConfigSnapshotEntity, UUID>
