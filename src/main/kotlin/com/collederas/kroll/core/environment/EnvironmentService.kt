@@ -1,5 +1,8 @@
 package com.collederas.kroll.core.environment
 
+import com.collederas.kroll.core.config.versioning.ActiveVersionEntity
+import com.collederas.kroll.core.config.versioning.ActiveVersionRepository
+import com.collederas.kroll.core.config.versioning.ConfigVersionService
 import com.collederas.kroll.core.environment.dto.CreateEnvironmentDto
 import com.collederas.kroll.core.environment.dto.EnvironmentResponseDto
 import com.collederas.kroll.core.project.ProjectService
@@ -17,6 +20,8 @@ import java.util.*
 class EnvironmentService(
     private val projectService: ProjectService,
     private val environmentRepository: EnvironmentRepository,
+    private val versionService: ConfigVersionService,
+    private val activeVersionRepository: ActiveVersionRepository,
     private val apiKeyRepository: ApiKeyRepository,
     private val clock: Clock = Clock.systemUTC(),
 ) {
@@ -82,7 +87,14 @@ class EnvironmentService(
                 project = project,
                 name = dto.name,
             )
+
         val savedEnv = environmentRepository.save(environment)
+
+        activeVersionRepository.save(
+            ActiveVersionEntity(
+                environmentId = savedEnv.id,
+            ),
+        )
 
         return EnvironmentResponseDto(savedEnv.id, savedEnv.name, savedEnv.project.id)
     }

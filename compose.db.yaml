@@ -21,7 +21,6 @@ services:
 volumes:
   kroll_pgdata:
 
-
 networks:
   kroll-net:
     name: kroll-net

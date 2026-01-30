@@ -24,6 +24,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-web")
 
+    implementation("com.github.java-json-tools:json-patch:1.13")
+
     implementation("io.jsonwebtoken:jjwt-api:0.13.0")
     runtimeOnly("io.jsonwebtoken:jjwt-impl:0.13.0")
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.13.0")
@@ -36,6 +38,8 @@ dependencies {
     implementation("org.flywaydb:flyway-core")
     implementation("org.flywaydb:flyway-database-postgresql")
     implementation("io.github.erdtman:java-json-canonicalization:1.1")
+    implementation("io.hypersistence:hypersistence-utils-hibernate-62:3.7.6")
+    implementation("com.fasterxml.jackson.core:jackson-databind")
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.15")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
     implementation("io.swagger.core.v3:swagger-annotations:2.2.20")

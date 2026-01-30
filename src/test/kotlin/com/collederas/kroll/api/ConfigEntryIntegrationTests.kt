@@ -1,9 +1,9 @@
 package com.collederas.kroll.api
 
-import com.collederas.kroll.core.configentry.entries.ConfigEntryService
-import com.collederas.kroll.core.configentry.entries.ConfigType
-import com.collederas.kroll.core.configentry.CreateConfigEntryDto
-import com.collederas.kroll.core.configentry.UpdateConfigEntryDto
+import com.collederas.kroll.core.config.CreateConfigEntryDto
+import com.collederas.kroll.core.config.UpdateConfigEntryDto
+import com.collederas.kroll.core.config.entry.ConfigEntryService
+import com.collederas.kroll.core.config.entry.ConfigType
 import com.collederas.kroll.security.identity.AuthUserDetails
 import com.collederas.kroll.support.MutableTestClock
 import com.collederas.kroll.support.TestClockConfig

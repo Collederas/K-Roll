@@ -1,3 +1,4 @@
+--  ==== VERSIONS
 CREATE TABLE config_versions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     environment_id UUID NOT NULL,
@@ -38,6 +39,9 @@ CREATE INDEX idx_config_versions_env_seq_desc
 CREATE INDEX idx_config_versions_created_at
     ON config_versions (created_at DESC);
 
+
+
+--  ==== SNAPSHOTS
 CREATE TABLE config_snapshots (
     version_id UUID PRIMARY KEY REFERENCES config_versions(id),
     created_at TIMESTAMPTZ NOT NULL,
@@ -51,17 +55,21 @@ ALTER TABLE config_snapshots
     REFERENCES config_versions(id)
     ON DELETE CASCADE;
 
+
+
+
+--  ==== POINTER TO ACTIVE VERSION
 CREATE TABLE active_versions (
     environment_id UUID PRIMARY KEY,
 
     -- the pointer
     active_version_id UUID,
 
-    draft_json TEXT,
+    draft_json JSONB,
     draft_updated_at TIMESTAMPTZ,
     draft_updated_by UUID,
 
-    published_at TIMESTAMPTZ NOT NULL,
+    published_at TIMESTAMPTZ,
     published_by UUID
 );
 

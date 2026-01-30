@@ -74,6 +74,7 @@ class RefreshTokenService(
 
     @Transactional
     fun consumeToken(tokenString: String): AppUser {
+        // TODO: wrong token ends up in a 500!
         val token =
             repository.findByToken(tokenString)
                 ?: throw IllegalArgumentException("Invalid refresh token")

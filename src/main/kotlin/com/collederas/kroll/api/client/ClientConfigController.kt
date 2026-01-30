@@ -1,8 +1,8 @@
 package com.collederas.kroll.api.client
 
-import com.collederas.kroll.core.configentry.ConfigResolver
-import com.collederas.kroll.core.configentry.ResolveMode
-import com.collederas.kroll.core.configentry.ResolvedConfig
+import com.collederas.kroll.core.config.ConfigResolver
+import com.collederas.kroll.core.config.ResolveMode
+import com.collederas.kroll.core.config.ResolvedConfig
 import com.collederas.kroll.security.apikey.identity.GameClientPrincipal
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag

@@ -1,8 +1,8 @@
 package com.collederas.kroll.support.factories
 
-import com.collederas.kroll.core.configentry.entries.ConfigEntryEntity
-import com.collederas.kroll.core.configentry.entries.ConfigEntryRepository
-import com.collederas.kroll.core.configentry.entries.ConfigType
+import com.collederas.kroll.core.config.entry.ConfigEntryEntity
+import com.collederas.kroll.core.config.entry.ConfigEntryRepository
+import com.collederas.kroll.core.config.entry.ConfigType
 import com.collederas.kroll.core.environment.EnvironmentEntity
 import com.collederas.kroll.core.environment.EnvironmentRepository
 import org.springframework.context.annotation.Profile
