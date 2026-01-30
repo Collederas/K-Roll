@@ -9,11 +9,10 @@ import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder
 
 @Configuration
 class JsonConfig {
-
     @Bean
     @Qualifier("strictJsonMapper")
-    fun strictJsonMapper(builder: Jackson2ObjectMapperBuilder): ObjectMapper {
-        return builder.build<ObjectMapper>()
+    fun strictJsonMapper(builder: Jackson2ObjectMapperBuilder): ObjectMapper =
+        builder
+            .build<ObjectMapper>()
             .enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS)
-    }
 }
