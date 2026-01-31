@@ -8,9 +8,11 @@ import com.collederas.kroll.core.config.ResolveMode
 import com.collederas.kroll.core.config.VersionDetailsDto
 import com.collederas.kroll.core.config.diff.ConfigDiffCalculator
 import com.collederas.kroll.core.config.diff.DiffResult
+import com.collederas.kroll.core.config.draft.isDraftDirty
 import com.collederas.kroll.core.config.versioning.snapshot.ConfigSnapshotEntity
 import com.collederas.kroll.core.config.versioning.snapshot.ConfigSnapshotRepository
 import com.collederas.kroll.crypto.Sha256
+import com.collederas.kroll.exceptions.ExistingUnpublishedDraft
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Service
@@ -109,6 +111,7 @@ class ConfigVersionService(
         envId: UUID,
         versionId: UUID,
         promotedBy: UUID,
+        force: Boolean = false,
     ) {
         val version =
             versionRepository
@@ -122,11 +125,14 @@ class ConfigVersionService(
         require(snapshotRepository.existsById(versionId)) {
             "Snapshot does not exist for version"
         }
-
         val now = Instant.now()
 
         val active =
             activeVersionRepository.findLocked(envId)
+
+        if (active.isDraftDirty() && !force){
+            throw ExistingUnpublishedDraft();
+        }
 
         active.activeVersionId = versionId
         active.publishedAt = now
@@ -137,58 +143,6 @@ class ConfigVersionService(
         active.draftUpdatedBy = null
 
         // TODO: emit audit event
-    }
-
-    @Transactional
-    @PreAuthorize("@envAuth.isOwner(#envId, authentication.principal.userId)")
-    fun createInitialVersion(
-        userId: UUID,
-        envId: UUID,
-        notes: String?,
-    ): UUID {
-        // Resolve draft config
-        val resolvedConfig =
-            configResolver.resolveForEnvironment(envId, ResolveMode.DRAFT)
-
-        // Determine next version metadata
-        val latest = versionRepository.findLatestByEnvironmentId(envId)
-        val nextSequence = (latest?.versionSequence ?: 0L) + 1
-        val versionLabel = "v$nextSequence"
-        val parentHash = latest?.contractHash
-
-        // Compute contract hash
-        val contract =
-            resolvedConfig.values.mapValues { it.value.type.name }
-
-        val contractBytes = objectMapper.writeValueAsBytes(contract)
-        val contractHash = Sha256.hashHex(contractBytes)
-
-        // Persist version
-        val version =
-            versionRepository.save(
-                ConfigVersionEntity(
-                    environmentId = envId,
-                    versionSequence = nextSequence,
-                    versionLabel = versionLabel,
-                    contractHash = contractHash,
-                    parentHash = parentHash,
-                    createdBy = userId,
-                    changeLog = notes,
-                ),
-            )
-
-        // Persist snapshot
-        val snapshotJson =
-            objectMapper.writeValueAsString(resolvedConfig)
-
-        snapshotRepository.save(
-            ConfigSnapshotEntity(
-                versionId = version.id,
-                snapshotJson = snapshotJson,
-            ),
-        )
-
-        return version.id
     }
 
     @Transactional
@@ -205,7 +159,6 @@ class ConfigVersionService(
     fun getActiveVersion(envId: UUID): ConfigVersionEntity? {
         val active =
             activeVersionRepository.findByEnvironmentId(envId)
-                ?: return null
 
         val versionId =
             active.activeVersionId

@@ -71,11 +71,13 @@ class ConfigVersionController(
     fun promote(
         @PathVariable envId: UUID,
         @PathVariable versionId: UUID,
+        @RequestParam(name = "force", defaultValue = "false") force: Boolean,
         @AuthenticationPrincipal user: AuthUserDetails,
     ) = versionService.promoteVersion(
         envId = envId,
         versionId = versionId,
         promotedBy = user.getId(),
+        force = force,
     )
 
     @PostMapping("/{versionId}/rollback")

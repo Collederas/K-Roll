@@ -52,6 +52,10 @@ class EnvironmentHasActiveApiKeysException(
     message: String = "Environment cannot be deleted while it has active API keys",
 ) : ConflictException("ENVIRONMENT_HAS_ACTIVE_API_KEYS", message)
 
+class ExistingUnpublishedDraft(
+    message: String = "Promotion would discard existing draft state",
+) : ConflictException("DRAFT_PRESENT", message)
+
 // ==================== BAD REQUEST (400) CATEGORY ====================
 
 sealed class BadRequestException(
