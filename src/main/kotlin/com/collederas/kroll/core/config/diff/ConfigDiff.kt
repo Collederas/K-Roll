@@ -36,7 +36,6 @@ sealed class DiffResult {
 }
 
 data class DiffEntry(
-    val key: String,
     val type: ConfigType,
     val value: Any, // primitives or structured JSON
 )

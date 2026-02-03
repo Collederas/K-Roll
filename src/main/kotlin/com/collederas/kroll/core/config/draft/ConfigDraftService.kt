@@ -30,7 +30,6 @@ class ConfigDraftService(
 
         if (active.draftJson == null) {
             active.draftJson = materializeDraft(active)
-            active.draftUpdatedAt = Instant.now()
         }
 
         return ConfigDraftResponseDto.from(active)

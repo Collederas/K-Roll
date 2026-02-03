@@ -50,21 +50,21 @@ class ConfigDiffCalculator(
                     o == null && n != null ->
                         DiffResult.Added(
                             key,
-                            DiffEntry(key, n.type, n.value),
+                            DiffEntry(n.type, n.value),
                         )
 
                     o != null && n == null ->
                         DiffResult.Removed(
                             key,
-                            DiffEntry(key, o.type, o.value),
+                            DiffEntry(o.type, o.value),
                         )
 
                     o != null && n != null -> {
                         if (o.type != n.type) {
                             DiffResult.Changed(
                                 key,
-                                DiffEntry(key, o.type, o.value),
-                                DiffEntry(key, n.type, n.value),
+                                DiffEntry(o.type, o.value),
+                                DiffEntry(n.type, n.value),
                                 SemanticDiff.TypeChanged,
                             )
                         } else {
@@ -74,8 +74,8 @@ class ConfigDiffCalculator(
                             } else {
                                 DiffResult.Changed(
                                     key,
-                                    DiffEntry(key, o.type, o.value),
-                                    DiffEntry(key, n.type, n.value),
+                                    DiffEntry(o.type, o.value),
+                                    DiffEntry(n.type, n.value),
                                     semantic,
                                 )
                             }

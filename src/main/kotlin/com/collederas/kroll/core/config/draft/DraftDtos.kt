@@ -43,7 +43,9 @@ data class ConfigDraftResponseDto(
 
 fun ActiveVersionEntity.isDraftDirty(): Boolean =
     draftJson != null &&
-        (publishedAt == null || draftUpdatedAt?.isAfter(publishedAt) == true)
+        publishedAt != null &&
+        draftUpdatedAt != null &&
+        draftUpdatedAt?.isAfter(publishedAt) == true
 
 data class BaseVersionDto(
     val versionId: UUID,
