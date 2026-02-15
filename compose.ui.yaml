@@ -18,7 +18,7 @@ services:
     networks:
       - kroll-net
     environment:
-      VITE_API_URL: http://localhost:8080/api/
+      VITE_API_URL: http://localhost:8080/api
 
   proxy:
     image: nginx:alpine

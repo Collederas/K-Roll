@@ -5,6 +5,7 @@ import com.collederas.kroll.core.config.versioning.ActiveVersionEntity
 import com.collederas.kroll.core.config.versioning.ActiveVersionRepository
 import com.collederas.kroll.core.config.versioning.snapshot.ConfigSnapshotRepository
 import com.collederas.kroll.exceptions.ConfigValidationException
+import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.fge.jsonpatch.JsonPatch
@@ -74,9 +75,11 @@ class ConfigDraftService(
                 initialized
             }
 
+        val normalizedDraft = ensureDraftShape(currentDraft)
+
         val patchedDraft =
             try {
-                patch.apply(currentDraft)
+                patch.apply(normalizedDraft)
             } catch (ex: JsonPatchException) {
                 throw ConfigValidationException(
                     listOf("Invalid patch path ${ex.message}"),
@@ -97,7 +100,25 @@ class ConfigDraftService(
     fun emptyDraftJson(): JsonNode =
         objectMapper.readTree(
             """
-            {}
+            {
+              "values": {}
+            }
             """.trimIndent(),
         )
+
+    private fun ensureDraftShape(draft: JsonNode): JsonNode {
+        val root =
+            if (draft is ObjectNode) {
+                draft.deepCopy<ObjectNode>()
+            } else {
+                objectMapper.createObjectNode()
+            }
+
+        val valuesNode = root.get("values")
+        if (valuesNode == null || !valuesNode.isObject) {
+            root.set<JsonNode>("values", objectMapper.createObjectNode())
+        }
+
+        return root
+    }
 }

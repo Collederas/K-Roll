@@ -121,11 +121,25 @@ class ConfigResolver(
                 node.booleanValue()
 
             ConfigType.NUMBER ->
-                node.floatValue()
+                parseNumberValue(node)
 
             ConfigType.STRING ->
                 node.textValue()
 
             ConfigType.JSON -> objectMapper.treeToValue(node, Any::class.java)
         }
+
+    private fun parseNumberValue(node: JsonNode): Number {
+        if (node.isNumber) {
+            return node.decimalValue()
+        }
+
+        val textValue = node.textValue()
+        require(!textValue.isNullOrBlank()) {
+            "NUMBER value cannot be null or blank"
+        }
+
+        return textValue.toBigDecimalOrNull()
+            ?: throw IllegalArgumentException("Invalid NUMBER value '$textValue'")
+    }
 }

@@ -2,9 +2,7 @@ package com.collederas.kroll.core.config.versioning
 
 import com.collederas.kroll.core.config.ChangedKeyDto
 import com.collederas.kroll.core.config.ConfigDiffDto
-import com.collederas.kroll.core.config.ConfigResolver
 import com.collederas.kroll.core.config.ConfigVersionDto
-import com.collederas.kroll.core.config.ResolveMode
 import com.collederas.kroll.core.config.VersionDetailsDto
 import com.collederas.kroll.core.config.diff.ConfigDiffCalculator
 import com.collederas.kroll.core.config.diff.DiffResult
@@ -13,6 +11,7 @@ import com.collederas.kroll.core.config.versioning.snapshot.ConfigSnapshotEntity
 import com.collederas.kroll.core.config.versioning.snapshot.ConfigSnapshotRepository
 import com.collederas.kroll.crypto.Sha256
 import com.collederas.kroll.exceptions.ExistingUnpublishedDraft
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Service
@@ -22,7 +21,6 @@ import java.util.*
 
 @Service
 class ConfigVersionService(
-    private val configResolver: ConfigResolver,
     private val versionRepository: ConfigVersionRepository,
     private val activeVersionRepository: ActiveVersionRepository,
     private val snapshotRepository: ConfigSnapshotRepository,
@@ -62,7 +60,9 @@ class ConfigVersionService(
         envId: UUID,
         notes: String? = null,
     ) {
-        val resolvedConfig = configResolver.resolveForEnvironment(envId, ResolveMode.DRAFT)
+        val active = activeVersionRepository.findLocked(envId)
+        val sourceJson = draftSourceForPublish(active)
+        val contract = buildContractFromSource(sourceJson)
 
         // TODO: defensive validate on publish
         // validator.validate(resolvedConfig)
@@ -72,10 +72,6 @@ class ConfigVersionService(
         val nextVersion = (latest?.versionSequence ?: 0L) + 1
         val nextVersionLabel = "v$nextVersion"
         val parentHash = latest?.contractHash
-
-        val contract =
-            resolvedConfig.values
-                .mapValues { it.value.type.name }
 
         val bytes = objectMapper.writeValueAsBytes(contract)
         val contractHash = Sha256.hashHex(bytes)
@@ -94,7 +90,7 @@ class ConfigVersionService(
         versionRepository.save(version)
 
         val snapshotJson =
-            objectMapper.writeValueAsString(resolvedConfig)
+            objectMapper.writeValueAsString(sourceJson)
 
         // TODO: calculate and store diff payload
         snapshotRepository.save(
@@ -104,6 +100,41 @@ class ConfigVersionService(
             ),
         )
     }
+
+    private fun draftSourceForPublish(active: ActiveVersionEntity): JsonNode {
+        active.draftJson?.let { return it }
+
+        val versionId = active.activeVersionId ?: return emptySource()
+        val snapshot =
+            snapshotRepository.findById(versionId)
+                .orElseThrow {
+                    IllegalStateException("active version $versionId has no snapshot")
+                }
+
+        return objectMapper.readTree(snapshot.snapshotJson)
+    }
+
+    private fun buildContractFromSource(sourceJson: JsonNode): Map<String, String> {
+        val valuesNode = sourceJson["values"] ?: return emptyMap()
+        require(valuesNode.isObject) {
+            "'values' must be a JSON object"
+        }
+
+        return valuesNode.properties()
+            .asSequence()
+            .associate { (key, entry) ->
+                key to entry["type"].asText()
+            }.toSortedMap()
+    }
+
+    private fun emptySource(): JsonNode =
+        objectMapper.readTree(
+            """
+            {
+              "values": {}
+            }
+            """.trimIndent(),
+        )
 
     @Transactional
     @PreAuthorize("@envAuth.isOwner(#envId, authentication.principal.userId)")

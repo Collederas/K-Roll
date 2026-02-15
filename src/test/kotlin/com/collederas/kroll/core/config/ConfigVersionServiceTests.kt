@@ -14,12 +14,14 @@ import com.collederas.kroll.core.config.versioning.ConfigVersionService
 import com.collederas.kroll.core.config.versioning.snapshot.ConfigSnapshotEntity
 import com.collederas.kroll.core.config.versioning.snapshot.ConfigSnapshotRepository
 import com.collederas.kroll.exceptions.ExistingUnpublishedDraft
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.mockk.every
 import io.mockk.impl.annotations.InjectMockKs
 import io.mockk.impl.annotations.MockK
 import io.mockk.junit5.MockKExtension
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -35,8 +37,6 @@ import java.util.*
 
 @ExtendWith(MockKExtension::class)
 class ConfigVersionServiceTests {
-    @MockK
-    lateinit var configResolver: ConfigResolver
     @MockK
     lateinit var versionRepository: ConfigVersionRepository
     @MockK
@@ -56,7 +56,7 @@ class ConfigVersionServiceTests {
     private val userId = UUID.randomUUID()
     private val hash1 = "hash1"
     private val hash2 = "hash2"
-    fun contractHash(): String = UUID.randomUUID().toString().replace("-", "")
+    private val jsonMapper = ObjectMapper().findAndRegisterModules()
 
 
     @Test
@@ -84,14 +84,6 @@ class ConfigVersionServiceTests {
 
     @Test
     fun `publishNewVersion creates next version and snapshot`() {
-        val resolvedConfig = mockk<ResolvedConfig> {
-            every { values } returns emptyMap()
-        }
-
-        every {
-            configResolver.resolveForEnvironment(envId, ResolveMode.DRAFT)
-        } returns resolvedConfig
-
         every {
             versionRepository.findLatestByEnvironmentId(envId)
         } returns ConfigVersion(
@@ -100,12 +92,32 @@ class ConfigVersionServiceTests {
             contractHash = hash1,
         )
 
-        every { objectMapper.writeValueAsBytes(any()) } returns ByteArray(0)
-        every { objectMapper.writeValueAsString(any()) } returns "{}"
+        val draftJson =
+            jsonMapper.readTree(
+                """
+                {
+                  "values": {
+                    "coins": { "type": "NUMBER", "value": "1000.50", "activeFrom": "2099-01-01T00:00:00Z" }
+                  }
+                }
+                """.trimIndent(),
+            )
+        every { activeVersionRepository.findLocked(envId) } returns ActiveVersion(
+            environmentId = envId,
+            draftJson = draftJson,
+        )
+
+        val contractSlot = slot<Map<String, String>>()
+        val snapshotSlot = slot<JsonNode>()
+        every { objectMapper.writeValueAsBytes(capture(contractSlot)) } returns ByteArray(0)
+        every { objectMapper.writeValueAsString(capture(snapshotSlot)) } returns "{}"
         every { versionRepository.save(any()) } answers { firstArg() }
         every { snapshotRepository.save(any()) } returns mockk()
 
         service.publishNewVersion(userId, envId, "notes")
+
+        assertEquals(mapOf("coins" to "NUMBER"), contractSlot.captured)
+        assertEquals(draftJson, snapshotSlot.captured)
 
         verify {
             versionRepository.save(match {
@@ -119,6 +131,39 @@ class ConfigVersionServiceTests {
     }
 
     @Test
+    fun `publishNewVersion materializes from active snapshot when draft is null`() {
+        val activeVersionId = UUID.randomUUID()
+        val active = ActiveVersion(environmentId = envId, activeVersionId = activeVersionId)
+        every { activeVersionRepository.findLocked(envId) } returns active
+        every { versionRepository.findLatestByEnvironmentId(envId) } returns null
+
+        val publishedSnapshotJson =
+            """
+            {
+              "values": {
+                "max_hp": { "type": "NUMBER", "value": 3500 }
+              }
+            }
+            """.trimIndent()
+        every { snapshotRepository.findById(activeVersionId) } returns Optional.of(
+            ConfigSnapshotEntity(versionId = activeVersionId, snapshotJson = publishedSnapshotJson),
+        )
+        every { objectMapper.readTree(publishedSnapshotJson) } returns jsonMapper.readTree(publishedSnapshotJson)
+
+        val contractSlot = slot<Map<String, String>>()
+        val snapshotSlot = slot<JsonNode>()
+        every { objectMapper.writeValueAsBytes(capture(contractSlot)) } returns ByteArray(0)
+        every { objectMapper.writeValueAsString(capture(snapshotSlot)) } returns "{}"
+        every { versionRepository.save(any()) } answers { firstArg() }
+        every { snapshotRepository.save(any()) } returns mockk()
+
+        service.publishNewVersion(userId, envId)
+
+        assertEquals(mapOf("max_hp" to "NUMBER"), contractSlot.captured)
+        assertEquals(jsonMapper.readTree(publishedSnapshotJson), snapshotSlot.captured)
+    }
+
+    @Test
     fun `promoteVersion fails if draft is dirty and not forced`() {
         val version = ConfigVersion(seq = 1, envId = envId, contractHash = hash1)
 
@@ -129,6 +174,7 @@ class ConfigVersionServiceTests {
         } returns ActiveVersion(
             environmentId = envId,
             draftJson = mockk(),
+            publishedAt = Instant.now().minusSeconds(60),
             draftUpdatedAt = Instant.now(),
         )
 
