@@ -1,8 +1,7 @@
 package com.collederas.kroll.api.client
 
-import com.collederas.kroll.core.config.ConfigResolver
-import com.collederas.kroll.core.config.ResolveMode
-import com.collederas.kroll.core.config.ResolvedConfig
+import com.collederas.kroll.core.config.ClientConfigFetchResponseDto
+import com.collederas.kroll.core.config.ClientConfigQueryService
 import com.collederas.kroll.security.apikey.identity.GameClientPrincipal
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -17,12 +16,12 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/client/config")
 @Tag(name = "Client API", description = "Endpoints for game clients")
 class ClientConfigController(
-    private val resolver: ConfigResolver,
+    private val clientConfigQueryService: ClientConfigQueryService,
 ) {
     @PostMapping("/fetch")
     @Operation(summary = "Fetch configuration", description = "Returns effective config for the environment")
-    fun fetchConfig(auth: Authentication): ResolvedConfig {
+    fun fetchConfig(auth: Authentication): ClientConfigFetchResponseDto {
         val principal = auth.principal as GameClientPrincipal
-        return resolver.resolveForEnvironment(principal.environmentId, ResolveMode.PUBLISHED)
+        return clientConfigQueryService.fetchPublishedConfig(principal.environmentId)
     }
 }

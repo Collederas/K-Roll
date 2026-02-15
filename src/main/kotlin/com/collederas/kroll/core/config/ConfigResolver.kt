@@ -3,6 +3,7 @@ package com.collederas.kroll.core.config
 import com.collederas.kroll.core.config.entry.ConfigType
 import com.collederas.kroll.core.config.versioning.ActiveVersionRepository
 import com.collederas.kroll.core.config.versioning.snapshot.ConfigSnapshotRepository
+import com.collederas.kroll.exceptions.PublishedConfigNotFoundException
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.springframework.stereotype.Component
@@ -31,6 +32,11 @@ class ConfigResolver(
     private val objectMapper: ObjectMapper,
     private val clock: Clock = Clock.systemUTC(),
 ) {
+    fun resolvePublishedValues(envId: UUID): Map<String, Any?> =
+        resolvePublished(envId)
+            .values
+            .mapValues { (_, resolved) -> resolved.value }
+
     fun resolveForEnvironment(
         envId: UUID,
         mode: ResolveMode,
@@ -44,15 +50,17 @@ class ConfigResolver(
         val active =
             activeVersionRepository
                 .findById(envId)
-                .orElseThrow { error("No active version row for env $envId") }
+                .orElseThrow {
+                    PublishedConfigNotFoundException("No active version row for environment $envId")
+                }
 
         val versionId =
             active.activeVersionId
-                ?: error("No published version for env $envId")
+                ?: throw PublishedConfigNotFoundException("No published version for environment $envId")
 
         val snapshot =
             snapshotRepository.findByVersionId(versionId)
-                ?: error("No snapshot for version $versionId")
+                ?: throw PublishedConfigNotFoundException("No snapshot for published version $versionId")
 
         val json =
             objectMapper.readTree(snapshot.snapshotJson)

@@ -74,4 +74,37 @@ class ConfigResolverTests {
 
         assertEquals(BigDecimal("1.2500"), resolved.values["multiplier"]?.value)
     }
+
+    @Test
+    fun `resolve published values returns semantic map sorted by key and filtered by activation`() {
+        val envId = UUID.randomUUID()
+        val versionId = UUID.randomUUID()
+        val active = ActiveVersion(environmentId = envId, activeVersionId = versionId)
+        val snapshotJson =
+            """
+            {
+              "values": {
+                "zeta": { "type": "STRING", "value": "late" },
+                "alpha": { "type": "BOOLEAN", "value": true },
+                "beta": { "type": "JSON", "value": { "x": 1 } },
+                "future": {
+                  "type": "NUMBER",
+                  "value": 10,
+                  "activeFrom": "2026-03-01T00:00:00Z"
+                }
+              }
+            }
+            """.trimIndent()
+
+        every { activeVersionRepository.findById(envId) } returns Optional.of(active)
+        every { snapshotRepository.findByVersionId(versionId) } returns
+            ConfigSnapshotEntity(versionId = versionId, snapshotJson = snapshotJson)
+
+        val values = resolver.resolvePublishedValues(envId)
+
+        assertEquals(listOf("alpha", "beta", "zeta"), values.keys.toList())
+        assertEquals(true, values["alpha"])
+        assertEquals(mapOf("x" to 1), values["beta"])
+        assertEquals("late", values["zeta"])
+    }
 }

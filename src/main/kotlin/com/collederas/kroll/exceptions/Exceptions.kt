@@ -33,6 +33,10 @@ class ConfigEntryNotFoundException(
     message: String = "Config entry not found",
 ) : NotFoundException("CONFIG_ENTRY_NOT_FOUND", message)
 
+class PublishedConfigNotFoundException(
+    message: String = "Published configuration not found",
+) : NotFoundException("PUBLISHED_CONFIG_NOT_FOUND", message)
+
 // ==================== CONFLICT (409) CATEGORY ====================
 
 sealed class ConflictException(
